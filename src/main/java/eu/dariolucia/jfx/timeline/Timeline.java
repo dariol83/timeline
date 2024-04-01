@@ -1,8 +1,13 @@
 package eu.dariolucia.jfx.timeline;
 
+import eu.dariolucia.jfx.timeline.model.ITaskLine;
+import eu.dariolucia.jfx.timeline.model.RenderingContext;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -19,8 +24,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.util.LinkedList;
 
 public class Timeline extends GridPane {
 
@@ -36,11 +40,14 @@ public class Timeline extends GridPane {
     private final SimpleLongProperty viewPortDuration = new SimpleLongProperty();
     private final SimpleObjectProperty<Instant> viewPortStart = new SimpleObjectProperty<>();
 
+    private final ObservableList<ITaskLine> lines = FXCollections.observableList(new LinkedList<>());
+
     /* *****************************************************************************************
      * Internal variables
      * *****************************************************************************************/
     private double textHeight = -1;
     private double headerRowHeight = -1;
+    private double lineRowHeight = -1;
     private ChronoUnit headerElement = ChronoUnit.SECONDS;
 
     public Timeline() {
@@ -85,25 +92,73 @@ public class Timeline extends GridPane {
         // Set horizontal scrollbar limits (fixed)
         this.horizontalScroll.setMin(0);
         this.horizontalScroll.setMax(100);
-        // Add mechanism to change start of viewport with horizontal scrollbar
+        this.verticalScroll.setMin(0);
+        this.verticalScroll.setMax(1);
+        // Add mechanism to change start of viewport with horizontal scrollbar (scrollbar update -> update viewport)
         this.horizontalScroll.valueProperty().addListener((e,o,n) -> updateStartTime());
-        // Add listener when timeline is resized
+        this.verticalScroll.valueProperty().addListener((e,o,n) -> refresh());
+        // Add listener when timeline is resized (structural update)
         ap.widthProperty().addListener((e,o,n) -> recomputeArea());
         ap.heightProperty().addListener((e,o,n) -> recomputeArea());
-        // Add listener when time properties are updated
+        // Add listener when time properties are updated (structural update)
         minTimeProperty().addListener((e,v,n) -> recomputeArea());
         maxTimeProperty().addListener((e,v,n) -> recomputeArea());
         viewPortDurationProperty().addListener((e,v,n) -> recomputeArea());
+        // Add listener when start time is updated (viewport update -> update scrollbar)
         viewPortStartProperty().addListener((e,o,n) -> recomputeViewport());
+        // Add listener to changes to the observable list structure (add, remove)
+        this.lines.addListener(this::itemsUpdated);
 
         Platform.runLater(this::recomputeArea);
+    }
 
-        // Add data defaults for testing
-        Instant currentTime = new GregorianCalendar(2024, Calendar.FEBRUARY, 10, 10, 0, 0).toInstant();
-        setMinTime(currentTime);
-        setMaxTime(currentTime.plusSeconds(12800));
-        setViewPortStart(currentTime);
-        setViewPortDuration(1200);
+    private void itemsUpdated(ListChangeListener.Change<? extends ITaskLine> a) {
+        // Update vertical scroll
+        updateVScrollbarSettings();
+        // TODO: depending on the location of the change, some optimisation could be performed (e.g. do not refresh if
+        //  the change is not inside the viewport
+        refresh();
+    }
+
+    private void updateVScrollbarSettings() {
+        // Get the current value
+        double currentValue = this.verticalScroll.getValue();
+        // Get the total number of lines
+        int totalLines = getTotalNbOfLines();
+        if(totalLines > 0) {
+            // Compute the max size
+            double fullSize = totalLines * this.lineRowHeight;
+            double totalSize = fullSize - this.imageArea.getHeight() + this.headerRowHeight;
+            if (currentValue > totalSize) {
+                currentValue = totalSize;
+            }
+            // Update the scrollbar max value
+            this.verticalScroll.setMax(totalSize);
+            this.verticalScroll.setValue(currentValue);
+            this.verticalScroll.setUnitIncrement(this.lineRowHeight);
+            // Set block increment
+            this.verticalScroll.setBlockIncrement(this.imageArea.getHeight() - this.headerRowHeight);
+            // Set visible amount if area is ready
+            if(this.imageArea.getHeight() > 0) {
+                this.verticalScroll.setVisibleAmount((totalSize / fullSize) * (this.imageArea.getHeight() - this.headerRowHeight));
+            } else {
+                this.verticalScroll.setVisibleAmount(1);
+            }
+        } else {
+            this.verticalScroll.setMax(1);
+            this.verticalScroll.setValue(0);
+            this.verticalScroll.setUnitIncrement(1);
+            this.verticalScroll.setBlockIncrement(1);
+            this.verticalScroll.setVisibleAmount(1);
+        }
+    }
+
+    private int getTotalNbOfLines() {
+        int nbLines = 0;
+        for(ITaskLine tl : this.lines) {
+            nbLines += tl.getNbOfLines();
+        }
+        return nbLines;
     }
 
     private void recomputeViewport() {
@@ -194,7 +249,7 @@ public class Timeline extends GridPane {
         }
         // Recompute scrollbar settings
         updateHScrollbarSettings();
-
+        updateVScrollbarSettings();
         // Repaint after this
         refresh();
     }
@@ -223,20 +278,58 @@ public class Timeline extends GridPane {
 
     public void refresh() {
         GraphicsContext gc = this.imageArea.getGraphicsContext2D();
-
-        gc.setFill(Color.BEIGE);
-        gc.fillRect(0, 0, this.imageArea.getWidth(), this.imageArea.getHeight());
-
+        // Draw the background
+        drawBackground(gc);
+        // Draw empty side panel
+        drawEmptySidePanel(gc);
+        // Draw task lines
+        RenderingContext rc = new RenderingContext(TASK_PANEL_WIDTH, this.lineRowHeight, this.textHeight, TEXT_PADDING,
+                getViewPortStart(), getViewPortStart().plusSeconds(getViewPortDuration()), this::toX);
+        drawTaskLines(gc, rc);
         // Draw calendar headers: need conversion functions Instant -> x on screen
         drawHeaders(gc);
 
-        // Draw empty side panel
-        gc.setFill(Color.LIGHTGRAY);
-        gc.fillRect(0,this.headerRowHeight, 100, this.imageArea.getHeight() - this.headerRowHeight);
-
         // Debug data
-        gc.setStroke(Color.BLACK);
-        gc.strokeText(String.format("%s %s %d %s", getMinTime(), getMaxTime(), getViewPortDuration(), getViewPortStart()), 0 ,textHeight + 40);
+        // gc.setStroke(Color.BLACK);
+        // gc.strokeText(String.format("%s %s %d %s", getMinTime(), getMaxTime(), getViewPortDuration(), getViewPortStart()), 0 ,textHeight + 40);
+    }
+
+    private void drawBackground(GraphicsContext gc) {
+        gc.setFill(Color.BEIGE);
+        gc.fillRect(0, 0, this.imageArea.getWidth(), this.imageArea.getHeight());
+    }
+
+    private void drawTaskLines(GraphicsContext gc, RenderingContext rc) {
+        // You render only line blocks that are contained in the viewport, as defined by the vertical scroll value
+        double yStart = this.verticalScroll.getValue();
+        double yEnd = yStart + this.imageArea.getHeight() - this.headerRowHeight;
+        int processedLines = 0;
+        for(ITaskLine line : this.lines) {
+            // Compute the Y span of the rendering for this task line
+            double taskLineYStart = processedLines * this.lineRowHeight;
+            processedLines += line.getNbOfLines();
+            double taskLineYEnd = processedLines * this.lineRowHeight;
+            if((taskLineYStart > yStart && taskLineYStart < yEnd) ||
+                    (taskLineYEnd > yStart && taskLineYEnd < yEnd)) {
+                // Render: translate the taskLineYStart in the right viewport coordinates
+                taskLineYStart -= yStart;
+                taskLineYStart += this.headerRowHeight;
+                // Ask the rendering of the timeline
+                line.render(gc, taskLineYStart, rc);
+            }
+            // Check if end line was found
+            if(taskLineYEnd > yEnd) {
+                break;
+            }
+        }
+        // Rendering completed
+    }
+
+    private void drawEmptySidePanel(GraphicsContext gc) {
+        gc.setFill(Color.LIGHTGRAY);
+        gc.setStroke(Color.DARKGRAY);
+        gc.fillRect(0,this.headerRowHeight, 100, this.imageArea.getHeight() - this.headerRowHeight);
+        gc.strokeRect(0,this.headerRowHeight, 100, this.imageArea.getHeight() - this.headerRowHeight);
     }
 
     private void drawHeaders(GraphicsContext gc) {
@@ -300,6 +393,7 @@ public class Timeline extends GridPane {
             text.setFont(font);
             textHeight = text.getBoundsInLocal().getHeight();
             headerRowHeight = textHeight + 2 * TEXT_PADDING;
+            lineRowHeight = textHeight + 4 * TEXT_PADDING;
         }
     }
 
@@ -368,5 +462,9 @@ public class Timeline extends GridPane {
 
     public void setViewPortStart(Instant viewPortStart) {
         this.viewPortStart.set(viewPortStart);
+    }
+
+    public ObservableList<ITaskLine> getLines() {
+        return lines;
     }
 }
