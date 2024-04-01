@@ -1,5 +1,8 @@
 package eu.dariolucia.jfx.timeline.model;
 
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.text.Text;
+
 import java.time.Instant;
 import java.util.function.ToDoubleFunction;
 
@@ -50,5 +53,11 @@ public final class RenderingContext {
 
     public Instant getViewPortEnd() {
         return this.viewPortEnd;
+    }
+
+    public double getTextWidth(GraphicsContext gc, String text) {
+        Text theText = new Text(text);
+        theText.setFont(gc.getFont());
+        return theText.getBoundsInLocal().getWidth();
     }
 }

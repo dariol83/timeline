@@ -4,6 +4,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
 
 import java.util.LinkedList;
 
@@ -56,8 +57,29 @@ public class GroupTaskLine implements ITaskLine {
     }
 
     @Override
-    public void render(GraphicsContext gc, double taskLineYStart, RenderingContext rc) {
-        // TODO:
+    public void render(GraphicsContext gc, double taskLineXStart, double taskLineYStart, RenderingContext rc) {
+        int nbLines = getNbOfLines();
+        // Render the sublines
+        int i = 0;
+        for(ITaskLine line : this.items) {
+            line.render(gc, taskLineXStart + 2*rc.getTextPadding() + rc.getTextHeight(), taskLineYStart + i * rc.getLineRowHeight(), rc);
+            ++i;
+        }
+        // Draw the group box
+        gc.setFill(Color.LIGHTGRAY);
+        gc.setStroke(Color.DARKGRAY);
+        gc.fillRect(taskLineXStart, taskLineYStart, 2*rc.getTextPadding() + rc.getTextHeight(), getNbOfLines() * rc.getLineRowHeight());
+        gc.strokeRect(taskLineXStart, taskLineYStart, 2*rc.getTextPadding() + rc.getTextHeight(), getNbOfLines() * rc.getLineRowHeight());
+        gc.setStroke(Color.BLACK);
+
+        gc.save();
+        gc.translate(taskLineXStart, taskLineYStart);
+        gc.rotate(-90);
+        // Render in the middle TODO: find a way to cache the string length given the name and the font!
+        double textWidth = rc.getTextWidth(gc, getName());
+        double offset = nbLines * rc.getLineRowHeight()/2;
+        gc.strokeText(getName(), - offset - textWidth/2, (2*rc.getTextPadding() + rc.getTextHeight())/2 + rc.getTextHeight()/2);// rc.getTextPadding() + rc.getTextHeight());
+        gc.restore();
     }
 
     public SimpleStringProperty descriptionProperty() {

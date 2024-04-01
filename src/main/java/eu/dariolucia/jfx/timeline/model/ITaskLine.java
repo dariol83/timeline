@@ -12,5 +12,5 @@ public interface ITaskLine {
 
     int getNbOfLines();
 
-    void render(GraphicsContext gc, double taskLineYStart, RenderingContext rc);
+    void render(GraphicsContext gc, double taskLineXStart, double taskLineYStart, RenderingContext rc);
 }

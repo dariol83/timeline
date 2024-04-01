@@ -93,9 +93,7 @@ public class TaskItem {
             gc.strokeRect(startX, startY, endX - startX, rc.getLineRowHeight() - 2*rc.getTextPadding());
             gc.setStroke(Color.BLACK);
             // Render in the middle TODO: find a way to cache the string length given the name and the font!
-            Text theText = new Text(getName());
-            theText.setFont(gc.getFont());
-            double textWidth = theText.getBoundsInLocal().getWidth();
+            double textWidth = rc.getTextWidth(gc, getName());
             gc.strokeText(getName(), startX + (endX - startX)/2 - textWidth/2, startY + rc.getLineRowHeight() - 2*rc.getTextPadding() - rc.getTextHeight()/2);
         }
     }

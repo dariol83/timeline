@@ -53,7 +53,7 @@ public class TaskLine implements ITaskLine {
     }
 
     @Override
-    public void render(GraphicsContext gc, double taskLineYStart, RenderingContext rc) {
+    public void render(GraphicsContext gc, double taskLineXStart, double taskLineYStart, RenderingContext rc) {
         // Render the tasks in the line
         for(TaskItem ti : this.items) {
             ti.render(gc, taskLineYStart, rc);
@@ -61,14 +61,14 @@ public class TaskLine implements ITaskLine {
         // Render the line in the task panel
         gc.setStroke(Color.DARKGRAY);
         gc.setFill(Color.LIGHTGRAY);
-        gc.fillRect(0, taskLineYStart, rc.getTaskPanelWidth(), rc.getLineRowHeight());
-        gc.strokeRect(0, taskLineYStart, rc.getTaskPanelWidth(), rc.getLineRowHeight());
+        gc.fillRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, rc.getLineRowHeight());
+        gc.strokeRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, rc.getLineRowHeight());
         // Render text
         gc.setStroke(Color.BLACK);
-        gc.strokeText(getName(), 0 + rc.getTextPadding(), taskLineYStart + rc.getLineRowHeight() - rc.getTextHeight(), rc.getTaskPanelWidth() - 2 * rc.getTextPadding());
+        gc.strokeText(getName(), taskLineXStart + rc.getTextPadding(), taskLineYStart + rc.getLineRowHeight() - rc.getTextHeight(), rc.getTaskPanelWidth() - 2 * rc.getTextPadding() - taskLineXStart);
         // Render bottom line
         gc.setStroke(Color.LIGHTGRAY);
-        gc.strokeLine(0 + rc.getTaskPanelWidth(), taskLineYStart + rc.getLineRowHeight(), rc.toX(rc.getViewPortEnd()), taskLineYStart + rc.getLineRowHeight());
+        gc.strokeLine(rc.getTaskPanelWidth(), taskLineYStart + rc.getLineRowHeight(), rc.toX(rc.getViewPortEnd()), taskLineYStart + rc.getLineRowHeight());
     }
 
     public SimpleStringProperty descriptionProperty() {

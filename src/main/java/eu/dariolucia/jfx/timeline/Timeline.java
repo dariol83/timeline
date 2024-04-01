@@ -3,6 +3,7 @@ package eu.dariolucia.jfx.timeline;
 import eu.dariolucia.jfx.timeline.model.ITaskLine;
 import eu.dariolucia.jfx.timeline.model.RenderingContext;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -29,7 +30,7 @@ import java.util.LinkedList;
 public class Timeline extends GridPane {
 
     public static final double TEXT_PADDING = 5;
-    public static final double TASK_PANEL_WIDTH = 100;
+    public static final double TASK_PANEL_WIDTH_DEFAULT = 100;
     private static final double MIN_WIDTH_PER_ELEMENT = 40;
     private final Canvas imageArea;
     private final ScrollBar horizontalScroll;
@@ -40,6 +41,7 @@ public class Timeline extends GridPane {
     private final SimpleLongProperty viewPortDuration = new SimpleLongProperty();
     private final SimpleObjectProperty<Instant> viewPortStart = new SimpleObjectProperty<>();
 
+    private final SimpleDoubleProperty taskPanelWidth = new SimpleDoubleProperty(TASK_PANEL_WIDTH_DEFAULT);
     private final ObservableList<ITaskLine> lines = FXCollections.observableList(new LinkedList<>());
 
     /* *****************************************************************************************
@@ -106,6 +108,8 @@ public class Timeline extends GridPane {
         viewPortDurationProperty().addListener((e,v,n) -> recomputeArea());
         // Add listener when start time is updated (viewport update -> update scrollbar)
         viewPortStartProperty().addListener((e,o,n) -> recomputeViewport());
+        // Add listener when task panel width is updated
+        taskPanelWidthProperty().addListener((e,o,n) -> refresh());
         // Add listener to changes to the observable list structure (add, remove)
         this.lines.addListener(this::itemsUpdated);
 
@@ -283,7 +287,7 @@ public class Timeline extends GridPane {
         // Draw empty side panel
         drawEmptySidePanel(gc);
         // Draw task lines
-        RenderingContext rc = new RenderingContext(TASK_PANEL_WIDTH, this.lineRowHeight, this.textHeight, TEXT_PADDING,
+        RenderingContext rc = new RenderingContext(getTaskPanelWidth(), this.lineRowHeight, this.textHeight, TEXT_PADDING,
                 getViewPortStart(), getViewPortStart().plusSeconds(getViewPortDuration()), this::toX);
         drawTaskLines(gc, rc);
         // Draw calendar headers: need conversion functions Instant -> x on screen
@@ -315,7 +319,7 @@ public class Timeline extends GridPane {
                 taskLineYStart -= yStart;
                 taskLineYStart += this.headerRowHeight;
                 // Ask the rendering of the timeline
-                line.render(gc, taskLineYStart, rc);
+                line.render(gc, 0, taskLineYStart, rc);
             }
             // Check if end line was found
             if(taskLineYEnd > yEnd) {
@@ -351,8 +355,8 @@ public class Timeline extends GridPane {
         // Fill the TL corner block
         gc.setFill(Color.LIGHTGRAY);
         gc.setStroke(Color.DARKGRAY);
-        gc.fillRect(0, 0, TASK_PANEL_WIDTH, this.headerRowHeight);
-        gc.strokeRect(0, 0, TASK_PANEL_WIDTH, this.headerRowHeight);
+        gc.fillRect(0, 0, getTaskPanelWidth(), this.headerRowHeight);
+        gc.strokeRect(0, 0, getTaskPanelWidth(), this.headerRowHeight);
     }
 
     private void renderHeader(GraphicsContext gc, Instant startTime, Instant endTime, ChronoUnit headerElement) {
@@ -399,9 +403,9 @@ public class Timeline extends GridPane {
 
     public Instant toInstant(double x) {
         // x indicates the pixel in canvas coordinates: first of all, we need to remove the task panel size
-        x -= TASK_PANEL_WIDTH;
+        x -= getTaskPanelWidth();
         // Now compute the percentage
-        double percentage = x / (this.imageArea.getWidth() - TASK_PANEL_WIDTH);
+        double percentage = x / (this.imageArea.getWidth() - getTaskPanelWidth());
         // Find out the instant from the viewport start
         return getViewPortStart().plusSeconds(Math.round(percentage * getViewPortDuration()));
     }
@@ -413,7 +417,7 @@ public class Timeline extends GridPane {
         // Now check where timeSecs linearly is
         double percentage = (timeSecs - startTimeSecs)/ (double) getViewPortDuration();
         // Now translate to pixels
-        return percentage * (this.imageArea.getWidth() - TASK_PANEL_WIDTH) + TASK_PANEL_WIDTH;
+        return percentage * (this.imageArea.getWidth() - getTaskPanelWidth()) + getTaskPanelWidth();
     }
 
     public Instant getMinTime() {
@@ -466,5 +470,17 @@ public class Timeline extends GridPane {
 
     public ObservableList<ITaskLine> getLines() {
         return lines;
+    }
+
+    public double getTaskPanelWidth() {
+        return taskPanelWidth.get();
+    }
+
+    public SimpleDoubleProperty taskPanelWidthProperty() {
+        return taskPanelWidth;
+    }
+
+    public void setTaskPanelWidth(double taskPanelWidth) {
+        this.taskPanelWidth.set(taskPanelWidth);
     }
 }
