@@ -1,5 +1,6 @@
 package eu.dariolucia.jfx.timeline.model;
 
+import javafx.beans.Observable;
 import javafx.scene.canvas.GraphicsContext;
 
 public interface ITaskLine {
@@ -13,4 +14,6 @@ public interface ITaskLine {
     int getNbOfLines();
 
     void render(GraphicsContext gc, double taskLineXStart, double taskLineYStart, RenderingContext rc);
+
+    Observable[] getObservableProperties();
 }

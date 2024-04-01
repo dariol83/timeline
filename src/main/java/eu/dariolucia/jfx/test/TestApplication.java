@@ -5,6 +5,7 @@ import eu.dariolucia.jfx.timeline.model.GroupTaskLine;
 import eu.dariolucia.jfx.timeline.model.TaskItem;
 import eu.dariolucia.jfx.timeline.model.TaskLine;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -31,13 +32,12 @@ public class TestApplication extends Application {
         tl.setViewPortStart(currentTime);
         tl.setViewPortDuration(1200);
         // Add task lines
-        {
-            TaskLine taskLine = new TaskLine("Task Line 1", "First task line");
-            taskLine.getItems().add(new TaskItem("Task 1", currentTime.plusSeconds(30), 98, 0));
-            taskLine.getItems().add(new TaskItem("Task 2", currentTime.plusSeconds(130), 28, 0));
-            taskLine.getItems().add(new TaskItem("Task 3", currentTime.plusSeconds(190), 5, 0));
-            tl.getLines().add(taskLine);
-        }
+        TaskLine theLine = new TaskLine("Task Line 1", "First task line");
+        theLine.getItems().add(new TaskItem("Task 1", currentTime.plusSeconds(30), 98, 0));
+        theLine.getItems().add(new TaskItem("Task 2", currentTime.plusSeconds(130), 28, 0));
+        theLine.getItems().add(new TaskItem("Task 3", currentTime.plusSeconds(190), 5, 0));
+        tl.getLines().add(theLine);
+
         {
             TaskLine taskLine = new TaskLine("Task Line 2", "Second task line");
             taskLine.getItems().add(new TaskItem("Task 1", currentTime.plusSeconds(600), 140, 0));
@@ -81,6 +81,28 @@ public class TestApplication extends Application {
             tl.getLines().add(taskLine);
         }
         tl.setTaskPanelWidth(200);
+
+        theLine.setName("Name is changed!sads ad as");
+
+        // Launch a thread that does some changes
+        Thread t = new Thread(() -> {
+            try {
+                Thread.sleep(4000);
+                TaskItem it = theLine.getItems().get(0);
+                for(int i = 0; i < 5; ++i) {
+                    Thread.sleep(4000);
+                    Platform.runLater(() -> it.setStartTime(it.getStartTime().plusSeconds(120)));
+                }
+                for(int i = 0; i < 5; ++i) {
+                    Thread.sleep(4000);
+                    Platform.runLater(() -> it.setExpectedDuration(it.getExpectedDuration() + 60));
+                }
+                Platform.runLater(() -> it.setName("New Task!"));
+            } catch (InterruptedException e) {
+                // ignore
+            }
+        });
+        t.start();
         // Add to application and render
         StackPane root = new StackPane();
         root.getChildren().add(tl);

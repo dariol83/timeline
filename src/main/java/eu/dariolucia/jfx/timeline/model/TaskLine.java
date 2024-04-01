@@ -1,12 +1,11 @@
 package eu.dariolucia.jfx.timeline.model;
 
+import javafx.beans.Observable;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
-
-import java.util.LinkedList;
 
 /**
  * A task line represents a line in a timeline.
@@ -15,7 +14,7 @@ public class TaskLine implements ITaskLine {
 
     private final SimpleStringProperty name = new SimpleStringProperty();
     private final SimpleStringProperty description = new SimpleStringProperty();
-    private final ObservableList<TaskItem> items = FXCollections.observableList(new LinkedList<>());
+    private final ObservableList<TaskItem> items = FXCollections.observableArrayList(param -> new Observable[] { param.startTimeProperty(), param.nameProperty(), param.expectedDurationProperty(), param.actualDurationProperty() });
 
     public TaskLine(String name) {
         this(name, null);
@@ -81,5 +80,18 @@ public class TaskLine implements ITaskLine {
 
     public ObservableList<TaskItem> getItems() {
         return items;
+    }
+
+    @Override
+    public Observable[] getObservableProperties() {
+        return new Observable[] { nameProperty(), descriptionProperty(), getItems() };
+    }
+
+    @Override
+    public String toString() {
+        return "TaskLine{" +
+                "name=" + getName() +
+                ", description=" + getDescription() +
+                '}';
     }
 }

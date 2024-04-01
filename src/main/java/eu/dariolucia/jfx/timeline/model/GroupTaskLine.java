@@ -1,12 +1,11 @@
 package eu.dariolucia.jfx.timeline.model;
 
+import javafx.beans.Observable;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
-
-import java.util.LinkedList;
 
 /**
  * A task group represents a group of task lines in a timeline.
@@ -15,7 +14,7 @@ public class GroupTaskLine implements ITaskLine {
 
     private final SimpleStringProperty name = new SimpleStringProperty();
     private final SimpleStringProperty description = new SimpleStringProperty();
-    private final ObservableList<ITaskLine> items = FXCollections.observableList(new LinkedList<>());
+    private final ObservableList<ITaskLine> items = FXCollections.observableArrayList(ITaskLine::getObservableProperties);
 
     public GroupTaskLine(String name) {
         this(name, null);
@@ -80,6 +79,11 @@ public class GroupTaskLine implements ITaskLine {
         double offset = nbLines * rc.getLineRowHeight()/2;
         gc.strokeText(getName(), - offset - textWidth/2, (2*rc.getTextPadding() + rc.getTextHeight())/2 + rc.getTextHeight()/2);// rc.getTextPadding() + rc.getTextHeight());
         gc.restore();
+    }
+
+    @Override
+    public Observable[] getObservableProperties() {
+        return new Observable[] { nameProperty(), descriptionProperty(), getItems() };
     }
 
     public SimpleStringProperty descriptionProperty() {

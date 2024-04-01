@@ -25,7 +25,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
-import java.util.LinkedList;
 
 public class Timeline extends GridPane {
 
@@ -42,7 +41,7 @@ public class Timeline extends GridPane {
     private final SimpleObjectProperty<Instant> viewPortStart = new SimpleObjectProperty<>();
 
     private final SimpleDoubleProperty taskPanelWidth = new SimpleDoubleProperty(TASK_PANEL_WIDTH_DEFAULT);
-    private final ObservableList<ITaskLine> lines = FXCollections.observableList(new LinkedList<>());
+    private final ObservableList<ITaskLine> lines = FXCollections.observableArrayList(ITaskLine::getObservableProperties);
 
     /* *****************************************************************************************
      * Internal variables
@@ -116,7 +115,19 @@ public class Timeline extends GridPane {
         Platform.runLater(this::recomputeArea);
     }
 
-    private void itemsUpdated(ListChangeListener.Change<? extends ITaskLine> a) {
+    private void itemsUpdated(ListChangeListener.Change<? extends ITaskLine> c) {
+        System.out.println("Change detected for timeline");
+        while(c.next()) {
+            if(c.wasAdded()) {
+                System.out.println("Added: " + c.getAddedSubList());
+            }
+            if(c.wasRemoved()) {
+                System.out.println("Removed: " + c.getRemoved());
+            }
+            if(c.wasUpdated()) {
+                System.out.println("Updated: " + c.getList());
+            }
+        }
         // Update vertical scroll
         updateVScrollbarSettings();
         // TODO: depending on the location of the change, some optimisation could be performed (e.g. do not refresh if

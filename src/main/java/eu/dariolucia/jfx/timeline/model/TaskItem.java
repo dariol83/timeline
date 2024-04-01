@@ -5,7 +5,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Text;
 
 import java.time.Instant;
 
@@ -101,5 +100,15 @@ public class TaskItem {
     private boolean isInViewPort(Instant start, Instant end, Instant viewPortStart, Instant viewPortEnd) {
         return (start.isAfter(viewPortStart) && start.isBefore(viewPortEnd)) || (end.isAfter(viewPortStart) && end.isBefore(viewPortEnd)) ||
                 (start.isBefore(viewPortStart) && end.isAfter(viewPortEnd));
+    }
+
+    @Override
+    public String toString() {
+        return "TaskItem{" +
+                "name=" + getName() +
+                ", startTime=" + getStartTime() +
+                ", expectedDuration=" + getExpectedDuration() +
+                ", actualDuration=" + getActualDuration() +
+                '}';
     }
 }
