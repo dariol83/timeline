@@ -26,6 +26,12 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 
+// TODO: Add features:
+//  - colors for task items
+//  - selection model, also with selection via mouse
+//  - cursors at given times
+//  - optional scrollbars
+//  - specific callbacks for mouse move, mouse click on canvas
 public class Timeline extends GridPane {
 
     public static final double TEXT_PADDING = 5;
