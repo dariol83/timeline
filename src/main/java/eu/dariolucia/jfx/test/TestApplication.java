@@ -2,6 +2,7 @@ package eu.dariolucia.jfx.test;
 
 import eu.dariolucia.jfx.timeline.Timeline;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
