@@ -8,6 +8,7 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.time.Instant;
@@ -93,15 +94,19 @@ public class TestApplication extends Application {
                     Thread.sleep(4000);
                     Platform.runLater(() -> it.setStartTime(it.getStartTime().plusSeconds(120)));
                 }
+                Platform.runLater(() -> tl.getSelectionModel().select(it));
                 for(int i = 0; i < 5; ++i) {
                     Thread.sleep(4000);
                     Platform.runLater(() -> it.setExpectedDuration(it.getExpectedDuration() + 60));
+                    Platform.runLater(() -> it.setActualDuration(it.getActualDuration() + 20));
                 }
+                Platform.runLater(() -> it.setTaskBackgroundColor(Color.RED));
                 Platform.runLater(() -> it.setName("New Task!"));
             } catch (InterruptedException e) {
                 // ignore
             }
         });
+        t.setDaemon(true);
         t.start();
         // Add to application and render
         StackPane root = new StackPane();

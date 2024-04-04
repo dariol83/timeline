@@ -3,9 +3,13 @@ package eu.dariolucia.jfx.timeline.model;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * A task line represents a line in a timeline.
@@ -14,7 +18,10 @@ public class TaskLine implements ITaskLine {
 
     private final SimpleStringProperty name = new SimpleStringProperty();
     private final SimpleStringProperty description = new SimpleStringProperty();
-    private final ObservableList<TaskItem> items = FXCollections.observableArrayList(param -> new Observable[] { param.startTimeProperty(), param.nameProperty(), param.expectedDurationProperty(), param.actualDurationProperty() });
+    private final ObservableList<TaskItem> items = FXCollections.observableArrayList(param -> new Observable[] {
+            param.startTimeProperty(), param.nameProperty(), param.expectedDurationProperty(), param.actualDurationProperty(),
+            param.taskBackgroundColorProperty(), param.taskTextColorProperty() });
+    private ITaskLine parent;
 
     public TaskLine(String name) {
         this(name, null);
@@ -23,6 +30,18 @@ public class TaskLine implements ITaskLine {
     public TaskLine(String name, String description) {
         this.name.set(name);
         this.description.set(description);
+        this.items.addListener(this::listUpdated);
+    }
+
+    private void listUpdated(ListChangeListener.Change<? extends TaskItem> change) {
+        while(change.next()) {
+            if(change.wasAdded()) {
+                change.getAddedSubList().forEach(ti -> ti.setParent(this));
+            }
+            if(change.wasRemoved()) {
+                change.getRemoved().forEach(ti -> ti.setParent(null));
+            }
+        }
     }
 
     public String getName() {
@@ -64,7 +83,7 @@ public class TaskLine implements ITaskLine {
         gc.strokeRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, rc.getLineRowHeight());
         // Render text
         gc.setStroke(Color.BLACK);
-        gc.strokeText(getName(), taskLineXStart + rc.getTextPadding(), taskLineYStart + rc.getLineRowHeight() - rc.getTextHeight(), rc.getTaskPanelWidth() - 2 * rc.getTextPadding() - taskLineXStart);
+        gc.strokeText(getName(), taskLineXStart + rc.getTextPadding(), taskLineYStart + rc.getLineRowHeight()/2 + rc.getTextHeight()/2, rc.getTaskPanelWidth() - 2 * rc.getTextPadding() - taskLineXStart);
         // Render bottom line
         gc.setStroke(Color.LIGHTGRAY);
         gc.strokeLine(rc.getTaskPanelWidth(), taskLineYStart + rc.getLineRowHeight(), rc.toX(rc.getViewPortEnd()), taskLineYStart + rc.getLineRowHeight());
@@ -85,6 +104,21 @@ public class TaskLine implements ITaskLine {
     @Override
     public Observable[] getObservableProperties() {
         return new Observable[] { nameProperty(), descriptionProperty(), getItems() };
+    }
+
+    @Override
+    public ITaskLine getParent() {
+        return parent;
+    }
+
+    @Override
+    public List<TaskItem> getTaskItems() {
+        return Collections.unmodifiableList(this.items);
+    }
+
+    @Override
+    public void setParent(ITaskLine parent) {
+        this.parent = parent;
     }
 
     @Override

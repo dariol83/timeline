@@ -15,9 +15,10 @@ public final class RenderingContext {
     private final double textPadding;
     private final Instant viewPortStart;
     private final Instant viewPortEnd;
+    private final TaskItem selectedTaskItem;
 
     public RenderingContext(double taskPanelWidth, double lineRowHeight, double textHeight, double textPadding, Instant viewPortStart, Instant viewPortEnd,
-                            ToDoubleFunction<Instant> instant2xFunction) {
+                            ToDoubleFunction<Instant> instant2xFunction, TaskItem selectedTaskItem) {
         this.taskPanelWidth = taskPanelWidth;
         this.lineRowHeight = lineRowHeight;
         this.textHeight = textHeight;
@@ -25,6 +26,7 @@ public final class RenderingContext {
         this.viewPortEnd = viewPortEnd;
         this.textPadding = textPadding;
         this.instant2xFunction = instant2xFunction;
+        this.selectedTaskItem = selectedTaskItem;
     }
 
     public double getTaskPanelWidth() {
@@ -53,6 +55,10 @@ public final class RenderingContext {
 
     public Instant getViewPortEnd() {
         return this.viewPortEnd;
+    }
+
+    public TaskItem getSelectedTaskItem() {
+        return selectedTaskItem;
     }
 
     public double getTextWidth(GraphicsContext gc, String text) {
