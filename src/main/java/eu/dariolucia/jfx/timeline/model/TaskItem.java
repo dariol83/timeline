@@ -1,11 +1,29 @@
+/*
+ * Copyright (c) 2024 Dario Lucia (https://www.dariolucia.eu)
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
 package eu.dariolucia.jfx.timeline.model;
 
+import eu.dariolucia.jfx.timeline.Timeline;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.effect.DropShadow;
-import javafx.scene.effect.Effect;
 import javafx.scene.paint.Color;
 
 import java.time.Instant;
@@ -20,8 +38,13 @@ public class TaskItem {
     private final SimpleLongProperty actualDuration = new SimpleLongProperty();
     private final SimpleObjectProperty<Color> taskBackgroundColor = new SimpleObjectProperty<>(Color.CYAN);
     private final SimpleObjectProperty<Color> taskTextColor = new SimpleObjectProperty<>(Color.BLACK);
-
     private TaskLine parent;
+    private Timeline timeline;
+
+    /* *****************************************************************************************
+     * Internal variables
+     * *****************************************************************************************/
+    private BoundingBox lastRenderedBounds;
 
     public TaskItem(String name, Instant startTime, long expectedDuration) {
         this(name, startTime, expectedDuration, 0);
@@ -33,6 +56,14 @@ public class TaskItem {
 
     void setParent(TaskLine parent) {
         this.parent = parent;
+    }
+
+    public Timeline getTimeline() {
+        return timeline;
+    }
+
+    public void setTimeline(Timeline timeline) {
+        this.timeline = timeline;
     }
 
     public TaskItem(String name, Instant startTime, long expectedDuration, long actualDuration) {
@@ -115,7 +146,6 @@ public class TaskItem {
     }
 
     public void render(GraphicsContext gc, double taskLineYStart, RenderingContext rc) {
-        // TODO: compute as part of update and not as part of the rendering?
         Instant endTimeExp = getStartTime().plusSeconds(getExpectedDuration());
         Instant endTimeAct = getActualDuration() >= 0 ? getStartTime().plusSeconds(getActualDuration()) : null;
         Instant endTime = endTimeAct != null && endTimeAct.isAfter(endTimeExp) ? endTimeAct : endTimeExp;
@@ -128,29 +158,49 @@ public class TaskItem {
             double endX = rc.toX(endTimeExp);
             // Render now expected
             boolean isSelected = rc.getSelectedTaskItem() == this;
-            Color toRender = getTaskBackgroundColor();
-            gc.setFill(toRender);
-            gc.setStroke(toRender.darker());
+            Color bgColor = getTaskBackgroundColor();
+            Color borderColor = isSelected ? Color.BLACK : bgColor.darker();
+            gc.setFill(bgColor);
+            gc.setStroke(borderColor);
             if(isSelected) {
-                gc.setEffect(new DropShadow());
+                gc.setLineWidth(2);
             }
-            gc.fillRect(startX, startY, endX - startX, rc.getLineRowHeight() - 2*rc.getTextPadding());
-            gc.setEffect(null);
-            // Selected tasks have larger stroke
-            gc.strokeRect(startX, startY, endX - startX, rc.getLineRowHeight() - 2*rc.getTextPadding());
-            // Restore stroke width
+            double taskHeight = rc.getLineRowHeight() - 2*rc.getTextPadding();
+            gc.fillRect(startX, startY, endX - startX, taskHeight);
+            // Selected tasks have black border and thicker line
+            gc.strokeRect(startX, startY, endX - startX, taskHeight);
+            gc.setLineWidth(1);
+            // Remember rendering box in pixel coordinates
+            this.lastRenderedBounds = new BoundingBox(startX, startY, endX - startX, taskHeight);
+            // Restore effect
             gc.setEffect(null);
             // Render now actual
             if(endTimeAct != null) {
                 double actualEndX = rc.toX(endTimeAct);
-                gc.setFill(toRender.darker());
-                gc.fillRect(startX, startY + rc.getTextPadding(), actualEndX - startX, rc.getLineRowHeight() - 4*rc.getTextPadding());
+                double actualStartX = startX + 1 + (isSelected ? 1 : 0); // Account for border and selection
+                gc.setFill(bgColor.darker());
+                gc.fillRect(actualStartX, startY + rc.getTextPadding(), actualEndX - actualStartX, rc.getLineRowHeight() - 4*rc.getTextPadding());
             }
             gc.setStroke(getTaskTextColor());
             // Render in the middle
             double textWidth = rc.getTextWidth(gc, getName());
             gc.strokeText(getName(), startX + (endX - startX)/2 - textWidth/2, startY - rc.getTextPadding() + rc.getLineRowHeight()/2 + rc.getTextHeight()/2);
         }
+    }
+
+    public boolean contains(double x, double y) {
+        return this.lastRenderedBounds != null && this.lastRenderedBounds.contains(x, y);
+    }
+
+    public boolean isRendered() {
+        return this.lastRenderedBounds != null;
+    }
+
+    public boolean contains(Instant time) {
+        long timeSeconds = time.getEpochSecond();
+        long startTimeSecond = getStartTime().getEpochSecond();
+        long endTimeSecond = getStartTime().plusSeconds(Math.max(getActualDuration(), getExpectedDuration())).getEpochSecond();
+        return timeSeconds >= startTimeSecond && timeSeconds <= endTimeSecond;
     }
 
     private boolean isInViewPort(Instant start, Instant end, Instant viewPortStart, Instant viewPortEnd) {
@@ -166,5 +216,9 @@ public class TaskItem {
                 ", expectedDuration=" + getExpectedDuration() +
                 ", actualDuration=" + getActualDuration() +
                 '}';
+    }
+
+    public void noRender() {
+        this.lastRenderedBounds = null;
     }
 }

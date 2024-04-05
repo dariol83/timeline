@@ -1,9 +1,25 @@
+/*
+ * Copyright (c) 2024 Dario Lucia (https://www.dariolucia.eu)
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
 package eu.dariolucia.jfx.timeline;
 
-import eu.dariolucia.jfx.timeline.model.ITaskLine;
-import eu.dariolucia.jfx.timeline.model.RenderingContext;
-import eu.dariolucia.jfx.timeline.model.TaskItem;
+import eu.dariolucia.jfx.timeline.model.*;
 import javafx.application.Platform;
+import javafx.beans.Observable;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -16,6 +32,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.SingleSelectionModel;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -29,12 +47,10 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 // TODO: Add features:
-//  - selection model, also with selection via mouse
-//  - cursors at given times
-//  - optional scrollbars
 //  - specific callbacks for mouse move, mouse click on canvas
 public class Timeline extends GridPane {
 
@@ -54,7 +70,15 @@ public class Timeline extends GridPane {
     private final SimpleLongProperty viewPortDuration = new SimpleLongProperty();
     private final SimpleObjectProperty<Instant> viewPortStart = new SimpleObjectProperty<>();
     private final SimpleDoubleProperty taskPanelWidth = new SimpleDoubleProperty(TASK_PANEL_WIDTH_DEFAULT);
-    private final ObservableList<ITaskLine> lines = FXCollections.observableArrayList(ITaskLine::getObservableProperties);
+    private final SimpleObjectProperty<Color> backgroundColor = new SimpleObjectProperty<>(Color.WHITE);
+    private final SimpleBooleanProperty scrollbarsVisible = new SimpleBooleanProperty();
+    private final ObservableList<ITaskLine> items = FXCollections.observableArrayList(ITaskLine::getObservableProperties);
+    private final ObservableList<TimeCursor> timeCursors = FXCollections.observableArrayList(timeCursor -> new Observable[] {
+            timeCursor.colorProperty(), timeCursor.timeProperty() });
+    private final ObservableList<TimeInterval> timeIntervals = FXCollections.observableArrayList(timeInterval -> new Observable[] {
+            timeInterval.colorProperty(), timeInterval.startTimeProperty(), timeInterval.endTimeProperty(), timeInterval.foregroundProperty() });
+    private final SimpleBooleanProperty enableMouseSelection = new SimpleBooleanProperty(true);
+    private final Label labelCornerfiller;
 
     /* *****************************************************************************************
      * Internal variables
@@ -90,20 +114,12 @@ public class Timeline extends GridPane {
         // Create the horizontal scrollbar
         this.horizontalScroll = new ScrollBar();
         this.horizontalScroll.setOrientation(Orientation.HORIZONTAL);
-        getChildren().add(this.horizontalScroll);
-        GridPane.setRowIndex(this.horizontalScroll, 1);
-        GridPane.setColumnIndex(this.horizontalScroll, 0);
-        // Create the horizontal scrollbar
+        // Create the vertical scrollbar
         this.verticalScroll = new ScrollBar();
         this.verticalScroll.setOrientation(Orientation.VERTICAL);
-        getChildren().add(this.verticalScroll);
-        GridPane.setRowIndex(this.verticalScroll, 0);
-        GridPane.setColumnIndex(this.verticalScroll, 1);
         // Create a fill label
-        Label filler = new Label("");
-        getChildren().add(filler);
-        GridPane.setRowIndex(filler, 1);
-        GridPane.setColumnIndex(filler, 1);
+        this.labelCornerfiller = new Label("");
+
 
         // Set horizontal scrollbar limits (fixed)
         this.horizontalScroll.setMin(0);
@@ -123,16 +139,162 @@ public class Timeline extends GridPane {
         // Add listener when start time is updated (viewport update -> update scrollbar)
         viewPortStartProperty().addListener((e,o,n) -> recomputeViewport());
         // Add listener when task panel width is updated
-        taskPanelWidthProperty().addListener((e,o,n) -> refresh());
+        taskPanelWidthProperty().addListener((e,o,n) -> recomputeViewport());
+        // Add listener when background color is updated
+        backgroundColorProperty().addListener((e,o,n) -> refresh());
+        // Add listener when scrollbar visible is updated
+        scrollbarsVisibleProperty().addListener((e,o,n) -> scrollbarsStatusChanged());
         // Add listener to changes to the observable list structure (add, remove)
-        this.lines.addListener(this::itemsUpdated);
+        this.items.addListener(this::itemsUpdated);
+        // Add listener to changes to the observable list of time cursors
+        this.timeCursors.addListener(this::timeCursorsUpdated);
+        // Add listener to changes to the observable list of time intevals
+        this.timeIntervals.addListener(this::timeIntervalsUpdated);
 
         // Create the selection model
         this.selectionModel = new TimelineSelectionModel(this);
         this.selectionModel.selectedItemProperty().addListener((e,o,n) -> refresh());
 
+        // Add listener for task item selection
+        this.imageArea.setOnMouseClicked(this::mouseClickedAction);
+        this.imageArea.setOnScroll(this::mouseScrolledAction);
+
         // Perform initial drawing
         Platform.runLater(this::recomputeArea);
+    }
+
+    private void scrollbarsStatusChanged() {
+        if(this.horizontalScroll.getParent() == null) {
+            addScrollbars();
+        } else {
+            removeScrollbars();
+        }
+        // At the end, recompute area
+        recomputeArea();
+    }
+
+    private void removeScrollbars() {
+        getChildren().remove(this.horizontalScroll);
+        getChildren().remove(this.verticalScroll);
+        getChildren().remove(this.labelCornerfiller);
+    }
+
+    private void addScrollbars() {
+        getChildren().add(this.horizontalScroll);
+        GridPane.setRowIndex(this.horizontalScroll, 1);
+        GridPane.setColumnIndex(this.horizontalScroll, 0);
+        getChildren().add(this.verticalScroll);
+        GridPane.setRowIndex(this.verticalScroll, 0);
+        GridPane.setColumnIndex(this.verticalScroll, 1);
+        getChildren().add(labelCornerfiller);
+        GridPane.setRowIndex(labelCornerfiller, 1);
+        GridPane.setColumnIndex(labelCornerfiller, 1);
+    }
+
+    private void mouseScrolledAction(ScrollEvent scrollEvent) {
+        if(scrollEvent.getDeltaY() < 0) {
+            this.verticalScroll.increment();
+        } else {
+            this.verticalScroll.decrement();
+        }
+    }
+
+    private void timeCursorsUpdated(ListChangeListener.Change<? extends TimeCursor> c) {
+        boolean refreshNeeded = false;
+        while(c.next()) {
+            if(refreshNeeded) {
+                break; // No point to go ahead
+            }
+            if(c.wasAdded()) {
+                for(TimeCursor tc : c.getAddedSubList()) {
+                    if(inViewport(tc.getTime())) {
+                        refreshNeeded = true;
+                        break;
+                    }
+                }
+            }
+            if(c.wasRemoved()) {
+                for(TimeCursor tc : c.getRemoved()) {
+                    if(inViewport(tc.getTime())) {
+                        refreshNeeded = true;
+                        break;
+                    }
+                }
+            }
+            if(c.wasUpdated()) {
+                for(TimeCursor tc : c.getList()) {
+                    if(inViewport(tc.getTime())) {
+                        refreshNeeded = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if(refreshNeeded) {
+            // Repaint
+            refresh();
+        }
+    }
+
+    private void timeIntervalsUpdated(ListChangeListener.Change<? extends TimeInterval> c) {
+        boolean refreshNeeded = false;
+        while(c.next()) {
+            if(refreshNeeded) {
+                break; // No point to go ahead
+            }
+            if(c.wasAdded()) {
+                for(TimeInterval tc : c.getAddedSubList()) {
+                    if(inViewport(tc.getStartTime(), tc.getEndTime())) {
+                        refreshNeeded = true;
+                        break;
+                    }
+                }
+            }
+            if(c.wasRemoved()) {
+                for(TimeInterval tc : c.getRemoved()) {
+                    if(inViewport(tc.getStartTime(), tc.getEndTime())) {
+                        refreshNeeded = true;
+                        break;
+                    }
+                }
+            }
+            if(c.wasUpdated()) {
+                for(TimeInterval tc : c.getList()) {
+                    if(inViewport(tc.getStartTime(), tc.getEndTime())) {
+                        refreshNeeded = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if(refreshNeeded) {
+            // Repaint
+            refresh();
+        }
+    }
+
+    private void mouseClickedAction(MouseEvent mouseEvent) {
+        // Get X,Y coordinates and check which task item is affected
+        TaskItem selectedTaskItem = null;
+        for (ITaskLine tl : this.items) {
+            if (tl.contains(mouseEvent.getX(), mouseEvent.getY())) {
+                for (TaskItem ti : tl.getTaskItems()) {
+                    if (ti.contains(mouseEvent.getX(), mouseEvent.getY())) {
+                        selectedTaskItem = ti;
+                        break;
+                    }
+                }
+            }
+            if (selectedTaskItem != null) {
+                break;
+            }
+        }
+        // Update selection
+        if(isEnableMouseSelection()) {
+            if (!Objects.equals(selectedTaskItem, this.selectionModel.getSelectedItem())) {
+                this.selectionModel.select(selectedTaskItem);
+            }
+        }
     }
 
     private void itemsUpdated(ListChangeListener.Change<? extends ITaskLine> c) {
@@ -140,11 +302,13 @@ public class Timeline extends GridPane {
         while(c.next()) {
             if(c.wasAdded()) {
                 refreshNeeded = true;
+                c.getAddedSubList().forEach(tl -> tl.setTimeline(this));
             }
             if(c.wasRemoved()) {
                 refreshNeeded = true;
+                c.getRemoved().forEach(tl -> tl.setTimeline(null));
             }
-            if(c.wasUpdated()) {
+            if(!refreshNeeded && c.wasUpdated()) {
                 refreshNeeded |= isChangeInViewport(c);
             }
         }
@@ -201,7 +365,7 @@ public class Timeline extends GridPane {
 
     private int getTotalNbOfLines() {
         int nbLines = 0;
-        for(ITaskLine tl : this.lines) {
+        for(ITaskLine tl : this.items) {
             nbLines += tl.getNbOfLines();
         }
         return nbLines;
@@ -331,15 +495,51 @@ public class Timeline extends GridPane {
         drawBackground(gc);
         // Draw empty side panel
         drawEmptySidePanel(gc);
+        // Draw time intervals in background
+        drawTimeIntervals(gc, false);
         // Draw task lines
         drawTaskLines(gc, rc);
         // Draw calendar headers: need conversion functions Instant -> x on screen
         drawHeaders(gc);
+        // Draw time intervals in foreground
+        drawTimeIntervals(gc, true);
+        // Draw cursors
+        drawCursors(gc);
+    }
+
+    private void drawTimeIntervals(GraphicsContext gc, boolean foreground) {
+        for(TimeInterval tc : this.timeIntervals) {
+            if(tc.isForeground() == foreground) {
+                if (inViewport(tc.getStartTime(), tc.getEndTime())) {
+                    double startX = tc.getStartTime() == null || tc.getStartTime().isBefore(getViewPortStart()) ? getTaskPanelWidth() : toX(tc.getStartTime());
+                    double endX = tc.getEndTime() == null || tc.getEndTime().isAfter(getViewPortStart().plusSeconds(getViewPortDuration())) ? this.imageArea.getWidth() : toX(tc.getEndTime());
+                    gc.setFill(tc.getColor());
+                    gc.fillRect(startX, this.headerRowHeight, endX - startX, this.imageArea.getHeight());
+                }
+            }
+        }
+    }
+
+    private void drawCursors(GraphicsContext gc) {
+        for(TimeCursor tc : this.timeCursors) {
+            if(inViewport(tc.getTime())) {
+                double startX = toX(tc.getTime());
+                gc.setStroke(tc.getColor());
+                gc.setLineWidth(1);
+                gc.setLineDashes();
+                gc.strokeLine(startX - 4, this.headerRowHeight + 1, startX + 4, this.headerRowHeight + 1);
+                gc.setLineWidth(2);
+                gc.setLineDashes(4, 4);
+                gc.strokeLine(startX, this.headerRowHeight + 2, startX, this.imageArea.getHeight());
+            }
+        }
+        gc.setLineWidth(1);
+        gc.setLineDashes();
     }
 
     private void drawBackground(GraphicsContext gc) {
         gc.clearRect(0, 0, this.imageArea.getWidth(), this.imageArea.getHeight());
-        gc.setFill(Color.WHITE); // TODO: property
+        gc.setFill(getBackgroundColor());
         gc.fillRect(0, 0, this.imageArea.getWidth(), this.imageArea.getHeight());
     }
 
@@ -352,7 +552,7 @@ public class Timeline extends GridPane {
         int startLine = -1;
         int endLine = -1;
         int i = 0;
-        for(ITaskLine line : this.lines) {
+        for(ITaskLine line : this.items) {
             // Compute the Y span of the rendering for this task line
             double taskLineYStart = processedLines * this.lineRowHeight;
             processedLines += line.getNbOfLines();
@@ -365,17 +565,20 @@ public class Timeline extends GridPane {
                 taskLineYStart += this.headerRowHeight;
                 // Ask the rendering of the timeline
                 line.render(gc, 0, taskLineYStart, rc);
-                // Remember
+                // Remember at this level what you rendered
                 endLine = i;
                 if(startLine == -1) {
                     startLine = i;
                 }
+            } else {
+                // Inform that this taskline is not rendered
+                line.noRender();
             }
             ++i;
             // Check if end line was found
-            if(taskLineYEnd > yEnd) {
-                break;
-            }
+            // if(taskLineYEnd > yEnd) {
+            //     break;
+            // }
         }
         // Rendering completed
         this.currentYViewportItems = new int[] { startLine, endLine };
@@ -472,6 +675,23 @@ public class Timeline extends GridPane {
         return percentage * (this.imageArea.getWidth() - getTaskPanelWidth()) + getTaskPanelWidth();
     }
 
+    public boolean inViewport(Instant time) {
+        long startTimeSecs = getViewPortStart().getEpochSecond();
+        long endTimeSecs = startTimeSecs + getViewPortDuration();
+        return time.getEpochSecond() >= startTimeSecs && time.getEpochSecond() <= endTimeSecs;
+    }
+
+    public boolean inViewport(Instant startTime, Instant endTime) {
+        long startTimeSecs = getViewPortStart().getEpochSecond();
+        long endTimeSecs = startTimeSecs + getViewPortDuration();
+        long intervalStartTimeSecs = startTime == null ? Long.MIN_VALUE : startTime.getEpochSecond();
+        long intervalEndTimeSecs = endTime == null ? Long.MAX_VALUE : endTime.getEpochSecond();
+
+        return (intervalStartTimeSecs >= startTimeSecs && intervalStartTimeSecs <= endTimeSecs) ||
+                (intervalEndTimeSecs >= startTimeSecs && intervalEndTimeSecs <= endTimeSecs) ||
+                (intervalStartTimeSecs <= startTimeSecs && intervalEndTimeSecs >= endTimeSecs);
+    }
+
     public Instant getMinTime() {
         return minTime.get();
     }
@@ -520,8 +740,16 @@ public class Timeline extends GridPane {
         this.viewPortStart.set(viewPortStart);
     }
 
-    public ObservableList<ITaskLine> getLines() {
-        return lines;
+    public ObservableList<ITaskLine> getItems() {
+        return items;
+    }
+
+    public ObservableList<TimeCursor> getTimeCursors() {
+        return timeCursors;
+    }
+
+    public ObservableList<TimeInterval> getTimeIntervals() {
+        return timeIntervals;
     }
 
     public double getTaskPanelWidth() {
@@ -538,7 +766,7 @@ public class Timeline extends GridPane {
 
     public List<TaskItem> getTaskItemList() {
         if(this.flatTaskItem == null) {
-            this.flatTaskItem = this.lines.stream().flatMap(l -> l.getTaskItems().stream()).collect(Collectors.toList());
+            this.flatTaskItem = this.items.stream().flatMap(l -> l.getTaskItems().stream()).collect(Collectors.toList());
         }
         return this.flatTaskItem;
     }
@@ -554,6 +782,42 @@ public class Timeline extends GridPane {
 
     public SingleSelectionModel<TaskItem> getSelectionModel() {
         return selectionModel;
+    }
+
+    public boolean isEnableMouseSelection() {
+        return enableMouseSelection.get();
+    }
+
+    public SimpleBooleanProperty enableMouseSelectionProperty() {
+        return enableMouseSelection;
+    }
+
+    public void setEnableMouseSelection(boolean enableMouseSelection) {
+        this.enableMouseSelection.set(enableMouseSelection);
+    }
+
+    public Color getBackgroundColor() {
+        return backgroundColor.get();
+    }
+
+    public SimpleObjectProperty<Color> backgroundColorProperty() {
+        return backgroundColor;
+    }
+
+    public void setBackgroundColor(Color backgroundColor) {
+        this.backgroundColor.set(backgroundColor);
+    }
+
+    public boolean isScrollbarsVisible() {
+        return scrollbarsVisible.get();
+    }
+
+    public SimpleBooleanProperty scrollbarsVisibleProperty() {
+        return scrollbarsVisible;
+    }
+
+    public void setScrollbarsVisible(boolean scrollbarsVisible) {
+        this.scrollbarsVisible.set(scrollbarsVisible);
     }
 
     private static class TimelineSelectionModel extends SingleSelectionModel<TaskItem> {

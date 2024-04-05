@@ -1,9 +1,23 @@
+/*
+ * Copyright (c) 2024 Dario Lucia (https://www.dariolucia.eu)
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
 package eu.dariolucia.jfx.test;
 
 import eu.dariolucia.jfx.timeline.Timeline;
-import eu.dariolucia.jfx.timeline.model.GroupTaskLine;
-import eu.dariolucia.jfx.timeline.model.TaskItem;
-import eu.dariolucia.jfx.timeline.model.TaskLine;
+import eu.dariolucia.jfx.timeline.model.*;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
@@ -37,21 +51,21 @@ public class TestApplication extends Application {
         theLine.getItems().add(new TaskItem("Task 1", currentTime.plusSeconds(30), 98, 0));
         theLine.getItems().add(new TaskItem("Task 2", currentTime.plusSeconds(130), 28, 0));
         theLine.getItems().add(new TaskItem("Task 3", currentTime.plusSeconds(190), 5, 0));
-        tl.getLines().add(theLine);
+        tl.getItems().add(theLine);
 
         {
             TaskLine taskLine = new TaskLine("Task Line 2", "Second task line");
             taskLine.getItems().add(new TaskItem("Task 1", currentTime.plusSeconds(600), 140, 0));
             taskLine.getItems().add(new TaskItem("Task 2", currentTime.plusSeconds(0), 77, 0));
             taskLine.getItems().add(new TaskItem("Task 3", currentTime.plusSeconds(920), 7000, 0));
-            tl.getLines().add(taskLine);
+            tl.getItems().add(taskLine);
         }
         {
             TaskLine taskLine = new TaskLine("Task Line 3 mega long task line name", "Third task line");
             taskLine.getItems().add(new TaskItem("Task 1 with a super long name that cannot fit in the label", currentTime.plusSeconds(600), 140, 0));
             taskLine.getItems().add(new TaskItem("Task 2", currentTime.plusSeconds(0), 77, 0));
             taskLine.getItems().add(new TaskItem("Task 3", currentTime.plusSeconds(920), 7000, 0));
-            tl.getLines().add(taskLine);
+            tl.getItems().add(taskLine);
         }
         {
             GroupTaskLine group = new GroupTaskLine("Group 1");
@@ -72,31 +86,44 @@ public class TestApplication extends Application {
 
             group.getItems().addAll(taskLine, taskLine2, taskLine3);
 
-            tl.getLines().add(group);
+            tl.getItems().add(group);
         }
         for(int i = 4; i < 50; ++i) {
             TaskLine taskLine = new TaskLine("Task Line " + i, i + "th task line");
             taskLine.getItems().add(new TaskItem("Task 1 (" + i + ")", currentTime.plusSeconds(600), 140, 0));
             taskLine.getItems().add(new TaskItem("Task 2 (" + i + ")", currentTime.plusSeconds(0), 77, 0));
             taskLine.getItems().add(new TaskItem("Task 3 (" + i + ")", currentTime.plusSeconds(920), 7000, 0));
-            tl.getLines().add(taskLine);
+            tl.getItems().add(taskLine);
         }
         tl.setTaskPanelWidth(200);
 
         theLine.setName("Name is changed!sads ad as");
+        Platform.runLater(() -> tl.getTimeCursors().add(new TimeCursor(theLine.getItems().get(0).getStartTime().plusSeconds(50))));
+        Platform.runLater(() -> tl.getTimeIntervals().add(new TimeInterval(theLine.getItems().get(0).getStartTime().plusSeconds(120),
+                theLine.getItems().get(0).getStartTime().plusSeconds(220))));
+        TimeInterval timeInterval = new TimeInterval(theLine.getItems().get(0).getStartTime().plusSeconds(520),
+                theLine.getItems().get(0).getStartTime().plusSeconds(620));
+        timeInterval.setForeground(true);
+        Platform.runLater(() -> tl.getTimeIntervals().add(timeInterval));
 
         // Launch a thread that does some changes
         Thread t = new Thread(() -> {
             try {
-                Thread.sleep(4000);
+                Thread.sleep(2000);
+                Platform.runLater(() -> tl.setScrollbarsVisible(true));
+                Thread.sleep(2000);
+                Platform.runLater(() -> tl.setScrollbarsVisible(false));
+                Thread.sleep(2000);
+                Platform.runLater(() -> tl.setScrollbarsVisible(true));
+
                 TaskItem it = theLine.getItems().get(0);
-                for(int i = 0; i < 5; ++i) {
-                    Thread.sleep(4000);
-                    Platform.runLater(() -> it.setStartTime(it.getStartTime().plusSeconds(120)));
+                for(int i = 0; i < 3; ++i) {
+                    Thread.sleep(3000);
+                    Platform.runLater(() -> it.setStartTime(it.getStartTime().plusSeconds(220)));
                 }
                 Platform.runLater(() -> tl.getSelectionModel().select(it));
-                for(int i = 0; i < 5; ++i) {
-                    Thread.sleep(4000);
+                for(int i = 0; i < 3; ++i) {
+                    Thread.sleep(3000);
                     Platform.runLater(() -> it.setExpectedDuration(it.getExpectedDuration() + 60));
                     Platform.runLater(() -> it.setActualDuration(it.getActualDuration() + 20));
                 }
