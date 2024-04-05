@@ -202,22 +202,19 @@ public class Timeline extends GridPane {
     private void timeCursorsUpdated(ListChangeListener.Change<? extends TimeCursor> c) {
         boolean refreshNeeded = false;
         while(c.next()) {
-            if(refreshNeeded) {
-                break; // No point to go ahead
-            }
             if(c.wasAdded()) {
                 for(TimeCursor tc : c.getAddedSubList()) {
+                    tc.setTimeline(this);
                     if(inViewport(tc.getTime())) {
                         refreshNeeded = true;
-                        break;
                     }
                 }
             }
             if(c.wasRemoved()) {
                 for(TimeCursor tc : c.getRemoved()) {
+                    tc.setTimeline(null);
                     if(inViewport(tc.getTime())) {
                         refreshNeeded = true;
-                        break;
                     }
                 }
             }
@@ -239,22 +236,19 @@ public class Timeline extends GridPane {
     private void timeIntervalsUpdated(ListChangeListener.Change<? extends TimeInterval> c) {
         boolean refreshNeeded = false;
         while(c.next()) {
-            if(refreshNeeded) {
-                break; // No point to go ahead
-            }
             if(c.wasAdded()) {
                 for(TimeInterval tc : c.getAddedSubList()) {
+                    tc.setTimeline(this);
                     if(inViewport(tc.getStartTime(), tc.getEndTime())) {
                         refreshNeeded = true;
-                        break;
                     }
                 }
             }
             if(c.wasRemoved()) {
                 for(TimeInterval tc : c.getRemoved()) {
+                    tc.setTimeline(null);
                     if(inViewport(tc.getStartTime(), tc.getEndTime())) {
                         refreshNeeded = true;
-                        break;
                     }
                 }
             }
@@ -290,10 +284,8 @@ public class Timeline extends GridPane {
             }
         }
         // Update selection
-        if(isEnableMouseSelection()) {
-            if (!Objects.equals(selectedTaskItem, this.selectionModel.getSelectedItem())) {
-                this.selectionModel.select(selectedTaskItem);
-            }
+        if(isEnableMouseSelection() && !Objects.equals(selectedTaskItem, this.selectionModel.getSelectedItem())) {
+            this.selectionModel.select(selectedTaskItem);
         }
     }
 
@@ -509,13 +501,11 @@ public class Timeline extends GridPane {
 
     private void drawTimeIntervals(GraphicsContext gc, boolean foreground) {
         for(TimeInterval tc : this.timeIntervals) {
-            if(tc.isForeground() == foreground) {
-                if (inViewport(tc.getStartTime(), tc.getEndTime())) {
-                    double startX = tc.getStartTime() == null || tc.getStartTime().isBefore(getViewPortStart()) ? getTaskPanelWidth() : toX(tc.getStartTime());
-                    double endX = tc.getEndTime() == null || tc.getEndTime().isAfter(getViewPortStart().plusSeconds(getViewPortDuration())) ? this.imageArea.getWidth() : toX(tc.getEndTime());
-                    gc.setFill(tc.getColor());
-                    gc.fillRect(startX, this.headerRowHeight, endX - startX, this.imageArea.getHeight());
-                }
+            if(tc.isForeground() == foreground && inViewport(tc.getStartTime(), tc.getEndTime())) {
+                double startX = tc.getStartTime() == null || tc.getStartTime().isBefore(getViewPortStart()) ? getTaskPanelWidth() : toX(tc.getStartTime());
+                double endX = tc.getEndTime() == null || tc.getEndTime().isAfter(getViewPortStart().plusSeconds(getViewPortDuration())) ? this.imageArea.getWidth() : toX(tc.getEndTime());
+                gc.setFill(tc.getColor());
+                gc.fillRect(startX, this.headerRowHeight, endX - startX, this.imageArea.getHeight());
             }
         }
     }
@@ -575,10 +565,6 @@ public class Timeline extends GridPane {
                 line.noRender();
             }
             ++i;
-            // Check if end line was found
-            // if(taskLineYEnd > yEnd) {
-            //     break;
-            // }
         }
         // Rendering completed
         this.currentYViewportItems = new int[] { startLine, endLine };
@@ -777,7 +763,7 @@ public class Timeline extends GridPane {
     }
 
     private long getTaskItemCount() {
-        return getTaskItemList().size(); // this.lines.stream().mapToLong(l -> l.getTaskItems().size()).sum();
+        return getTaskItemList().size();
     }
 
     public SingleSelectionModel<TaskItem> getSelectionModel() {

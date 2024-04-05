@@ -17,13 +17,11 @@
 package eu.dariolucia.jfx.timeline.model;
 
 import eu.dariolucia.jfx.timeline.Timeline;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.paint.Color;
 
 import java.time.Instant;
