@@ -18,6 +18,7 @@ package eu.dariolucia.jfx.timeline.model;
 
 import eu.dariolucia.jfx.timeline.Timeline;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
 import java.time.Instant;
@@ -65,6 +66,19 @@ public class TimeCursor {
 
     public void setColor(Color color) {
         this.color.set(color);
+    }
+
+    public void render(GraphicsContext gc, RenderingContext rc) {
+        double startX = rc.toX(getTime());
+        // Draw a small line on top
+        gc.setStroke(getColor());
+        gc.setLineWidth(1);
+        gc.setLineDashes();
+        gc.strokeLine(startX - 4, rc.getHeaderRowHeight() + 1, startX + 4, rc.getHeaderRowHeight() + 1);
+        // Draw a line for the entire height of the image area
+        gc.setLineWidth(2);
+        gc.setLineDashes(4, 4);
+        gc.strokeLine(startX, rc.getHeaderRowHeight() + 2, startX, rc.getImageAreaHeight());
     }
 
     @Override

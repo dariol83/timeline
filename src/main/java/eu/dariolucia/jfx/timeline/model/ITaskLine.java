@@ -22,6 +22,9 @@ import javafx.scene.canvas.GraphicsContext;
 
 import java.util.List;
 
+/**
+ * This interface is used to abstract the access to the lines of a timeline (group or single).
+ */
 public interface ITaskLine {
 
     String getName();

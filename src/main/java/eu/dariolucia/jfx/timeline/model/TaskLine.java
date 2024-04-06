@@ -30,7 +30,11 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * A task line represents a line in a timeline.
+ * A task line represents a line in a timeline, and contains {@link TaskItem} instances.
+ * In its current implementation, a task line is always rendered on a single line: overalapping task items are rendered
+ * one on top of the other, therefore the end result might not be the best.
+ * This class can be subclassed and the render() method can be overwritten. It is nevertheless important, that the
+ * last rendered bounding box is saved/reset using the related methods.
  */
 public class TaskLine implements ITaskLine {
 
@@ -110,13 +114,22 @@ public class TaskLine implements ITaskLine {
         double lineLength = rc.toX(rc.getViewPortEnd());
         gc.strokeLine(rc.getTaskPanelWidth(), taskLineYStart + rc.getLineRowHeight(), lineLength, taskLineYStart + rc.getLineRowHeight());
         // Remember boundaries
-        this.lastRenderedBounds = new BoundingBox(taskLineXStart, taskLineYStart, lineLength - taskLineXStart, rc.getLineRowHeight());
+        updateLastRenderedBounds(new BoundingBox(taskLineXStart, taskLineYStart,
+                lineLength - taskLineXStart, rc.getLineRowHeight()));
+    }
+
+    protected void updateLastRenderedBounds(BoundingBox boundingBox) {
+        this.lastRenderedBounds = boundingBox;
+    }
+
+    protected BoundingBox getLastRenderedBounds() {
+        return lastRenderedBounds;
     }
 
     @Override
     public void noRender() {
         this.items.forEach(TaskItem::noRender);
-        this.lastRenderedBounds = null;
+        updateLastRenderedBounds(null);
     }
 
     @Override

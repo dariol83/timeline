@@ -20,6 +20,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.text.Text;
 
 import java.time.Instant;
+import java.util.Set;
 import java.util.function.ToDoubleFunction;
 
 public final class RenderingContext {
@@ -31,18 +32,26 @@ public final class RenderingContext {
     private final double textPadding;
     private final Instant viewPortStart;
     private final Instant viewPortEnd;
-    private final TaskItem selectedTaskItem;
+    private final Set<TaskItem> selectedTaskItems;
+    private final double imageAreaWidth;
+    private final double imageAreaHeight;
+    private final double headerRowHeight;
 
-    public RenderingContext(double taskPanelWidth, double lineRowHeight, double textHeight, double textPadding, Instant viewPortStart, Instant viewPortEnd,
-                            ToDoubleFunction<Instant> instant2xFunction, TaskItem selectedTaskItem) {
+    public RenderingContext(double taskPanelWidth, double headerRowHeight, double lineRowHeight, double textHeight, double textPadding,
+                            Instant viewPortStart, Instant viewPortEnd,
+                            double imageAreaWidth, double imageAreaHeight,
+                            ToDoubleFunction<Instant> instant2xFunction, Set<TaskItem> selectedItems) {
         this.taskPanelWidth = taskPanelWidth;
+        this.headerRowHeight = headerRowHeight;
         this.lineRowHeight = lineRowHeight;
         this.textHeight = textHeight;
         this.viewPortStart = viewPortStart;
         this.viewPortEnd = viewPortEnd;
+        this.imageAreaWidth = imageAreaWidth;
+        this.imageAreaHeight = imageAreaHeight;
         this.textPadding = textPadding;
         this.instant2xFunction = instant2xFunction;
-        this.selectedTaskItem = selectedTaskItem;
+        this.selectedTaskItems = selectedItems;
     }
 
     public double getTaskPanelWidth() {
@@ -73,8 +82,26 @@ public final class RenderingContext {
         return this.viewPortEnd;
     }
 
-    public TaskItem getSelectedTaskItem() {
-        return selectedTaskItem;
+    public Set<TaskItem> getSelectedTaskItems() {
+        return selectedTaskItems;
+    }
+
+    public double getImageAreaHeight() {
+        return imageAreaHeight;
+    }
+
+    public double getImageAreaWidth() {
+        return imageAreaWidth;
+    }
+
+    public double getHeaderRowHeight() {
+        return headerRowHeight;
+    }
+
+    public boolean isInViewPort(Instant start, Instant end) {
+        return (start.isAfter(this.viewPortStart) && start.isBefore(this.viewPortEnd)) || (
+                end.isAfter(this.viewPortStart) && end.isBefore(this.viewPortEnd)) ||
+                (start.isBefore(this.viewPortStart) && end.isAfter(this.viewPortEnd));
     }
 
     public double getTextWidth(GraphicsContext gc, String text) {

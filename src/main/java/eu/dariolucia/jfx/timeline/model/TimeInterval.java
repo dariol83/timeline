@@ -19,6 +19,7 @@ package eu.dariolucia.jfx.timeline.model;
 import eu.dariolucia.jfx.timeline.Timeline;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
 import java.time.Instant;
@@ -103,5 +104,12 @@ public class TimeInterval {
                 ", foreground=" + foreground +
                 ", color=" + color +
                 '}';
+    }
+
+    public void render(GraphicsContext gc, RenderingContext rc) {
+        double startX = getStartTime() == null || getStartTime().isBefore(rc.getViewPortStart()) ? rc.getTaskPanelWidth() : rc.toX(getStartTime());
+        double endX = getEndTime() == null || getEndTime().isAfter(rc.getViewPortEnd()) ? rc.getImageAreaWidth() : rc.toX(getEndTime());
+        gc.setFill(getColor());
+        gc.fillRect(startX, rc.getHeaderRowHeight(), endX - startX, rc.getImageAreaHeight());
     }
 }

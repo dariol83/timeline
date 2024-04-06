@@ -75,6 +75,8 @@ public class TestApplication extends Application {
             taskLine.getItems().add(new TaskItem("Task 2", currentTime.plusSeconds(123), 377, 0));
             taskLine.getItems().add(new TaskItem("Task 3", currentTime.plusSeconds(920), 32, 0));
 
+            GroupTaskLine group2 = new GroupTaskLine("Group 2");
+
             TaskLine taskLine2 = new TaskLine("Task Line 3 group 2", "Yet another task line");
             taskLine2.getItems().add(new TaskItem("Task 1", currentTime.plusSeconds(600), 140, 0));
             taskLine2.getItems().add(new TaskItem("Task 2", currentTime.plusSeconds(1), 77, 0));
@@ -84,7 +86,8 @@ public class TestApplication extends Application {
             taskLine3.getItems().add(new TaskItem("Task 1", currentTime.plusSeconds(600), 140, 0));
             taskLine3.getItems().add(new TaskItem("Task 2", currentTime.plusSeconds(120), 465, 0));
 
-            group.getItems().addAll(taskLine, taskLine2, taskLine3);
+            group2.getItems().addAll(taskLine2, taskLine3);
+            group.getItems().addAll(taskLine, group2);
 
             tl.getItems().add(group);
         }

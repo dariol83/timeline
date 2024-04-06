@@ -27,9 +27,15 @@ import javafx.scene.paint.Color;
 import java.time.Instant;
 
 /**
- * A task item is a concrete task, with a name, start time, expected duration, actual duration, status.
+ * A task item is a concrete task, with a name, start time, expected duration, actual duration and color.
+ * This class can be subclassed and the render() method can be overwritten. It is nevertheless important, that the
+ * last rendered bounding box is saved/reset using the related methods.
  */
 public class TaskItem {
+
+    /* *****************************************************************************************
+     * Properties
+     * *****************************************************************************************/
     private final SimpleStringProperty name = new SimpleStringProperty();
     private final SimpleObjectProperty<Instant> startTime = new SimpleObjectProperty<>();
     private final SimpleLongProperty expectedDuration = new SimpleLongProperty();
@@ -148,14 +154,14 @@ public class TaskItem {
         Instant endTimeAct = getActualDuration() >= 0 ? getStartTime().plusSeconds(getActualDuration()) : null;
         Instant endTime = endTimeAct != null && endTimeAct.isAfter(endTimeExp) ? endTimeAct : endTimeExp;
         // Render only if in viewport
-        if(isInViewPort(getStartTime(), endTime, rc.getViewPortStart(), rc.getViewPortEnd())) {
+        if(rc.isInViewPort(getStartTime(), endTime)) {
             // Convert to X coordinates
             double startX = rc.toX(getStartTime());
             double startY = taskLineYStart + rc.getTextPadding();
             // Expected
             double endX = rc.toX(endTimeExp);
             // Render now expected
-            boolean isSelected = rc.getSelectedTaskItem() == this;
+            boolean isSelected = rc.getSelectedTaskItems().contains(this);
             Color bgColor = getTaskBackgroundColor();
             Color borderColor = isSelected ? Color.BLACK : bgColor.darker();
             gc.setFill(bgColor);
@@ -169,13 +175,13 @@ public class TaskItem {
             gc.strokeRect(startX, startY, endX - startX, taskHeight);
             gc.setLineWidth(1);
             // Remember rendering box in pixel coordinates
-            this.lastRenderedBounds = new BoundingBox(startX, startY, endX - startX, taskHeight);
+            updateLastRenderedBounds(new BoundingBox(startX, startY, endX - startX, taskHeight));
             // Restore effect
             gc.setEffect(null);
             // Render now actual
             if(endTimeAct != null) {
                 double actualEndX = rc.toX(endTimeAct);
-                double actualStartX = startX + 1 + (isSelected ? 1 : 0); // Account for border and selection
+                double actualStartX = startX + (isSelected ? 1 : 0); // Account for selection
                 gc.setFill(bgColor.darker());
                 gc.fillRect(actualStartX, startY + rc.getTextPadding(), actualEndX - actualStartX, rc.getLineRowHeight() - 4*rc.getTextPadding());
             }
@@ -184,6 +190,14 @@ public class TaskItem {
             double textWidth = rc.getTextWidth(gc, getName());
             gc.strokeText(getName(), startX + (endX - startX)/2 - textWidth/2, startY - rc.getTextPadding() + rc.getLineRowHeight()/2 + rc.getTextHeight()/2);
         }
+    }
+
+    protected void updateLastRenderedBounds(BoundingBox boundingBox) {
+        this.lastRenderedBounds = boundingBox;
+    }
+
+    protected BoundingBox getLastRenderedBounds() {
+        return lastRenderedBounds;
     }
 
     public boolean contains(double x, double y) {
@@ -201,9 +215,8 @@ public class TaskItem {
         return timeSeconds >= startTimeSecond && timeSeconds <= endTimeSecond;
     }
 
-    private boolean isInViewPort(Instant start, Instant end, Instant viewPortStart, Instant viewPortEnd) {
-        return (start.isAfter(viewPortStart) && start.isBefore(viewPortEnd)) || (end.isAfter(viewPortStart) && end.isBefore(viewPortEnd)) ||
-                (start.isBefore(viewPortStart) && end.isAfter(viewPortEnd));
+    public void noRender() {
+        updateLastRenderedBounds(null);
     }
 
     @Override
@@ -214,9 +227,5 @@ public class TaskItem {
                 ", expectedDuration=" + getExpectedDuration() +
                 ", actualDuration=" + getActualDuration() +
                 '}';
-    }
-
-    public void noRender() {
-        this.lastRenderedBounds = null;
     }
 }

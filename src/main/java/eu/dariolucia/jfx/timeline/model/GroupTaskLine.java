@@ -30,7 +30,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * A task group represents a group of task lines in a timeline.
+ * A task group represents a group of task lines or sub-groups in a timeline.
+ * This class can be subclassed and the render() method can be overwritten. It is nevertheless important, that the
+ * last rendered bounding box is saved/reset using the related methods.
  */
 public class GroupTaskLine implements ITaskLine {
 

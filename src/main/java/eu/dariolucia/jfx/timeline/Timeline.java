@@ -46,20 +46,34 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-// TODO: Add features:
-//  - specific callbacks for mouse move, mouse click on canvas
+/**
+ * A timeline is a graphical JavaFX component that can be used to displays tasks and groups of tasks, time cursors
+ * and time intervals on a time line. Each element is individually customizable.
+ */
+
+// TODO: implement multi selection (Ctrl + click for mouse interaction)
 public class Timeline extends GridPane {
 
-    public static final double TEXT_PADDING = 5;
-    public static final double TASK_PANEL_WIDTH_DEFAULT = 100;
+    /* *****************************************************************************************
+     * Constants
+     * *****************************************************************************************/
+    private static final double TEXT_PADDING = 5;
+    private static final double TASK_PANEL_WIDTH_DEFAULT = 100;
     private static final double MIN_WIDTH_PER_ELEMENT = 40;
+
+    /* *****************************************************************************************
+     * JavaFX elements
+     * *****************************************************************************************/
     private final Canvas imageArea;
     private final ScrollBar horizontalScroll;
     private final ScrollBar verticalScroll;
+    private final Label labelCornerfiller;
     private final TimelineSelectionModel selectionModel;
 
     /* *****************************************************************************************
@@ -78,7 +92,6 @@ public class Timeline extends GridPane {
     private final ObservableList<TimeInterval> timeIntervals = FXCollections.observableArrayList(timeInterval -> new Observable[] {
             timeInterval.colorProperty(), timeInterval.startTimeProperty(), timeInterval.endTimeProperty(), timeInterval.foregroundProperty() });
     private final SimpleBooleanProperty enableMouseSelection = new SimpleBooleanProperty(true);
-    private final Label labelCornerfiller;
 
     /* *****************************************************************************************
      * Internal variables
@@ -120,7 +133,6 @@ public class Timeline extends GridPane {
         // Create a fill label
         this.labelCornerfiller = new Label("");
 
-
         // Set horizontal scrollbar limits (fixed)
         this.horizontalScroll.setMin(0);
         this.horizontalScroll.setMax(100);
@@ -156,11 +168,31 @@ public class Timeline extends GridPane {
         this.selectionModel.selectedItemProperty().addListener((e,o,n) -> refresh());
 
         // Add listener for task item selection
-        this.imageArea.setOnMouseClicked(this::mouseClickedAction);
-        this.imageArea.setOnScroll(this::mouseScrolledAction);
+        this.imageArea.addEventHandler(MouseEvent.MOUSE_CLICKED, this::mouseClickedAction);
+        this.imageArea.addEventHandler(ScrollEvent.ANY, this::mouseScrolledAction);
 
         // Perform initial drawing
         Platform.runLater(this::recomputeArea);
+    }
+
+    public ScrollBar getVerticalScroll() {
+        if(isScrollbarsVisible()) {
+            return verticalScroll;
+        } else {
+            return null;
+        }
+    }
+
+    public ScrollBar getHorizontalScroll() {
+        if(isScrollbarsVisible()) {
+            return horizontalScroll;
+        } else {
+            return null;
+        }
+    }
+
+    public Canvas getImageArea() {
+        return imageArea;
     }
 
     private void scrollbarsStatusChanged() {
@@ -301,7 +333,7 @@ public class Timeline extends GridPane {
                 c.getRemoved().forEach(tl -> tl.setTimeline(null));
             }
             if(!refreshNeeded && c.wasUpdated()) {
-                refreshNeeded |= isChangeInViewport(c);
+                refreshNeeded = isChangeInViewport(c);
             }
         }
         if(refreshNeeded) {
@@ -428,7 +460,7 @@ public class Timeline extends GridPane {
         // Compute the Instant where the scrollbar now is
         double percentage = this.horizontalScroll.getValue() / this.horizontalScroll.getMax();
         long toAdd = (getMaxTime().getEpochSecond() - getViewPortDuration()) - getMinTime().getEpochSecond();
-        toAdd *= percentage;
+        toAdd = (long) (toAdd * percentage);
         Instant newStartValue = getMinTime().plusSeconds(toAdd);
         setViewPortStart(newStartValue);
     }
@@ -462,7 +494,7 @@ public class Timeline extends GridPane {
             return ChronoUnit.SECONDS;
         }
         double pixelForSecond = pixelWidth / durationSeconds;
-        double temp = 0;
+        double temp;
         if(pixelForSecond > MIN_WIDTH_PER_ELEMENT) {
             return ChronoUnit.SECONDS;
         } else if((temp = pixelForSecond * 60) > MIN_WIDTH_PER_ELEMENT) {
@@ -481,46 +513,38 @@ public class Timeline extends GridPane {
     public void refresh() {
         GraphicsContext gc = this.imageArea.getGraphicsContext2D();
         gc.setFontSmoothingType(FontSmoothingType.LCD);
-        RenderingContext rc = new RenderingContext(getTaskPanelWidth(), this.lineRowHeight, this.textHeight, TEXT_PADDING,
-                getViewPortStart(), getViewPortStart().plusSeconds(getViewPortDuration()), this::toX, selectionModel.getSelectedItem());
+        RenderingContext rc = new RenderingContext(getTaskPanelWidth(), this.headerRowHeight, this.lineRowHeight, this.textHeight, TEXT_PADDING,
+                getViewPortStart(), getViewPortStart().plusSeconds(getViewPortDuration()),
+                this.imageArea.getWidth(), this.imageArea.getHeight(),
+                this::toX, new LinkedHashSet<>(Collections.singleton(selectionModel.getSelectedItem())));
         // Draw the background
         drawBackground(gc);
         // Draw empty side panel
         drawEmptySidePanel(gc);
         // Draw time intervals in background
-        drawTimeIntervals(gc, false);
+        drawTimeIntervals(gc, rc, false);
         // Draw task lines
         drawTaskLines(gc, rc);
         // Draw calendar headers: need conversion functions Instant -> x on screen
         drawHeaders(gc);
         // Draw time intervals in foreground
-        drawTimeIntervals(gc, true);
+        drawTimeIntervals(gc, rc, true);
         // Draw cursors
-        drawCursors(gc);
+        drawCursors(gc, rc);
     }
 
-    private void drawTimeIntervals(GraphicsContext gc, boolean foreground) {
+    private void drawTimeIntervals(GraphicsContext gc, RenderingContext rc, boolean foreground) {
         for(TimeInterval tc : this.timeIntervals) {
             if(tc.isForeground() == foreground && inViewport(tc.getStartTime(), tc.getEndTime())) {
-                double startX = tc.getStartTime() == null || tc.getStartTime().isBefore(getViewPortStart()) ? getTaskPanelWidth() : toX(tc.getStartTime());
-                double endX = tc.getEndTime() == null || tc.getEndTime().isAfter(getViewPortStart().plusSeconds(getViewPortDuration())) ? this.imageArea.getWidth() : toX(tc.getEndTime());
-                gc.setFill(tc.getColor());
-                gc.fillRect(startX, this.headerRowHeight, endX - startX, this.imageArea.getHeight());
+                tc.render(gc, rc);
             }
         }
     }
 
-    private void drawCursors(GraphicsContext gc) {
+    private void drawCursors(GraphicsContext gc, RenderingContext rc) {
         for(TimeCursor tc : this.timeCursors) {
             if(inViewport(tc.getTime())) {
-                double startX = toX(tc.getTime());
-                gc.setStroke(tc.getColor());
-                gc.setLineWidth(1);
-                gc.setLineDashes();
-                gc.strokeLine(startX - 4, this.headerRowHeight + 1, startX + 4, this.headerRowHeight + 1);
-                gc.setLineWidth(2);
-                gc.setLineDashes(4, 4);
-                gc.strokeLine(startX, this.headerRowHeight + 2, startX, this.imageArea.getHeight());
+                tc.render(gc, rc);
             }
         }
         gc.setLineWidth(1);
@@ -618,12 +642,12 @@ public class Timeline extends GridPane {
     private String formatHeaderText(Instant startTime, ChronoUnit headerElement) {
         ZonedDateTime time = startTime.atZone(ZoneId.of("UTC"));
         switch(headerElement) {
-            case SECONDS: return String.format("%02d:%02d:%02d", time.get(ChronoField.HOUR_OF_DAY), time.get(ChronoField.MINUTE_OF_HOUR), time.get(ChronoField.SECOND_OF_MINUTE));
-            case MINUTES: return String.format("%02d:%02d", time.get(ChronoField.HOUR_OF_DAY), time.get(ChronoField.MINUTE_OF_HOUR));
-            case HOURS: return String.format("%02d", time.get(ChronoField.HOUR_OF_DAY));
-            case DAYS: return String.format("%04d-%02d-%02d", time.get(ChronoField.YEAR), time.get(ChronoField.MONTH_OF_YEAR) + 1, time.get(ChronoField.DAY_OF_MONTH));
-            case MONTHS: return String.format("%04d-%02d", time.get(ChronoField.YEAR), time.get(ChronoField.MONTH_OF_YEAR) + 1);
-            default: return String.format("%04d", time.get(ChronoField.YEAR));
+            case SECONDS: return String.format("%02d:%02d:%02d", time.getHour(), time.getMinute(), time.getSecond());
+            case MINUTES: return String.format("%02d:%02d", time.getHour(), time.getMinute());
+            case HOURS: return String.format("%02d", time.getHour());
+            case DAYS: return String.format("%04d-%02d-%02d", time.getYear(), time.get(ChronoField.MONTH_OF_YEAR) + 1, time.getDayOfMonth());
+            case MONTHS: return String.format("%04d-%02d", time.getYear(), time.get(ChronoField.MONTH_OF_YEAR) + 1);
+            default: return String.format("%04d", time.getYear());
         }
     }
 
