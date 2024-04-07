@@ -16,6 +16,7 @@
 
 package eu.dariolucia.jfx.timeline;
 
+import eu.dariolucia.jfx.timeline.internal.TimelineSingleSelectionModel;
 import eu.dariolucia.jfx.timeline.model.*;
 import javafx.application.Platform;
 import javafx.beans.Observable;
@@ -31,7 +32,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollBar;
-import javafx.scene.control.SingleSelectionModel;
+import javafx.scene.control.SelectionModel;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
@@ -54,10 +55,8 @@ import java.util.stream.Collectors;
 
 /**
  * A timeline is a graphical JavaFX component that can be used to displays tasks and groups of tasks, time cursors
- * and time intervals on a time line. Each element is individually customizable.
+ * and time intervals on a timeline. Each element is individually customizable.
  */
-
-// TODO: implement multi selection (Ctrl + click for mouse interaction)
 public class Timeline extends GridPane {
 
     /* *****************************************************************************************
@@ -74,7 +73,7 @@ public class Timeline extends GridPane {
     private final ScrollBar horizontalScroll;
     private final ScrollBar verticalScroll;
     private final Label labelCornerfiller;
-    private final TimelineSelectionModel selectionModel;
+    private final SelectionModel<TaskItem> selectionModel;
 
     /* *****************************************************************************************
      * Properties
@@ -164,7 +163,7 @@ public class Timeline extends GridPane {
         this.timeIntervals.addListener(this::timeIntervalsUpdated);
 
         // Create the selection model
-        this.selectionModel = new TimelineSelectionModel(this);
+        this.selectionModel = new TimelineSingleSelectionModel(this);
         this.selectionModel.selectedItemProperty().addListener((e,o,n) -> refresh());
 
         // Add listener for task item selection
@@ -781,16 +780,7 @@ public class Timeline extends GridPane {
         return this.flatTaskItem;
     }
 
-    private TaskItem getTaskItemAt(int i) {
-        List<TaskItem> flatItemList = getTaskItemList();
-        return flatItemList.get(i);
-    }
-
-    private long getTaskItemCount() {
-        return getTaskItemList().size();
-    }
-
-    public SingleSelectionModel<TaskItem> getSelectionModel() {
+    public SelectionModel<TaskItem> getSelectionModel() {
         return selectionModel;
     }
 
@@ -830,22 +820,16 @@ public class Timeline extends GridPane {
         this.scrollbarsVisible.set(scrollbarsVisible);
     }
 
-    private static class TimelineSelectionModel extends SingleSelectionModel<TaskItem> {
+    /* *****************************************************************************************
+     * Utility access method
+     * *****************************************************************************************/
 
-        private final Timeline timeline;
-
-        public TimelineSelectionModel(Timeline timeline) {
-            this.timeline = timeline;
-        }
-
-        @Override
-        protected TaskItem getModelItem(int i) {
-            return timeline.getTaskItemAt(i);
-        }
-
-        @Override
-        protected int getItemCount() {
-            return (int) timeline.getTaskItemCount();
-        }
+    public TaskItem getTaskItemAt(int i) {
+        return getTaskItemList().get(i);
     }
+
+    public long getTaskItemCount() {
+        return getTaskItemList().size();
+    }
+
 }
