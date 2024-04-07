@@ -14,9 +14,8 @@
  *   limitations under the License.
  */
 
-package eu.dariolucia.jfx.test;
+package eu.dariolucia.jfx.timeline;
 
-import eu.dariolucia.jfx.timeline.Timeline;
 import eu.dariolucia.jfx.timeline.model.*;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -81,15 +80,39 @@ public class TestApplication extends Application {
             taskLine2.getItems().add(new TaskItem("Task 2", currentTime.plusSeconds(1), 77, 0));
             taskLine2.getItems().add(new TaskItem("Task 3", currentTime.plusSeconds(120), 465, 0));
 
+            TaskLine taskLine3 = new TaskLine("Task Line 3 group 2", "Yet another task line");
+            taskLine3.getItems().add(new TaskItem("Task 1", currentTime.plusSeconds(600), 140, 0));
+            taskLine3.getItems().add(new TaskItem("Task 2", currentTime.plusSeconds(120), 465, 0));
+
+            TaskLine taskLine4 = new TaskLine("Task Line 4 group 1", "Yet another task line");
+            taskLine4.getItems().add(new TaskItem("Task 5", currentTime.plusSeconds(600), 140, 0));
+            taskLine4.getItems().add(new TaskItem("Task 6", currentTime.plusSeconds(120), 465, 0));
+
+            group2.getItems().addAll(taskLine2, taskLine3);
+            group.getItems().addAll(taskLine, group2, taskLine4);
+
+            tl.getItems().add(group);
+        }
+        GroupTaskLine group3 = new GroupTaskLine("Group 3");
+        {
+            TaskLine taskLine = new TaskLine("Task Line 1 group 3", "Yet another task line");
+            taskLine.getItems().add(new TaskItem("Task 1", currentTime.plusSeconds(1600), 140, 0));
+            taskLine.getItems().add(new TaskItem("Task 2", currentTime.plusSeconds(123), 377, 0));
+            taskLine.getItems().add(new TaskItem("Task 3", currentTime.plusSeconds(920), 32, 0));
+
+            TaskLine taskLine2 = new TaskLine("Task Line 2 group 3", "Yet another task line");
+            taskLine2.getItems().add(new TaskItem("Task 1", currentTime.plusSeconds(600), 140, 0));
+            taskLine2.getItems().add(new TaskItem("Task 2", currentTime.plusSeconds(1), 77, 0));
+            taskLine2.getItems().add(new TaskItem("Task 3", currentTime.plusSeconds(120), 465, 0));
+
             TaskLine taskLine3 = new TaskLine("Task Line 3 group 3", "Yet another task line");
             taskLine3.getItems().add(new TaskItem("Task 1", currentTime.plusSeconds(600), 140, 0));
             taskLine3.getItems().add(new TaskItem("Task 2", currentTime.plusSeconds(120), 465, 0));
 
-            group2.getItems().addAll(taskLine2, taskLine3);
-            group.getItems().addAll(taskLine, group2);
-
-            tl.getItems().add(group);
+            group3.getItems().addAll(taskLine, taskLine2, taskLine3);
+            tl.getItems().add(group3);
         }
+
         for(int i = 4; i < 50; ++i) {
             TaskLine taskLine = new TaskLine("Task Line " + i, i + "th task line");
             taskLine.getItems().add(new TaskItem("Task 1 (" + i + ")", currentTime.plusSeconds(600), 140, 0));

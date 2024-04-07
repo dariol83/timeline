@@ -54,10 +54,12 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * A timeline is a graphical JavaFX component that can be used to displays tasks and groups of tasks, time cursors
+ * A timeline is a graphical JavaFX component that can be used to display tasks and groups of tasks, time cursors
  * and time intervals on a timeline. Each element is individually customizable in terms of rendering via standard JavaFX
  * properties and via subclassing for more personalised rendering.
  */
+
+// TODO: add Ctrl - drag to pan
 public class Timeline extends GridPane {
 
     /* *****************************************************************************************
@@ -224,10 +226,18 @@ public class Timeline extends GridPane {
     }
 
     private void mouseScrolledAction(ScrollEvent scrollEvent) {
-        if(scrollEvent.getDeltaY() < 0) {
-            this.verticalScroll.increment();
+        if(scrollEvent.isControlDown()) {
+            if (scrollEvent.getDeltaY() < 0) {
+                setViewPortDuration((long) (getViewPortDuration() + getViewPortDuration()/10.0));
+            } else {
+                setViewPortDuration(Math.max(10, (long) (getViewPortDuration() - getViewPortDuration()/10.0)));
+            }
         } else {
-            this.verticalScroll.decrement();
+            if (scrollEvent.getDeltaY() < 0) {
+                this.verticalScroll.increment();
+            } else {
+                this.verticalScroll.decrement();
+            }
         }
     }
 
@@ -656,7 +666,7 @@ public class Timeline extends GridPane {
     }
 
     private Instant getAdjustedStartTime(Instant viewPortStart, ChronoUnit headerElement) {
-        return viewPortStart.truncatedTo(headerElement);
+        return viewPortStart.truncatedTo(headerElement); // TODO: Unit is too large to be used for truncation for some values
     }
 
     private void measureFontHeight(Font font) {
