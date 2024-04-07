@@ -33,6 +33,13 @@ public interface ITaskLine {
 
     int getNbOfLines();
 
+    /**
+     * Ask the item to recompute the rendering structure and return whether there was a structural change (more/less lines
+     * to be drawn). The {@link ITaskLine} implementation shall use this opportunity to recompute the rendering structure.
+     * @return true if the rendering structure changes, otherwise false
+     */
+    boolean computeRenderingStructure();
+
     void render(GraphicsContext gc, double taskLineXStart, double taskLineYStart, RenderingContext rc);
 
     void noRender();

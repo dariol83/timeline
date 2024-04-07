@@ -96,6 +96,15 @@ public class GroupTaskLine implements ITaskLine {
     }
 
     @Override
+    public boolean computeRenderingStructure() {
+        boolean changed = false;
+        for(ITaskLine tl : this.items) {
+            changed |= tl.computeRenderingStructure();
+        }
+        return changed;
+    }
+
+    @Override
     public void render(GraphicsContext gc, double taskLineXStart, double taskLineYStart, RenderingContext rc) {
         int nbLines = getNbOfLines();
         double groupBoxWidth = rc.getLineRowHeight();
@@ -103,7 +112,7 @@ public class GroupTaskLine implements ITaskLine {
         int i = 0;
         for(ITaskLine line : this.items) {
             line.render(gc, taskLineXStart + groupBoxWidth, taskLineYStart + i * rc.getLineRowHeight(), rc);
-            ++i;
+            i += line.getNbOfLines();
         }
         double groupBoxHeight = getNbOfLines() * rc.getLineRowHeight();
         // Draw the group box

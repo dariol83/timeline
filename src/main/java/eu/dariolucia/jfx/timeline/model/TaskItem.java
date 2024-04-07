@@ -174,18 +174,19 @@ public class TaskItem {
             // Selected tasks have black border and thicker line
             gc.strokeRect(startX, startY, endX - startX, taskHeight);
             gc.setLineWidth(1);
-            // Remember rendering box in pixel coordinates
-            updateLastRenderedBounds(new BoundingBox(startX, startY, endX - startX, taskHeight));
             // Restore effect
             gc.setEffect(null);
             // Render now actual
+            double actualEndX = -1;
             if(endTimeAct != null) {
-                double actualEndX = rc.toX(endTimeAct);
+                actualEndX = rc.toX(endTimeAct);
                 double actualStartX = startX + (isSelected ? 1 : 0); // Account for selection
                 gc.setFill(bgColor.darker());
                 gc.fillRect(actualStartX, startY + rc.getTextPadding(), actualEndX - actualStartX, rc.getLineRowHeight() - 4*rc.getTextPadding());
             }
             gc.setStroke(getTaskTextColor());
+            // Remember rendering box in pixel coordinates
+            updateLastRenderedBounds(new BoundingBox(startX, startY, Math.max(endX, actualEndX) - startX, taskHeight));
             // Render in the middle
             double textWidth = rc.getTextWidth(gc, getName());
             gc.strokeText(getName(), startX + (endX - startX)/2 - textWidth/2, startY - rc.getTextPadding() + rc.getLineRowHeight()/2 + rc.getTextHeight()/2);
@@ -217,6 +218,17 @@ public class TaskItem {
 
     public void noRender() {
         updateLastRenderedBounds(null);
+    }
+
+    public boolean overlapWith(TaskItem item) {
+        long thisStartTime = getStartTime().getEpochSecond();
+        long thisEndTime = Math.max(getStartTime().getEpochSecond() + getActualDuration(), getStartTime().getEpochSecond() + getExpectedDuration());
+        long itemStartTime = item.getStartTime().getEpochSecond();
+        long itemEndTime = Math.max(item.getStartTime().getEpochSecond() + item.getActualDuration(), item.getStartTime().getEpochSecond() + item.getExpectedDuration());
+        return (thisStartTime >= itemStartTime && thisStartTime <= itemEndTime) ||
+                (thisEndTime >= itemStartTime && thisEndTime <= itemEndTime) ||
+                (thisStartTime <= itemStartTime && thisEndTime >= itemEndTime) ||
+                (itemStartTime <= thisStartTime && itemEndTime >= thisEndTime);
     }
 
     @Override

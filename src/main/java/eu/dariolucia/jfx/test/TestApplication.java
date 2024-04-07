@@ -51,6 +51,7 @@ public class TestApplication extends Application {
         theLine.getItems().add(new TaskItem("Task 1", currentTime.plusSeconds(30), 98, 0));
         theLine.getItems().add(new TaskItem("Task 2", currentTime.plusSeconds(130), 28, 0));
         theLine.getItems().add(new TaskItem("Task 3", currentTime.plusSeconds(190), 5, 0));
+        theLine.getItems().add(new TaskItem("Task 4", currentTime.plusSeconds(60 * 11), 80, 140));
         tl.getItems().add(theLine);
 
         {
@@ -67,15 +68,13 @@ public class TestApplication extends Application {
             taskLine.getItems().add(new TaskItem("Task 3", currentTime.plusSeconds(920), 7000, 0));
             tl.getItems().add(taskLine);
         }
+        GroupTaskLine group = new GroupTaskLine("Group 1");
+        GroupTaskLine group2 = new GroupTaskLine("Group 2");
         {
-            GroupTaskLine group = new GroupTaskLine("Group 1");
-
             TaskLine taskLine = new TaskLine("Task Line 3 group 1", "Yet another task line");
             taskLine.getItems().add(new TaskItem("Task 1", currentTime.plusSeconds(1600), 140, 0));
             taskLine.getItems().add(new TaskItem("Task 2", currentTime.plusSeconds(123), 377, 0));
             taskLine.getItems().add(new TaskItem("Task 3", currentTime.plusSeconds(920), 32, 0));
-
-            GroupTaskLine group2 = new GroupTaskLine("Group 2");
 
             TaskLine taskLine2 = new TaskLine("Task Line 3 group 2", "Yet another task line");
             taskLine2.getItems().add(new TaskItem("Task 1", currentTime.plusSeconds(600), 140, 0));
@@ -124,6 +123,7 @@ public class TestApplication extends Application {
                     Thread.sleep(3000);
                     Platform.runLater(() -> it.setStartTime(it.getStartTime().plusSeconds(220)));
                 }
+                Thread.sleep(3000);
                 Platform.runLater(() -> tl.getSelectionModel().select(it));
                 for(int i = 0; i < 3; ++i) {
                     Thread.sleep(3000);
@@ -132,6 +132,12 @@ public class TestApplication extends Application {
                 }
                 Platform.runLater(() -> it.setTaskBackgroundColor(Color.RED));
                 Platform.runLater(() -> it.setName("New Task!"));
+                Thread.sleep(3000);
+                Platform.runLater(() -> it.setStartTime(it.getStartTime().minusSeconds(520)));
+                Thread.sleep(3000);
+                Platform.runLater(() -> theLine.getItems().remove(it));
+                Thread.sleep(3000);
+                Platform.runLater(() -> ((TaskLine) (group2.getItems().get(0))).getItems().add(new TaskItem("Task 4", currentTime.plusSeconds(123), 377, 0)));
             } catch (InterruptedException e) {
                 // ignore
             }

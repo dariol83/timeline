@@ -26,6 +26,7 @@ import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -46,6 +47,8 @@ public class TaskLine implements ITaskLine {
     private ITaskLine parent;
     private Timeline timeline;
     private BoundingBox lastRenderedBounds;
+
+    private List<RenderingLine> renderingLines = new ArrayList<>();
 
     public TaskLine(String name) {
         this(name, null);
@@ -92,30 +95,60 @@ public class TaskLine implements ITaskLine {
 
     @Override
     public int getNbOfLines() {
-        return 1;
+        return Math.max(1, this.renderingLines.size());
+    }
+
+    @Override
+    public boolean computeRenderingStructure() {
+        int oldSize = this.renderingLines.size();
+        // Create one rendering line by default
+        this.renderingLines.clear();
+        this.renderingLines.add(new RenderingLine());
+        // For each task...
+        for (TaskItem ti : this.items) {
+            boolean added = false;
+            // ...check if there is a rendering line that can accept this task
+            for (RenderingLine rl : this.renderingLines) {
+                // If no overlap, add task
+                if (!rl.overlap(ti)) {
+                    rl.getLine().add(ti);
+                    // Task allocated
+                    added = true;
+                    break;
+                }
+                // Check next line
+            }
+            // If not added...
+            if (!added) {
+                // ...create a line and add it to the new line
+                RenderingLine rl = new RenderingLine();
+                rl.getLine().add(ti);
+                this.renderingLines.add(rl);
+            }
+        }
+        return this.renderingLines.size() != oldSize;
     }
 
     @Override
     public void render(GraphicsContext gc, double taskLineXStart, double taskLineYStart, RenderingContext rc) {
-        // Render the tasks in the line
-        for(TaskItem ti : this.items) {
-            ti.render(gc, taskLineYStart, rc);
+        // Render the tasks in each rendered line
+        double newTaskLineYStart = taskLineYStart;
+        for(RenderingLine rl : this.renderingLines) {
+            rl.render(gc, newTaskLineYStart, rc);
+            newTaskLineYStart += rc.getLineRowHeight();
         }
         // Render the line in the task panel
+        double taskLineHeight = rc.getLineRowHeight() * getNbOfLines();
         gc.setStroke(Color.DARKGRAY);
         gc.setFill(Color.LIGHTGRAY);
-        gc.fillRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, rc.getLineRowHeight());
-        gc.strokeRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, rc.getLineRowHeight());
+        gc.fillRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight);
+        gc.strokeRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight);
         // Render text
         gc.setStroke(Color.BLACK);
-        gc.strokeText(getName(), taskLineXStart + rc.getTextPadding(), taskLineYStart + rc.getLineRowHeight()/2 + rc.getTextHeight()/2, rc.getTaskPanelWidth() - 2 * rc.getTextPadding() - taskLineXStart);
-        // Render bottom line
-        gc.setStroke(Color.LIGHTGRAY);
-        double lineLength = rc.toX(rc.getViewPortEnd());
-        gc.strokeLine(rc.getTaskPanelWidth(), taskLineYStart + rc.getLineRowHeight(), lineLength, taskLineYStart + rc.getLineRowHeight());
+        gc.strokeText(getName(), taskLineXStart + rc.getTextPadding(), taskLineYStart + taskLineHeight/2 + rc.getTextHeight()/2, rc.getTaskPanelWidth() - 2 * rc.getTextPadding() - taskLineXStart);
         // Remember boundaries
         updateLastRenderedBounds(new BoundingBox(taskLineXStart, taskLineYStart,
-                lineLength - taskLineXStart, rc.getLineRowHeight()));
+                rc.getImageAreaWidth() - taskLineXStart, taskLineHeight));
     }
 
     protected void updateLastRenderedBounds(BoundingBox boundingBox) {
@@ -191,5 +224,32 @@ public class TaskLine implements ITaskLine {
                 "name=" + getName() +
                 ", description=" + getDescription() +
                 '}';
+    }
+
+    private static class RenderingLine {
+
+        private final List<TaskItem> line = new ArrayList<>();
+
+        public List<TaskItem> getLine() {
+            return this.line;
+        }
+
+        public boolean overlap(TaskItem item) {
+            for(TaskItem ti : this.line) {
+                if(ti.overlapWith(item)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public void render(GraphicsContext gc, double taskLineYStart, RenderingContext rc) {
+            for(TaskItem ti : this.line) {
+                ti.render(gc, taskLineYStart, rc);
+            }
+            // Render bottom line
+            gc.setStroke(Color.LIGHTGRAY);
+            gc.strokeLine(rc.getTaskPanelWidth(), taskLineYStart + rc.getLineRowHeight(), rc.getImageAreaWidth(), taskLineYStart + rc.getLineRowHeight());
+        }
     }
 }

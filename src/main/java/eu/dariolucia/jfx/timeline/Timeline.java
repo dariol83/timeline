@@ -55,7 +55,8 @@ import java.util.stream.Collectors;
 
 /**
  * A timeline is a graphical JavaFX component that can be used to displays tasks and groups of tasks, time cursors
- * and time intervals on a timeline. Each element is individually customizable.
+ * and time intervals on a timeline. Each element is individually customizable in terms of rendering via standard JavaFX
+ * properties and via subclassing for more personalised rendering.
  */
 public class Timeline extends GridPane {
 
@@ -344,11 +345,15 @@ public class Timeline extends GridPane {
     }
 
     private boolean isChangeInViewport(ListChangeListener.Change<? extends ITaskLine> c) {
+        boolean structureChanged = false;
+        for(ITaskLine tl : c.getList()) {
+            structureChanged |= tl.computeRenderingStructure();
+        }
         if(this.currentYViewportItems == null || this.currentYViewportItems[0] == -1) {
             // Strange state, assume change
             return true;
         }
-        return (c.getFrom() >= this.currentYViewportItems[0] && c.getFrom() <= this.currentYViewportItems[1]) ||
+        return structureChanged || (c.getFrom() >= this.currentYViewportItems[0] && c.getFrom() <= this.currentYViewportItems[1]) ||
                 (c.getTo() >= this.currentYViewportItems[0] && c.getTo() <= this.currentYViewportItems[1]) ||
                 (c.getFrom() <= this.currentYViewportItems[0] && c.getTo() >= this.currentYViewportItems[1]);
     }
