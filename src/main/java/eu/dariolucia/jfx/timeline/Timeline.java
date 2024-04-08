@@ -56,6 +56,7 @@ import java.util.stream.Collectors;
  * and time intervals on a timeline. Each element is individually customizable in terms of rendering via standard JavaFX
  * properties and via subclassing for more personalised rendering.
  */
+// TODO: add color customisation for selection border, task panel (fill, text)
 public class Timeline extends GridPane {
 
     /* *****************************************************************************************
