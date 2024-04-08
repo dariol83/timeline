@@ -104,7 +104,7 @@ public final class RenderingContext {
                 (start.isBefore(this.viewPortStart) && end.isAfter(this.viewPortEnd));
     }
 
-    public double getTextWidth(GraphicsContext gc, String text) {
+    public static double getTextWidth(GraphicsContext gc, String text) {
         Text theText = new Text(text);
         theText.setFont(gc.getFont());
         return theText.getBoundsInLocal().getWidth();

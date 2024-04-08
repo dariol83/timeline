@@ -25,7 +25,7 @@ import javafx.scene.paint.Color;
 import java.time.Instant;
 
 /**
- * A class used to place time intervals (also open ended) on the timeline.
+ * A class used to place time intervals (also open-ended) on the timeline.
  */
 public class TimeInterval {
 

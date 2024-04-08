@@ -126,7 +126,7 @@ public class GroupTaskLine implements ITaskLine {
         gc.translate(taskLineXStart, taskLineYStart);
         gc.rotate(-90);
         // Render in the middle
-        double textWidth = rc.getTextWidth(gc, getName());
+        double textWidth = RenderingContext.getTextWidth(gc, getName());
         double offset = nbLines * rc.getLineRowHeight()/2;
         gc.strokeText(getName(), - offset - textWidth/2, groupBoxWidth/2 + rc.getTextHeight()/2);
         gc.restore();

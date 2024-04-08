@@ -188,7 +188,7 @@ public class TaskItem {
             // Remember rendering box in pixel coordinates
             updateLastRenderedBounds(new BoundingBox(startX, startY, Math.max(endX, actualEndX) - startX, taskHeight));
             // Render in the middle
-            double textWidth = rc.getTextWidth(gc, getName());
+            double textWidth = RenderingContext.getTextWidth(gc, getName());
             gc.strokeText(getName(), startX + (endX - startX)/2 - textWidth/2, startY - rc.getTextPadding() + rc.getLineRowHeight()/2 + rc.getTextHeight()/2);
         }
     }
