@@ -24,7 +24,6 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -116,11 +115,11 @@ public class GroupTaskLine implements ITaskLine {
         }
         double groupBoxHeight = getNbOfLines() * rc.getLineRowHeight();
         // Draw the group box
-        gc.setFill(Color.LIGHTGRAY);
-        gc.setStroke(Color.DARKGRAY);
+        gc.setFill(rc.getPanelBackgroundColor());
+        gc.setStroke(rc.getPanelBorderColor());
         gc.fillRect(taskLineXStart, taskLineYStart, groupBoxWidth, groupBoxHeight);
         gc.strokeRect(taskLineXStart, taskLineYStart, groupBoxWidth, groupBoxHeight);
-        gc.setStroke(Color.BLACK);
+        gc.setStroke(rc.getPanelForegroundColor());
 
         gc.save();
         gc.translate(taskLineXStart, taskLineYStart);

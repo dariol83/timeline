@@ -56,7 +56,6 @@ import java.util.stream.Collectors;
  * and time intervals on a timeline. Each element is individually customizable in terms of rendering via standard JavaFX
  * properties and via subclassing for more personalised rendering.
  */
-// TODO: add color customisation for selection border, task panel (fill, text)
 public class Timeline extends GridPane {
 
     /* *****************************************************************************************
@@ -83,6 +82,13 @@ public class Timeline extends GridPane {
     private final SimpleObjectProperty<Instant> viewPortStart = new SimpleObjectProperty<>();
     private final SimpleDoubleProperty taskPanelWidth = new SimpleDoubleProperty(TASK_PANEL_WIDTH_DEFAULT);
     private final SimpleObjectProperty<Color> backgroundColor = new SimpleObjectProperty<>(Color.WHITE);
+    private final SimpleObjectProperty<Color> headerBackgroundColor = new SimpleObjectProperty<>(Color.LIGHTGRAY);
+    private final SimpleObjectProperty<Color> headerForegroundColor = new SimpleObjectProperty<>(Color.BLACK);
+    private final SimpleObjectProperty<Color> headerBorderColor = new SimpleObjectProperty<>(headerBackgroundColor.get().darker());
+    private final SimpleObjectProperty<Color> panelBackgroundColor = new SimpleObjectProperty<>(Color.LIGHTGRAY);
+    private final SimpleObjectProperty<Color> panelForegroundColor = new SimpleObjectProperty<>(Color.BLACK);
+    private final SimpleObjectProperty<Color> panelBorderColor = new SimpleObjectProperty<>(panelBackgroundColor.get().darker());
+    private final SimpleObjectProperty<Color> selectBorderColor = new SimpleObjectProperty<>(Color.BLACK);
     private final SimpleBooleanProperty scrollbarsVisible = new SimpleBooleanProperty();
     private final ObservableList<ITaskLine> items = FXCollections.observableArrayList(ITaskLine::getObservableProperties);
     private final ObservableList<TimeCursor> timeCursors = FXCollections.observableArrayList(timeCursor -> new Observable[] {
@@ -153,10 +159,18 @@ public class Timeline extends GridPane {
         viewPortStartProperty().addListener((e,o,n) -> recomputeViewport());
         // Add listener when task panel width is updated
         taskPanelWidthProperty().addListener((e,o,n) -> recomputeViewport());
-        // Add listener when background color is updated
+        // Add listener when colors are updated
         backgroundColorProperty().addListener((e,o,n) -> internalRefresh());
+        headerBackgroundColorProperty().addListener((e, o, n) -> internalRefresh());
+        headerForegroundColorProperty().addListener((e, o, n) -> internalRefresh());
+        panelBackgroundColorProperty().addListener((e, o, n) -> internalRefresh());
+        panelForegroundColorProperty().addListener((e, o, n) -> internalRefresh());
+        panelBorderColorProperty().addListener((e, o, n) -> internalRefresh());
+        headerBorderColorProperty().addListener((e, o, n) -> internalRefresh());
+        selectBorderColorProperty().addListener((e, o, n) -> internalRefresh());
         // Add listener when scrollbar visible is updated
         scrollbarsVisibleProperty().addListener((e,o,n) -> scrollbarsStatusChanged());
+
         // Add listener to changes to the observable list structure (add, remove)
         this.items.addListener(this::itemsUpdated);
         // Add listener to changes to the observable list of time cursors
@@ -449,6 +463,90 @@ public class Timeline extends GridPane {
         this.scrollbarsVisible.set(scrollbarsVisible);
     }
 
+    public Color getHeaderBackgroundColor() {
+        return headerBackgroundColor.get();
+    }
+
+    public SimpleObjectProperty<Color> headerBackgroundColorProperty() {
+        return headerBackgroundColor;
+    }
+
+    public void setHeaderBackgroundColor(Color headerBackgroundColor) {
+        this.headerBackgroundColor.set(headerBackgroundColor);
+    }
+
+    public Color getHeaderForegroundColor() {
+        return headerForegroundColor.get();
+    }
+
+    public SimpleObjectProperty<Color> headerForegroundColorProperty() {
+        return headerForegroundColor;
+    }
+
+    public void setHeaderForegroundColor(Color headerForegroundColor) {
+        this.headerForegroundColor.set(headerForegroundColor);
+    }
+
+    public Color getPanelBackgroundColor() {
+        return panelBackgroundColor.get();
+    }
+
+    public SimpleObjectProperty<Color> panelBackgroundColorProperty() {
+        return panelBackgroundColor;
+    }
+
+    public void setPanelBackgroundColor(Color panelBackgroundColor) {
+        this.panelBackgroundColor.set(panelBackgroundColor);
+    }
+
+    public Color getPanelForegroundColor() {
+        return panelForegroundColor.get();
+    }
+
+    public SimpleObjectProperty<Color> panelForegroundColorProperty() {
+        return panelForegroundColor;
+    }
+
+    public void setPanelForegroundColor(Color panelForegroundColor) {
+        this.panelForegroundColor.set(panelForegroundColor);
+    }
+
+    public Color getPanelBorderColor() {
+        return panelBorderColor.get();
+    }
+
+    public SimpleObjectProperty<Color> panelBorderColorProperty() {
+        return panelBorderColor;
+    }
+
+    public void setPanelBorderColor(Color panelBorderColor) {
+        this.panelBorderColor.set(panelBorderColor);
+    }
+
+    public Color getHeaderBorderColor() {
+        return headerBorderColor.get();
+    }
+
+    public SimpleObjectProperty<Color> headerBorderColorProperty() {
+        return headerBorderColor;
+    }
+
+    public void setHeaderBorderColor(Color headerBorderColor) {
+        this.headerBorderColor.set(headerBorderColor);
+    }
+
+    public Color getSelectBorderColor() {
+        return selectBorderColor.get();
+    }
+
+    public SimpleObjectProperty<Color> selectBorderColorProperty() {
+        return selectBorderColor;
+    }
+
+    public void setSelectBorderColor(Color selectBorderColor) {
+        this.selectBorderColor.set(selectBorderColor);
+    }
+
     /* *****************************************************************************************
      * Utility access method
      * *****************************************************************************************/
@@ -471,7 +569,8 @@ public class Timeline extends GridPane {
         RenderingContext rc = new RenderingContext(getTaskPanelWidth(), this.headerRowHeight, this.lineRowHeight, this.textHeight, TEXT_PADDING,
                 getViewPortStart(), getViewPortStart().plusSeconds(getViewPortDuration()),
                 this.imageArea.getWidth(), this.imageArea.getHeight(),
-                this::toX, new LinkedHashSet<>(Collections.singleton(selectionModel.getSelectedItem())));
+                this::toX, new LinkedHashSet<>(Collections.singleton(selectionModel.getSelectedItem())),
+                getPanelBackgroundColor(), getPanelForegroundColor(), getPanelBorderColor(), getSelectBorderColor());
         // Draw the background
         drawBackground(gc);
         // Draw empty side panel
@@ -888,8 +987,8 @@ public class Timeline extends GridPane {
             }
         }
         // Fill the TL corner block
-        gc.setFill(Color.LIGHTGRAY);
-        gc.setStroke(Color.DARKGRAY);
+        gc.setFill(getHeaderBackgroundColor());
+        gc.setStroke(getHeaderBorderColor());
         gc.fillRect(0, 0, getTaskPanelWidth(), this.headerRowHeight);
         gc.strokeRect(0, 0, getTaskPanelWidth(), this.headerRowHeight);
     }
@@ -899,12 +998,12 @@ public class Timeline extends GridPane {
         double xEnd = toX(endTime);
         double height = this.headerRowHeight;
         // Fill rectangle
-        gc.setFill(Color.LIGHTGRAY);
-        gc.setStroke(Color.DARKGRAY);
+        gc.setFill(getHeaderBackgroundColor());
+        gc.setStroke(getHeaderBackgroundColor().darker());
         gc.fillRect(xStart, 0, xEnd - xStart, height);
         gc.strokeRect(xStart, 0, xEnd - xStart, height);
         // Write text
-        gc.setStroke(Color.BLACK);
+        gc.setStroke(getHeaderForegroundColor());
         String toWrite = formatHeaderText(startTime, headerElement);
         gc.strokeText(toWrite, xStart + TEXT_PADDING, this.textHeight + TEXT_PADDING);
     }

@@ -17,6 +17,7 @@
 package eu.dariolucia.jfx.timeline.model;
 
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 
 import java.time.Instant;
@@ -36,11 +37,19 @@ public final class RenderingContext {
     private final double imageAreaWidth;
     private final double imageAreaHeight;
     private final double headerRowHeight;
+    private final Color panelBackgroundColor;
+    private final Color panelForegroundColor;
+    private final Color panelBorderColor;
+    private final Color selectBorderColor;
+
+
 
     public RenderingContext(double taskPanelWidth, double headerRowHeight, double lineRowHeight, double textHeight, double textPadding,
                             Instant viewPortStart, Instant viewPortEnd,
                             double imageAreaWidth, double imageAreaHeight,
-                            ToDoubleFunction<Instant> instant2xFunction, Set<TaskItem> selectedItems) {
+                            ToDoubleFunction<Instant> instant2xFunction, Set<TaskItem> selectedItems,
+                            Color panelBackgroundColor, Color panelForegroundColor,
+                            Color panelBorderColor, Color selectBorderColor) {
         this.taskPanelWidth = taskPanelWidth;
         this.headerRowHeight = headerRowHeight;
         this.lineRowHeight = lineRowHeight;
@@ -52,6 +61,10 @@ public final class RenderingContext {
         this.textPadding = textPadding;
         this.instant2xFunction = instant2xFunction;
         this.selectedTaskItems = selectedItems;
+        this.panelBackgroundColor = panelBackgroundColor;
+        this.panelForegroundColor = panelForegroundColor;
+        this.panelBorderColor = panelBorderColor;
+        this.selectBorderColor = selectBorderColor;
     }
 
     public double getTaskPanelWidth() {
@@ -96,6 +109,22 @@ public final class RenderingContext {
 
     public double getHeaderRowHeight() {
         return headerRowHeight;
+    }
+
+    public Color getPanelBackgroundColor() {
+        return panelBackgroundColor;
+    }
+
+    public Color getPanelForegroundColor() {
+        return panelForegroundColor;
+    }
+
+    public Color getSelectBorderColor() {
+        return selectBorderColor;
+    }
+
+    public Color getPanelBorderColor() {
+        return panelBorderColor;
     }
 
     public boolean isInViewPort(Instant start, Instant end) {

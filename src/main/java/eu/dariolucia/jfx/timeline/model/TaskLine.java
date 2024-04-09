@@ -139,12 +139,12 @@ public class TaskLine implements ITaskLine {
         }
         // Render the line in the task panel
         double taskLineHeight = rc.getLineRowHeight() * getNbOfLines();
-        gc.setStroke(Color.DARKGRAY);
-        gc.setFill(Color.LIGHTGRAY);
+        gc.setStroke(rc.getPanelBorderColor());
+        gc.setFill(rc.getPanelBackgroundColor());
         gc.fillRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight);
         gc.strokeRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight);
         // Render text
-        gc.setStroke(Color.BLACK);
+        gc.setStroke(rc.getPanelForegroundColor());
         gc.strokeText(getName(), taskLineXStart + rc.getTextPadding(), taskLineYStart + taskLineHeight/2 + rc.getTextHeight()/2, rc.getTaskPanelWidth() - 2 * rc.getTextPadding() - taskLineXStart);
         // Remember boundaries
         updateLastRenderedBounds(new BoundingBox(taskLineXStart, taskLineYStart,

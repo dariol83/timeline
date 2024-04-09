@@ -22,6 +22,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.effect.*;
 import javafx.scene.paint.Color;
 
 import java.time.Instant;
@@ -40,7 +41,7 @@ public class TaskItem {
     private final SimpleObjectProperty<Instant> startTime = new SimpleObjectProperty<>();
     private final SimpleLongProperty expectedDuration = new SimpleLongProperty();
     private final SimpleLongProperty actualDuration = new SimpleLongProperty();
-    private final SimpleObjectProperty<Color> taskBackgroundColor = new SimpleObjectProperty<>(Color.CYAN);
+    private final SimpleObjectProperty<Color> taskBackgroundColor = new SimpleObjectProperty<>(Color.PAPAYAWHIP);
     private final SimpleObjectProperty<Color> taskTextColor = new SimpleObjectProperty<>(Color.BLACK);
     private TaskLine parent;
     private Timeline timeline;
@@ -163,11 +164,12 @@ public class TaskItem {
             // Render now expected
             boolean isSelected = rc.getSelectedTaskItems().contains(this);
             Color bgColor = getTaskBackgroundColor();
-            Color borderColor = isSelected ? Color.BLACK : bgColor.darker();
+            Color borderColor = isSelected ? rc.getSelectBorderColor() : bgColor.darker();
             gc.setFill(bgColor);
             gc.setStroke(borderColor);
             if(isSelected) {
                 gc.setLineWidth(2);
+                // gc.setEffect(new InnerShadow(10, rc.getSelectBorderColor()));
             }
             double taskHeight = rc.getLineRowHeight() - 2*rc.getTextPadding();
             gc.fillRect(startX, startY, endX - startX, taskHeight);
@@ -185,11 +187,11 @@ public class TaskItem {
                 gc.fillRect(actualStartX, startY + rc.getTextPadding(), actualEndX - actualStartX, rc.getLineRowHeight() - 4*rc.getTextPadding());
             }
             gc.setStroke(getTaskTextColor());
-            // Remember rendering box in pixel coordinates
-            updateLastRenderedBounds(new BoundingBox(startX, startY, Math.max(endX, actualEndX) - startX, taskHeight));
             // Render in the middle
             double textWidth = RenderingContext.getTextWidth(gc, getName());
             gc.strokeText(getName(), startX + (endX - startX)/2 - textWidth/2, startY - rc.getTextPadding() + rc.getLineRowHeight()/2 + rc.getTextHeight()/2);
+            // Remember rendering box in pixel coordinates
+            updateLastRenderedBounds(new BoundingBox(startX, startY, Math.max(endX, actualEndX) - startX, taskHeight));
         }
     }
 
