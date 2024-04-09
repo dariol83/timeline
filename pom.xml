@@ -1,12 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~   Copyright (c) 2024 Dario Lucia (https://www.dariolucia.eu)
+  ~
+  ~   Licensed under the Apache License, Version 2.0 (the "License");
+  ~   you may not use this file except in compliance with the License.
+  ~   You may obtain a copy of the License at
+  ~
+  ~        http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~   Unless required by applicable law or agreed to in writing, software
+  ~   distributed under the License is distributed on an "AS IS" BASIS,
+  ~   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~   See the License for the specific language governing permissions and
+  ~   limitations under the License.
+  -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>eu.dariolucia.jfx</groupId>
-    <artifactId>jfx-timeline</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>timeline</artifactId>
+    <version>0.1.0</version>
+    <packaging>bundle</packaging>
+
+    <name>JavaFX Timeline Chart</name>
+    <description>Timeline/Gantt chart widget for JavaFX applications.</description>
     <url>https://www.github.com/dariol83/timeline</url>
 
     <developers>
@@ -25,6 +44,12 @@
         </license>
     </licenses>
 
+    <scm>
+        <url>https://github.com/dariol83/timeline.git</url>
+        <connection>scm:git:git@github.com:dariol83/timeline.git</connection>
+        <developerConnection>scm:git:git@github.com:dariol83/timeline.git</developerConnection>
+    </scm>
+
     <properties>
         <!-- Encoding -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -32,7 +57,6 @@
         <!-- Java version -->
         <java.version>11</java.version>
         <!-- External libraries versions -->
-        <junit.version>5.10.0-M1</junit.version>
         <openjfx.version>19.0.2.1</openjfx.version>
         <!-- Maven plugin versions -->
         <maven.jacoco.version>0.8.8</maven.jacoco.version>
@@ -41,6 +65,8 @@
         <maven.source.version>3.1.0</maven.source.version>
         <maven.compiler.version>3.11.0</maven.compiler.version>
         <maven.version>2.5</maven.version>
+        <maven.gpg.version>1.6</maven.gpg.version>
+        <maven.bundle.version>5.1.8</maven.bundle.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
@@ -97,6 +123,18 @@
                     <nohelp>true</nohelp>
                 </configuration>
             </plugin>
+            <!-- Bundle plugin -->
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>${maven.bundle.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Export-Package>eu.dariolucia.jfx.timeline.*</Export-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -104,11 +142,6 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-base</artifactId>
-            <version>${openjfx.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-fxml</artifactId>
             <version>${openjfx.version}</version>
         </dependency>
         <dependency>
@@ -122,5 +155,35 @@
             <version>${openjfx.version}</version>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <distributionManagement>
+                <repository>
+                    <id>ossrh</id>
+                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                </repository>
+            </distributionManagement>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven.gpg.version}</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
