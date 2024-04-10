@@ -22,7 +22,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.effect.*;
 import javafx.scene.paint.Color;
 
 import java.time.Instant;
@@ -150,7 +149,7 @@ public class TaskItem {
         this.taskTextColor.set(taskTextColor);
     }
 
-    public void render(GraphicsContext gc, double taskLineYStart, RenderingContext rc) {
+    public void render(GraphicsContext gc, double taskLineYStart, IRenderingContext rc) {
         Instant endTimeExp = getStartTime().plusSeconds(getExpectedDuration());
         Instant endTimeAct = getActualDuration() >= 0 ? getStartTime().plusSeconds(getActualDuration()) : null;
         Instant endTime = endTimeAct != null && endTimeAct.isAfter(endTimeExp) ? endTimeAct : endTimeExp;
@@ -188,7 +187,7 @@ public class TaskItem {
             }
             gc.setStroke(getTaskTextColor());
             // Render in the middle
-            double textWidth = RenderingContext.getTextWidth(gc, getName());
+            double textWidth = rc.getTextWidth(gc, getName());
             gc.strokeText(getName(), startX + (endX - startX)/2 - textWidth/2, startY - rc.getTextPadding() + rc.getLineRowHeight()/2 + rc.getTextHeight()/2);
             // Remember rendering box in pixel coordinates
             updateLastRenderedBounds(new BoundingBox(startX, startY, Math.max(endX, actualEndX) - startX, taskHeight));

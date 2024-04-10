@@ -68,7 +68,7 @@ public class TimeCursor {
         this.color.set(color);
     }
 
-    public void render(GraphicsContext gc, RenderingContext rc) {
+    public void render(GraphicsContext gc, IRenderingContext rc) {
         double startX = rc.toX(getTime());
         // Draw a small line on top
         gc.setStroke(getColor());

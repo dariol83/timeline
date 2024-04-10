@@ -40,7 +40,7 @@ public interface ITaskLine {
      */
     boolean computeRenderingStructure();
 
-    void render(GraphicsContext gc, double taskLineXStart, double taskLineYStart, RenderingContext rc);
+    void render(GraphicsContext gc, double taskLineXStart, double taskLineYStart, IRenderingContext rc);
 
     void noRender();
 

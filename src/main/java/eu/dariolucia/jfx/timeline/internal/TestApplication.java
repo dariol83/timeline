@@ -14,8 +14,9 @@
  *   limitations under the License.
  */
 
-package eu.dariolucia.jfx.timeline;
+package eu.dariolucia.jfx.timeline.internal;
 
+import eu.dariolucia.jfx.timeline.Timeline;
 import eu.dariolucia.jfx.timeline.model.*;
 import javafx.application.Application;
 import javafx.application.Platform;

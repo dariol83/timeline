@@ -106,7 +106,7 @@ public class TimeInterval {
                 '}';
     }
 
-    public void render(GraphicsContext gc, RenderingContext rc) {
+    public void render(GraphicsContext gc, IRenderingContext rc) {
         double startX = getStartTime() == null || getStartTime().isBefore(rc.getViewPortStart()) ? rc.getTaskPanelWidth() : rc.toX(getStartTime());
         double endX = getEndTime() == null || getEndTime().isAfter(rc.getViewPortEnd()) ? rc.getImageAreaWidth() : rc.toX(getEndTime());
         gc.setFill(getColor());

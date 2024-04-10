@@ -104,7 +104,7 @@ public class GroupTaskLine implements ITaskLine {
     }
 
     @Override
-    public void render(GraphicsContext gc, double taskLineXStart, double taskLineYStart, RenderingContext rc) {
+    public void render(GraphicsContext gc, double taskLineXStart, double taskLineYStart, IRenderingContext rc) {
         int nbLines = getNbOfLines();
         double groupBoxWidth = rc.getLineRowHeight();
         // Render the sublines
@@ -125,7 +125,7 @@ public class GroupTaskLine implements ITaskLine {
         gc.translate(taskLineXStart, taskLineYStart);
         gc.rotate(-90);
         // Render in the middle
-        double textWidth = RenderingContext.getTextWidth(gc, getName());
+        double textWidth = rc.getTextWidth(gc, getName());
         double offset = nbLines * rc.getLineRowHeight()/2;
         gc.strokeText(getName(), - offset - textWidth/2, groupBoxWidth/2 + rc.getTextHeight()/2);
         gc.restore();

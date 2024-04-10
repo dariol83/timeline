@@ -130,12 +130,14 @@ public class TaskLine implements ITaskLine {
     }
 
     @Override
-    public void render(GraphicsContext gc, double taskLineXStart, double taskLineYStart, RenderingContext rc) {
+    public void render(GraphicsContext gc, double taskLineXStart, double taskLineYStart, IRenderingContext rc) {
         // Render the tasks in each rendered line
         double newTaskLineYStart = taskLineYStart;
+        int i = 0;
         for(RenderingLine rl : this.renderingLines) {
-            rl.render(gc, newTaskLineYStart, rc);
+            rl.render(gc, newTaskLineYStart, i == this.renderingLines.size() - 1, rc);
             newTaskLineYStart += rc.getLineRowHeight();
+            ++i;
         }
         // Render the line in the task panel
         double taskLineHeight = rc.getLineRowHeight() * getNbOfLines();
@@ -243,13 +245,15 @@ public class TaskLine implements ITaskLine {
             return false;
         }
 
-        public void render(GraphicsContext gc, double taskLineYStart, RenderingContext rc) {
+        public void render(GraphicsContext gc, double taskLineYStart, boolean lastLine, IRenderingContext rc) {
             for(TaskItem ti : this.line) {
                 ti.render(gc, taskLineYStart, rc);
             }
             // Render bottom line
-            gc.setStroke(Color.LIGHTGRAY);
-            gc.strokeLine(rc.getTaskPanelWidth(), taskLineYStart + rc.getLineRowHeight(), rc.getImageAreaWidth(), taskLineYStart + rc.getLineRowHeight());
+            if(lastLine) {
+                gc.setStroke(rc.getPanelBorderColor());
+                gc.strokeLine(rc.getTaskPanelWidth(), taskLineYStart + rc.getLineRowHeight(), rc.getImageAreaWidth(), taskLineYStart + rc.getLineRowHeight());
+            }
         }
     }
 }

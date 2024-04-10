@@ -20,10 +20,7 @@ import eu.dariolucia.jfx.timeline.internal.TimelineSingleSelectionModel;
 import eu.dariolucia.jfx.timeline.model.*;
 import javafx.application.Platform;
 import javafx.beans.Observable;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleLongProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -45,10 +42,7 @@ import javafx.scene.text.TextBoundsType;
 import java.time.*;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -56,7 +50,7 @@ import java.util.stream.Collectors;
  * and time intervals on a timeline. Each element is individually customizable in terms of rendering via standard JavaFX
  * properties and via subclassing for more personalised rendering.
  */
-public class Timeline extends GridPane {
+public class Timeline extends GridPane implements IRenderingContext {
 
     /* *****************************************************************************************
      * Constants
@@ -80,6 +74,7 @@ public class Timeline extends GridPane {
     private final SimpleObjectProperty<Instant> maxTime = new SimpleObjectProperty<>();
     private final SimpleLongProperty viewPortDuration = new SimpleLongProperty();
     private final SimpleObjectProperty<Instant> viewPortStart = new SimpleObjectProperty<>();
+    private final SimpleObjectProperty<Instant> viewPortEnd = new SimpleObjectProperty<>();
     private final SimpleDoubleProperty taskPanelWidth = new SimpleDoubleProperty(TASK_PANEL_WIDTH_DEFAULT);
     private final SimpleObjectProperty<Color> backgroundColor = new SimpleObjectProperty<>(Color.WHITE);
     private final SimpleObjectProperty<Color> headerBackgroundColor = new SimpleObjectProperty<>(Color.LIGHTGRAY);
@@ -280,6 +275,7 @@ public class Timeline extends GridPane {
      * @param time the instant to convert
      * @return the X mapped to the instant
      */
+    @Override
     public double toX(Instant time) {
         // The X can be off map
         long timeSecs = time.getEpochSecond();
@@ -288,6 +284,11 @@ public class Timeline extends GridPane {
         double percentage = (timeSecs - startTimeSecs)/ (double) getViewPortDuration();
         // Now translate to pixels
         return percentage * (this.imageArea.getWidth() - getTaskPanelWidth()) + getTaskPanelWidth();
+    }
+
+    @Override
+    public double getTextPadding() {
+        return TEXT_PADDING;
     }
 
     /**
@@ -380,8 +381,38 @@ public class Timeline extends GridPane {
         this.viewPortDuration.set(viewPortDuration);
     }
 
+    @Override
     public Instant getViewPortStart() {
         return viewPortStart.get();
+    }
+
+    @Override
+    public Instant getViewPortEnd() {
+        return viewPortEnd.get();
+    }
+
+    @Override
+    public Set<TaskItem> getSelectedTaskItems() {
+        return Collections.singleton(this.selectionModel.getSelectedItem());
+    }
+
+    @Override
+    public double getImageAreaHeight() {
+        return this.imageArea.getHeight();
+    }
+
+    @Override
+    public double getImageAreaWidth() {
+        return this.imageArea.getWidth();
+    }
+
+    @Override
+    public double getHeaderRowHeight() {
+        return this.headerRowHeight;
+    }
+
+    public ReadOnlyObjectProperty<Instant> viewPortEndProperty() {
+        return viewPortEnd;
     }
 
     public SimpleObjectProperty<Instant> viewPortStartProperty() {
@@ -404,8 +435,19 @@ public class Timeline extends GridPane {
         return timeIntervals;
     }
 
+    @Override
     public double getTaskPanelWidth() {
         return taskPanelWidth.get();
+    }
+
+    @Override
+    public double getTextHeight() {
+        return this.textHeight;
+    }
+
+    @Override
+    public double getLineRowHeight() {
+        return this.lineRowHeight;
     }
 
     public SimpleDoubleProperty taskPanelWidthProperty() {
@@ -487,6 +529,7 @@ public class Timeline extends GridPane {
         this.headerForegroundColor.set(headerForegroundColor);
     }
 
+    @Override
     public Color getPanelBackgroundColor() {
         return panelBackgroundColor.get();
     }
@@ -499,6 +542,7 @@ public class Timeline extends GridPane {
         this.panelBackgroundColor.set(panelBackgroundColor);
     }
 
+    @Override
     public Color getPanelForegroundColor() {
         return panelForegroundColor.get();
     }
@@ -511,8 +555,16 @@ public class Timeline extends GridPane {
         this.panelForegroundColor.set(panelForegroundColor);
     }
 
+    @Override
     public Color getPanelBorderColor() {
         return panelBorderColor.get();
+    }
+
+    @Override
+    public boolean isInViewPort(Instant start, Instant end) {
+        return (start.isAfter(getViewPortStart()) && start.isBefore(getViewPortEnd())) || (
+                end.isAfter(getViewPortStart()) && end.isBefore(getViewPortEnd())) ||
+                (start.isBefore(getViewPortStart()) && end.isAfter(getViewPortEnd()));
     }
 
     public SimpleObjectProperty<Color> panelBorderColorProperty() {
@@ -535,6 +587,7 @@ public class Timeline extends GridPane {
         this.headerBorderColor.set(headerBorderColor);
     }
 
+    @Override
     public Color getSelectBorderColor() {
         return selectBorderColor.get();
     }
@@ -566,25 +619,20 @@ public class Timeline extends GridPane {
     private void internalRefresh() {
         GraphicsContext gc = this.imageArea.getGraphicsContext2D();
         gc.setFontSmoothingType(FontSmoothingType.LCD);
-        RenderingContext rc = new RenderingContext(getTaskPanelWidth(), this.headerRowHeight, this.lineRowHeight, this.textHeight, TEXT_PADDING,
-                getViewPortStart(), getViewPortStart().plusSeconds(getViewPortDuration()),
-                this.imageArea.getWidth(), this.imageArea.getHeight(),
-                this::toX, new LinkedHashSet<>(Collections.singleton(selectionModel.getSelectedItem())),
-                getPanelBackgroundColor(), getPanelForegroundColor(), getPanelBorderColor(), getSelectBorderColor());
         // Draw the background
         drawBackground(gc);
         // Draw empty side panel
         drawEmptySidePanel(gc);
         // Draw time intervals in background
-        drawTimeIntervals(gc, rc, false);
+        drawTimeIntervals(gc, this, false);
         // Draw task lines
-        drawTaskLines(gc, rc);
+        drawTaskLines(gc, this);
         // Draw calendar headers: need conversion functions Instant -> x on screen
         drawHeaders(gc);
         // Draw time intervals in foreground
-        drawTimeIntervals(gc, rc, true);
+        drawTimeIntervals(gc, this, true);
         // Draw cursors
-        drawCursors(gc, rc);
+        drawCursors(gc, this);
     }
 
     private void scrollbarsStatusChanged() {
@@ -787,6 +835,8 @@ public class Timeline extends GridPane {
     }
 
     private void recomputeViewport() {
+        // Compute viewport end
+        this.viewPortEnd.set(this.viewPortStart.get().plusSeconds(this.viewPortDuration.get()));
         updateHScrollbarPosition();
         internalRefresh();
     }
@@ -862,6 +912,8 @@ public class Timeline extends GridPane {
         if(getViewPortDuration() == 0) {
             setViewPortDuration(getMaxTime().getEpochSecond() - getMinTime().getEpochSecond());
         }
+        // Compute viewport end
+        this.viewPortEnd.set(this.viewPortStart.get().plusSeconds(this.viewPortDuration.get()));
         // Recompute scrollbar settings
         updateHScrollbarSettings();
         updateVScrollbarSettings();
@@ -874,11 +926,11 @@ public class Timeline extends GridPane {
             // Use seconds, not initialised
             return ChronoUnit.SECONDS;
         }
-        double secondsSize = RenderingContext.getTextWidth(gc, "00:00:00") + 4*TEXT_PADDING;
-        double minutesSize = RenderingContext.getTextWidth(gc, "00:00") + 4*TEXT_PADDING;
-        double hoursSize = RenderingContext.getTextWidth(gc, "00") + 4*TEXT_PADDING;
-        double daysSize = RenderingContext.getTextWidth(gc, "0000-00-00") + 4*TEXT_PADDING;
-        double monthsSize = RenderingContext.getTextWidth(gc, "0000-00") + 4*TEXT_PADDING;
+        double secondsSize = getTextWidth(gc, "00:00:00") + 4*TEXT_PADDING;
+        double minutesSize = getTextWidth(gc, "00:00") + 4*TEXT_PADDING;
+        double hoursSize = getTextWidth(gc, "00") + 4*TEXT_PADDING;
+        double daysSize = getTextWidth(gc, "0000-00-00") + 4*TEXT_PADDING;
+        double monthsSize = getTextWidth(gc, "0000-00") + 4*TEXT_PADDING;
 
         double pixelForSecond = pixelWidth / durationSeconds;
         double temp;
@@ -897,7 +949,14 @@ public class Timeline extends GridPane {
         }
     }
 
-    private void drawTimeIntervals(GraphicsContext gc, RenderingContext rc, boolean foreground) {
+    @Override
+    public double getTextWidth(GraphicsContext gc, String text) {
+        Text theText = new Text(text);
+        theText.setFont(gc.getFont());
+        return theText.getBoundsInLocal().getWidth();
+    }
+
+    private void drawTimeIntervals(GraphicsContext gc, IRenderingContext rc, boolean foreground) {
         for(TimeInterval tc : this.timeIntervals) {
             if(tc.isForeground() == foreground && inViewport(tc.getStartTime(), tc.getEndTime())) {
                 tc.render(gc, rc);
@@ -905,7 +964,7 @@ public class Timeline extends GridPane {
         }
     }
 
-    private void drawCursors(GraphicsContext gc, RenderingContext rc) {
+    private void drawCursors(GraphicsContext gc, IRenderingContext rc) {
         for(TimeCursor tc : this.timeCursors) {
             if(inViewport(tc.getTime())) {
                 tc.render(gc, rc);
@@ -921,7 +980,7 @@ public class Timeline extends GridPane {
         gc.fillRect(0, 0, this.imageArea.getWidth(), this.imageArea.getHeight());
     }
 
-    private void drawTaskLines(GraphicsContext gc, RenderingContext rc) {
+    private void drawTaskLines(GraphicsContext gc, IRenderingContext rc) {
         // You render only line blocks that are contained in the viewport, as defined by the vertical scroll value
         double yStart = this.verticalScroll.getValue();
         double yEnd = yStart + this.imageArea.getHeight() - this.headerRowHeight;
