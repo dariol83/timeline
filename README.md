@@ -1,5 +1,7 @@
 # Timeline Chart
 
+[<img src="https://img.shields.io/maven-central/v/eu.dariolucia.jfx/eu.dariolucia.jfx.timeline?color=greem&style=flat">](https://search.maven.org/search?q=eu.dariolucia.jfx.timeline)
+
 ## Introduction
 This module contains an implementation of a timeline/Gantt chart for JavaFX. The widget supports the following features:
 - Grouping of tasks in lines and group of lines;
