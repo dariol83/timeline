@@ -50,6 +50,8 @@ public class TaskItem {
      * *****************************************************************************************/
     private BoundingBox lastRenderedBounds;
 
+    private Object userData;
+
     public TaskItem(String name, Instant startTime, long expectedDuration) {
         this(name, startTime, expectedDuration, 0);
     }
@@ -147,6 +149,14 @@ public class TaskItem {
 
     public void setTaskTextColor(Color taskTextColor) {
         this.taskTextColor.set(taskTextColor);
+    }
+
+    public Object getUserData() {
+        return userData;
+    }
+
+    public void setUserData(Object userData) {
+        this.userData = userData;
     }
 
     public void render(GraphicsContext gc, double taskLineYStart, IRenderingContext rc) {
