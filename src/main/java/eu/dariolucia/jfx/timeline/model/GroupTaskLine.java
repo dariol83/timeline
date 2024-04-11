@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * A task group represents a group of task lines or sub-groups in a timeline.
+ * A task group represents a group of task lines or subgroups in a timeline.
  * This class can be subclassed and the render() method can be overwritten. It is nevertheless important, that the
  * last rendered bounding box is saved/reset using the related methods.
  */
@@ -42,10 +42,19 @@ public class GroupTaskLine implements ITaskLine {
     private Timeline timeline;
     private BoundingBox lastRenderedBounds;
 
+    /**
+     * Class constructor with no description.
+     * @param name the name of the task group
+     */
     public GroupTaskLine(String name) {
         this(name, null);
     }
 
+    /**
+     * Class constructor with name and description.
+     * @param name the name of the task group
+     * @param description the description of the task group
+     */
     public GroupTaskLine(String name, String description) {
         this.name.set(name);
         this.description.set(description);
@@ -186,6 +195,10 @@ public class GroupTaskLine implements ITaskLine {
     public void setTimeline(Timeline timeline) {
         this.timeline = timeline;
         this.items.forEach(i -> i.setTimeline(timeline));
+        if(this.timeline != null) {
+            // If added to a new timeline, the rendering structure must be recomputed
+            computeRenderingStructure();
+        }
     }
 
     @Override

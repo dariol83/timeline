@@ -30,6 +30,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.SelectionModel;
+import javafx.scene.effect.Effect;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
@@ -42,7 +43,10 @@ import javafx.scene.text.TextBoundsType;
 import java.time.*;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -55,7 +59,7 @@ public class Timeline extends GridPane implements IRenderingContext {
     /* *****************************************************************************************
      * Constants
      * *****************************************************************************************/
-    private static final double TEXT_PADDING = 5;
+    private static final double TEXT_PADDING_DEFAULT = 5;
     private static final double TASK_PANEL_WIDTH_DEFAULT = 100;
 
     /* *****************************************************************************************
@@ -70,12 +74,13 @@ public class Timeline extends GridPane implements IRenderingContext {
     /* *****************************************************************************************
      * Properties
      * *****************************************************************************************/
-    private final SimpleObjectProperty<Instant> minTime = new SimpleObjectProperty<>();
-    private final SimpleObjectProperty<Instant> maxTime = new SimpleObjectProperty<>();
-    private final SimpleLongProperty viewPortDuration = new SimpleLongProperty();
-    private final SimpleObjectProperty<Instant> viewPortStart = new SimpleObjectProperty<>();
+    private final SimpleObjectProperty<Instant> minTime = new SimpleObjectProperty<>(Instant.now());
+    private final SimpleObjectProperty<Instant> maxTime = new SimpleObjectProperty<>(Instant.now().plusSeconds(3600));
+    private final SimpleLongProperty viewPortDuration = new SimpleLongProperty(600);
+    private final SimpleObjectProperty<Instant> viewPortStart = new SimpleObjectProperty<>(minTime.get());
     private final SimpleObjectProperty<Instant> viewPortEnd = new SimpleObjectProperty<>();
     private final SimpleDoubleProperty taskPanelWidth = new SimpleDoubleProperty(TASK_PANEL_WIDTH_DEFAULT);
+    private final SimpleDoubleProperty textPadding = new SimpleDoubleProperty(TEXT_PADDING_DEFAULT);
     private final SimpleObjectProperty<Color> backgroundColor = new SimpleObjectProperty<>(Color.WHITE);
     private final SimpleObjectProperty<Color> headerBackgroundColor = new SimpleObjectProperty<>(Color.LIGHTGRAY);
     private final SimpleObjectProperty<Color> headerForegroundColor = new SimpleObjectProperty<>(Color.BLACK);
@@ -84,13 +89,18 @@ public class Timeline extends GridPane implements IRenderingContext {
     private final SimpleObjectProperty<Color> panelForegroundColor = new SimpleObjectProperty<>(Color.BLACK);
     private final SimpleObjectProperty<Color> panelBorderColor = new SimpleObjectProperty<>(panelBackgroundColor.get().darker());
     private final SimpleObjectProperty<Color> selectBorderColor = new SimpleObjectProperty<>(Color.BLACK);
-    private final SimpleBooleanProperty scrollbarsVisible = new SimpleBooleanProperty();
+    private final SimpleObjectProperty<Effect> selectBorderEffect = new SimpleObjectProperty<>(null);
+    private final SimpleDoubleProperty selectBorderWidth = new SimpleDoubleProperty(2.0);
+    private final SimpleObjectProperty<Font> textFont = new SimpleObjectProperty<>(null);
+    private final SimpleBooleanProperty horizontalScrollbarVisible = new SimpleBooleanProperty();
+    private final SimpleBooleanProperty verticalScrollbarVisible = new SimpleBooleanProperty();
     private final ObservableList<ITaskLine> items = FXCollections.observableArrayList(ITaskLine::getObservableProperties);
     private final ObservableList<TimeCursor> timeCursors = FXCollections.observableArrayList(timeCursor -> new Observable[] {
             timeCursor.colorProperty(), timeCursor.timeProperty() });
     private final ObservableList<TimeInterval> timeIntervals = FXCollections.observableArrayList(timeInterval -> new Observable[] {
             timeInterval.colorProperty(), timeInterval.startTimeProperty(), timeInterval.endTimeProperty(), timeInterval.foregroundProperty() });
     private final SimpleBooleanProperty enableMouseSelection = new SimpleBooleanProperty(true);
+    private final SimpleBooleanProperty enableMouseScroll = new SimpleBooleanProperty(true);
 
     /* *****************************************************************************************
      * Internal variables
@@ -163,8 +173,13 @@ public class Timeline extends GridPane implements IRenderingContext {
         panelBorderColorProperty().addListener((e, o, n) -> internalRefresh());
         headerBorderColorProperty().addListener((e, o, n) -> internalRefresh());
         selectBorderColorProperty().addListener((e, o, n) -> internalRefresh());
+        selectBorderWidthProperty().addListener((e,v,n) -> internalRefresh());
+        selectBorderEffectProperty().addListener((e,v,n) -> internalRefresh());
+        textFontProperty().addListener((e,v,n) -> textSettingsUpdated());
+        textPaddingProperty().addListener((e,v,n) -> textSettingsUpdated());
         // Add listener when scrollbar visible is updated
-        scrollbarsVisibleProperty().addListener((e,o,n) -> scrollbarsStatusChanged());
+        horizontalScrollbarVisibleProperty().addListener((e,o,n) -> horizontalScrollbarStatusChanged());
+        verticalScrollbarVisibleProperty().addListener((e,o,n) -> verticalScrollbarStatusChanged());
 
         // Add listener to changes to the observable list structure (add, remove)
         this.items.addListener(this::itemsUpdated);
@@ -190,7 +205,7 @@ public class Timeline extends GridPane implements IRenderingContext {
      * @return the vertical {@link ScrollBar} if visible, otherwise null.
      */
     public ScrollBar getVerticalScroll() {
-        if(isScrollbarsVisible()) {
+        if(isVerticalScrollbarVisible()) {
             return verticalScroll;
         } else {
             return null;
@@ -202,7 +217,7 @@ public class Timeline extends GridPane implements IRenderingContext {
      * @return the horizontal {@link ScrollBar} if visible, otherwise null.
      */
     public ScrollBar getHorizontalScroll() {
-        if(isScrollbarsVisible()) {
+        if(isHorizontalScrollbarVisible()) {
             return horizontalScroll;
         } else {
             return null;
@@ -284,11 +299,6 @@ public class Timeline extends GridPane implements IRenderingContext {
         double percentage = (timeSecs - startTimeSecs)/ (double) getViewPortDuration();
         // Now translate to pixels
         return percentage * (this.imageArea.getWidth() - getTaskPanelWidth()) + getTaskPanelWidth();
-    }
-
-    @Override
-    public double getTextPadding() {
-        return TEXT_PADDING;
     }
 
     /**
@@ -493,16 +503,28 @@ public class Timeline extends GridPane implements IRenderingContext {
         this.backgroundColor.set(backgroundColor);
     }
 
-    public boolean isScrollbarsVisible() {
-        return scrollbarsVisible.get();
+    public boolean isHorizontalScrollbarVisible() {
+        return horizontalScrollbarVisible.get();
     }
 
-    public SimpleBooleanProperty scrollbarsVisibleProperty() {
-        return scrollbarsVisible;
+    public SimpleBooleanProperty horizontalScrollbarVisibleProperty() {
+        return horizontalScrollbarVisible;
     }
 
-    public void setScrollbarsVisible(boolean scrollbarsVisible) {
-        this.scrollbarsVisible.set(scrollbarsVisible);
+    public void setHorizontalScrollbarVisible(boolean scrollbarsVisible) {
+        this.horizontalScrollbarVisible.set(scrollbarsVisible);
+    }
+
+    public boolean isVerticalScrollbarVisible() {
+        return verticalScrollbarVisible.get();
+    }
+
+    public SimpleBooleanProperty verticalScrollbarVisibleProperty() {
+        return verticalScrollbarVisible;
+    }
+
+    public void setVerticalScrollbarVisible(boolean verticalScrollbarVisible) {
+        this.verticalScrollbarVisible.set(verticalScrollbarVisible);
     }
 
     public Color getHeaderBackgroundColor() {
@@ -600,6 +622,70 @@ public class Timeline extends GridPane implements IRenderingContext {
         this.selectBorderColor.set(selectBorderColor);
     }
 
+    @Override
+    public Effect getSelectBorderEffect() {
+        return selectBorderEffect.get();
+    }
+
+    public SimpleObjectProperty<Effect> selectBorderEffectProperty() {
+        return selectBorderEffect;
+    }
+
+    public void setSelectBorderEffect(Effect selectBorderEffect) {
+        this.selectBorderEffect.set(selectBorderEffect);
+    }
+
+    @Override
+    public double getSelectBorderWidth() {
+        return selectBorderWidth.get();
+    }
+
+    public SimpleDoubleProperty selectBorderWidthProperty() {
+        return selectBorderWidth;
+    }
+
+    public void setSelectBorderWidth(double selectBorderWidth) {
+        this.selectBorderWidth.set(selectBorderWidth);
+    }
+
+    @Override
+    public Font getTextFont() {
+        return textFont.get();
+    }
+
+    public SimpleObjectProperty<Font> textFontProperty() {
+        return textFont;
+    }
+
+    public void setTextFont(Font textFont) {
+        this.textFont.set(textFont);
+    }
+
+    public boolean isEnableMouseScroll() {
+        return enableMouseScroll.get();
+    }
+
+    public SimpleBooleanProperty enableMouseScrollProperty() {
+        return enableMouseScroll;
+    }
+
+    public void setEnableMouseScroll(boolean enableMouseScroll) {
+        this.enableMouseScroll.set(enableMouseScroll);
+    }
+
+    @Override
+    public double getTextPadding() {
+        return textPadding.get();
+    }
+
+    public SimpleDoubleProperty textPaddingProperty() {
+        return textPadding;
+    }
+
+    public void setTextPadding(double textPadding) {
+        this.textPadding.set(textPadding);
+    }
+
     /* *****************************************************************************************
      * Utility access method
      * *****************************************************************************************/
@@ -615,9 +701,16 @@ public class Timeline extends GridPane implements IRenderingContext {
     /* *****************************************************************************************
      * Internal methods
      * *****************************************************************************************/
+    private void textSettingsUpdated() {
+        textHeight = -1;
+        recomputeArea();
+    }
 
     private void internalRefresh() {
         GraphicsContext gc = this.imageArea.getGraphicsContext2D();
+        if(getTextFont() != null) {
+            gc.setFont(getTextFont());
+        }
         gc.setFontSmoothingType(FontSmoothingType.LCD);
         // Draw the background
         drawBackground(gc);
@@ -635,46 +728,72 @@ public class Timeline extends GridPane implements IRenderingContext {
         drawCursors(gc, this);
     }
 
-    private void scrollbarsStatusChanged() {
-        if(this.horizontalScroll.getParent() == null) {
-            addScrollbars();
-        } else {
-            removeScrollbars();
+    private void horizontalScrollbarStatusChanged() {
+        if(this.horizontalScroll.getParent() == null && isHorizontalScrollbarVisible()) {
+            addHScrollbar();
+        } else if(this.horizontalScroll.getParent() != null && !isHorizontalScrollbarVisible()) {
+            removeHScrollbar();
         }
         // At the end, recompute area
         recomputeArea();
     }
 
-    private void removeScrollbars() {
+    private void addHScrollbar() {
+        getChildren().add(this.horizontalScroll);
+        GridPane.setRowIndex(this.horizontalScroll, 1);
+        GridPane.setColumnIndex(this.horizontalScroll, 0);
+        if(isVerticalScrollbarVisible()) {
+            getChildren().add(labelCornerfiller);
+            GridPane.setRowIndex(labelCornerfiller, 1);
+            GridPane.setColumnIndex(labelCornerfiller, 1);
+        }
+    }
+
+    private void removeHScrollbar() {
         getChildren().remove(this.horizontalScroll);
+        getChildren().remove(this.labelCornerfiller);
+    }
+
+    private void verticalScrollbarStatusChanged() {
+        if(this.verticalScroll.getParent() == null && isVerticalScrollbarVisible()) {
+            addVScrollbar();
+        } else if(this.verticalScroll.getParent() != null && !isVerticalScrollbarVisible()) {
+            removeVScrollbar();
+        }
+        // At the end, recompute area
+        recomputeArea();
+    }
+
+    private void addVScrollbar() {
+        getChildren().add(this.verticalScroll);
+        GridPane.setRowIndex(this.verticalScroll, 0);
+        GridPane.setColumnIndex(this.verticalScroll, 1);
+        if(isHorizontalScrollbarVisible()) {
+            getChildren().add(labelCornerfiller);
+            GridPane.setRowIndex(labelCornerfiller, 1);
+            GridPane.setColumnIndex(labelCornerfiller, 1);
+        }
+    }
+
+    private void removeVScrollbar() {
         getChildren().remove(this.verticalScroll);
         getChildren().remove(this.labelCornerfiller);
     }
 
-    private void addScrollbars() {
-        getChildren().add(this.horizontalScroll);
-        GridPane.setRowIndex(this.horizontalScroll, 1);
-        GridPane.setColumnIndex(this.horizontalScroll, 0);
-        getChildren().add(this.verticalScroll);
-        GridPane.setRowIndex(this.verticalScroll, 0);
-        GridPane.setColumnIndex(this.verticalScroll, 1);
-        getChildren().add(labelCornerfiller);
-        GridPane.setRowIndex(labelCornerfiller, 1);
-        GridPane.setColumnIndex(labelCornerfiller, 1);
-    }
-
     private void mouseScrolledAction(ScrollEvent scrollEvent) {
-        if(scrollEvent.isControlDown()) {
-            if (scrollEvent.getDeltaY() < 0) {
-                setViewPortDuration((long) (getViewPortDuration() + getViewPortDuration()/10.0));
+        if(isEnableMouseScroll()) {
+            if (scrollEvent.isControlDown()) {
+                if (scrollEvent.getDeltaY() < 0) {
+                    setViewPortDuration((long) (getViewPortDuration() + getViewPortDuration() / 10.0));
+                } else {
+                    setViewPortDuration(Math.max(10, (long) (getViewPortDuration() - getViewPortDuration() / 10.0)));
+                }
             } else {
-                setViewPortDuration(Math.max(10, (long) (getViewPortDuration() - getViewPortDuration()/10.0)));
-            }
-        } else {
-            if (scrollEvent.getDeltaY() < 0) {
-                this.verticalScroll.increment();
-            } else {
-                this.verticalScroll.decrement();
+                if (scrollEvent.getDeltaY() < 0) {
+                    this.verticalScroll.increment();
+                } else {
+                    this.verticalScroll.decrement();
+                }
             }
         }
     }
@@ -802,27 +921,36 @@ public class Timeline extends GridPane implements IRenderingContext {
             // Compute the max size
             double fullSize = totalLines * this.lineRowHeight;
             double totalSize = fullSize - this.imageArea.getHeight() + this.headerRowHeight;
-            if (currentValue > totalSize) {
-                currentValue = totalSize;
-            }
-            // Update the scrollbar max value
-            this.verticalScroll.setMax(totalSize);
-            this.verticalScroll.setValue(currentValue);
-            this.verticalScroll.setUnitIncrement(this.lineRowHeight);
-            // Set block increment
-            this.verticalScroll.setBlockIncrement(this.imageArea.getHeight() - this.headerRowHeight);
-            // Set visible amount if area is ready
-            if(this.imageArea.getHeight() > 0) {
-                this.verticalScroll.setVisibleAmount((totalSize / fullSize) * (this.imageArea.getHeight() - this.headerRowHeight));
+            if(totalSize < 0) {
+                // There is no need of a scrollbar in this case
+                this.verticalScroll.setMax(0);
+                this.verticalScroll.setValue(0);
+                this.verticalScroll.setUnitIncrement(0);
+                this.verticalScroll.setBlockIncrement(0);
+                this.verticalScroll.setVisibleAmount(0);
             } else {
-                this.verticalScroll.setVisibleAmount(1);
+                if (currentValue > totalSize) {
+                    currentValue = totalSize;
+                }
+                // Update the scrollbar max value
+                this.verticalScroll.setMax(totalSize);
+                this.verticalScroll.setValue(currentValue);
+                this.verticalScroll.setUnitIncrement(this.lineRowHeight);
+                // Set block increment
+                this.verticalScroll.setBlockIncrement(this.imageArea.getHeight() - this.headerRowHeight);
+                // Set visible amount if area is ready
+                if (this.imageArea.getHeight() > 0) {
+                    this.verticalScroll.setVisibleAmount((totalSize / fullSize) * (this.imageArea.getHeight() - this.headerRowHeight));
+                } else {
+                    this.verticalScroll.setVisibleAmount(1);
+                }
             }
         } else {
-            this.verticalScroll.setMax(1);
+            this.verticalScroll.setMax(0);
             this.verticalScroll.setValue(0);
-            this.verticalScroll.setUnitIncrement(1);
-            this.verticalScroll.setBlockIncrement(1);
-            this.verticalScroll.setVisibleAmount(1);
+            this.verticalScroll.setUnitIncrement(0);
+            this.verticalScroll.setBlockIncrement(0);
+            this.verticalScroll.setVisibleAmount(0);
         }
     }
 
@@ -926,11 +1054,11 @@ public class Timeline extends GridPane implements IRenderingContext {
             // Use seconds, not initialised
             return ChronoUnit.SECONDS;
         }
-        double secondsSize = getTextWidth(gc, "00:00:00") + 4*TEXT_PADDING;
-        double minutesSize = getTextWidth(gc, "00:00") + 4*TEXT_PADDING;
-        double hoursSize = getTextWidth(gc, "00") + 4*TEXT_PADDING;
-        double daysSize = getTextWidth(gc, "0000-00-00") + 4*TEXT_PADDING;
-        double monthsSize = getTextWidth(gc, "0000-00") + 4*TEXT_PADDING;
+        double secondsSize = getTextWidth(gc, "00:00:00") + 4*getTextPadding();
+        double minutesSize = getTextWidth(gc, "00:00") + 4*getTextPadding();
+        double hoursSize = getTextWidth(gc, "00") + 4*getTextPadding();
+        double daysSize = getTextWidth(gc, "0000-00-00") + 4*getTextPadding();
+        double monthsSize = getTextWidth(gc, "0000-00") + 4*getTextPadding();
 
         double pixelForSecond = pixelWidth / durationSeconds;
         double temp;
@@ -994,9 +1122,9 @@ public class Timeline extends GridPane implements IRenderingContext {
             double taskLineYStart = processedLines * this.lineRowHeight;
             processedLines += line.getNbOfLines();
             double taskLineYEnd = processedLines * this.lineRowHeight;
-            if((taskLineYStart > yStart && taskLineYStart < yEnd) ||
-                    (taskLineYEnd > yStart && taskLineYEnd < yEnd) ||
-                    (taskLineYStart < yStart && taskLineYEnd > yEnd)) {
+            if((taskLineYStart >= yStart && taskLineYStart <= yEnd) ||
+                    (taskLineYEnd >= yStart && taskLineYEnd <= yEnd) ||
+                    (taskLineYStart <= yStart && taskLineYEnd >= yEnd)) {
                 // Render: translate the taskLineYStart in the right viewport coordinates
                 taskLineYStart -= yStart;
                 taskLineYStart += this.headerRowHeight;
@@ -1018,8 +1146,8 @@ public class Timeline extends GridPane implements IRenderingContext {
     }
 
     private void drawEmptySidePanel(GraphicsContext gc) {
-        gc.setFill(Color.LIGHTGRAY);
-        gc.setStroke(Color.DARKGRAY);
+        gc.setFill(getPanelBackgroundColor());
+        gc.setStroke(getPanelBorderColor());
         gc.fillRect(0,this.headerRowHeight, 100, this.imageArea.getHeight() - this.headerRowHeight);
         gc.strokeRect(0,this.headerRowHeight, 100, this.imageArea.getHeight() - this.headerRowHeight);
     }
@@ -1064,7 +1192,7 @@ public class Timeline extends GridPane implements IRenderingContext {
         // Write text
         gc.setStroke(getHeaderForegroundColor());
         String toWrite = formatHeaderText(startTime, headerElement);
-        gc.strokeText(toWrite, xStart + TEXT_PADDING, this.textHeight + TEXT_PADDING);
+        gc.strokeText(toWrite, xStart + getTextPadding(), this.textHeight + getTextPadding());
     }
 
     private String formatHeaderText(Instant startTime, ChronoUnit headerElement) {
@@ -1110,8 +1238,8 @@ public class Timeline extends GridPane implements IRenderingContext {
             text.setBoundsType(TextBoundsType.VISUAL);
             text.setFont(font);
             textHeight = text.getBoundsInLocal().getHeight();
-            headerRowHeight = textHeight + 2 * TEXT_PADDING;
-            lineRowHeight = textHeight + 6 * TEXT_PADDING;
+            headerRowHeight = textHeight + 2 * getTextPadding();
+            lineRowHeight = textHeight + 6 * getTextPadding();
         }
     }
 }

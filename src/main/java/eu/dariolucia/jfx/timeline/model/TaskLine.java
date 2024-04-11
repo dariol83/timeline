@@ -24,7 +24,6 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -218,6 +217,10 @@ public class TaskLine implements ITaskLine {
     public void setTimeline(Timeline timeline) {
         this.timeline = timeline;
         this.items.forEach(i -> i.setTimeline(timeline));
+        if(this.timeline != null) {
+            // If added to a new timeline, the rendering structure must be recomputed
+            computeRenderingStructure();
+        }
     }
 
     @Override

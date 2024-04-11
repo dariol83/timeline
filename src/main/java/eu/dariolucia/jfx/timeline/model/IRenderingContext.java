@@ -17,12 +17,20 @@
 package eu.dariolucia.jfx.timeline.model;
 
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.effect.Effect;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 
 import java.time.Instant;
 import java.util.Set;
 
 public interface IRenderingContext {
+
+    Effect getSelectBorderEffect();
+
+    double getSelectBorderWidth();
+
+    Font getTextFont();
 
     double getTextWidth(GraphicsContext gc, String text);
 

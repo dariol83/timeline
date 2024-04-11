@@ -21,6 +21,8 @@ import eu.dariolucia.jfx.timeline.model.*;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -132,16 +134,33 @@ public class TestApplication extends Application {
                 theLine.getItems().get(0).getStartTime().plusSeconds(620));
         timeInterval.setForeground(true);
         Platform.runLater(() -> tl.getTimeIntervals().add(timeInterval));
+        tl.setEnableMouseScroll(false);
+        tl.getImageArea().setOnContextMenuRequested(contextMenuEvent -> {
+            ContextMenu cm = new ContextMenu();
+            cm.getItems().add(new MenuItem("This is node: " + tl.getTaskItemAt(contextMenuEvent.getX(), contextMenuEvent.getY())));
+            cm.show(tl.getImageArea().getScene().getWindow(), contextMenuEvent.getScreenX(), contextMenuEvent.getScreenY());
+        });
+
+        TimeInterval timeInterval2 = new TimeInterval(null,
+                theLine.getItems().get(0).getStartTime().plusSeconds(420));
+        timeInterval2.setForeground(true);
+        Platform.runLater(() -> tl.getTimeIntervals().add(timeInterval2));
 
         // Launch a thread that does some changes
         Thread t = new Thread(() -> {
             try {
                 Thread.sleep(2000);
-                Platform.runLater(() -> tl.setScrollbarsVisible(true));
+                Platform.runLater(() -> tl.setHorizontalScrollbarVisible(true));
                 Thread.sleep(2000);
-                Platform.runLater(() -> tl.setScrollbarsVisible(false));
+                Platform.runLater(() -> tl.setVerticalScrollbarVisible(true));
                 Thread.sleep(2000);
-                Platform.runLater(() -> tl.setScrollbarsVisible(true));
+                Platform.runLater(() -> tl.setVerticalScrollbarVisible(false));
+                Thread.sleep(2000);
+                Platform.runLater(() -> tl.setHorizontalScrollbarVisible(false));
+                Thread.sleep(2000);
+                Platform.runLater(() -> tl.setVerticalScrollbarVisible(true));
+                Thread.sleep(2000);
+                Platform.runLater(() -> tl.setHorizontalScrollbarVisible(true));
 
                 TaskItem it = theLine.getItems().get(0);
                 for(int i = 0; i < 3; ++i) {
@@ -158,6 +177,8 @@ public class TestApplication extends Application {
                 Platform.runLater(() -> it.setTaskBackgroundColor(Color.RED));
                 Platform.runLater(() -> it.setName("New Task!"));
                 Thread.sleep(3000);
+                Platform.runLater(() -> tl.setEnableMouseScroll(true));
+
                 Platform.runLater(() -> it.setStartTime(it.getStartTime().minusSeconds(520)));
                 Thread.sleep(3000);
                 Platform.runLater(() -> theLine.getItems().remove(it));
@@ -177,7 +198,6 @@ public class TestApplication extends Application {
     }
 
     private static TaskItem createTaskItem(String name, Instant currentTime, int secondsToAdd, int expectedDuration, int actualDuration) {
-        TaskItem ti = new TaskItem(name, currentTime.plusSeconds(secondsToAdd), expectedDuration, actualDuration);
-        return ti;
+        return new TaskItem(name, currentTime.plusSeconds(secondsToAdd), expectedDuration, actualDuration);
     }
 }

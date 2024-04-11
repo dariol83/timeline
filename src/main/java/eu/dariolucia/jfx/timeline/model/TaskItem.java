@@ -167,15 +167,15 @@ public class TaskItem {
             gc.setFill(bgColor);
             gc.setStroke(borderColor);
             if(isSelected) {
-                gc.setLineWidth(2);
-                // gc.setEffect(new InnerShadow(10, rc.getSelectBorderColor()));
+                gc.setLineWidth(rc.getSelectBorderWidth());
+                gc.setEffect(rc.getSelectBorderEffect());
             }
             double taskHeight = rc.getLineRowHeight() - 2*rc.getTextPadding();
             gc.fillRect(startX, startY, endX - startX, taskHeight);
-            // Selected tasks have black border and thicker line
+            // Draw the selection
             gc.strokeRect(startX, startY, endX - startX, taskHeight);
+            // Restore effect and line
             gc.setLineWidth(1);
-            // Restore effect
             gc.setEffect(null);
             // Render now actual
             double actualEndX = -1;
