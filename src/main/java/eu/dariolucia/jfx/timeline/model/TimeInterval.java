@@ -26,6 +26,7 @@ import java.time.Instant;
 
 /**
  * A class used to place time intervals (also open-ended) on the timeline.
+ * This class can be subclassed and the render() method can be overwritten.
  */
 public class TimeInterval {
 

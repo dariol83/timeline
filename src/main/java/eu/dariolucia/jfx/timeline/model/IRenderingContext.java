@@ -24,6 +24,9 @@ import javafx.scene.text.Font;
 import java.time.Instant;
 import java.util.Set;
 
+/**
+ * This interface exposes a set of information to the rendering functions of the different model objects.
+ */
 public interface IRenderingContext {
 
     Effect getSelectBorderEffect();

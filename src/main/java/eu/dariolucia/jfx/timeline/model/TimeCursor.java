@@ -25,6 +25,7 @@ import java.time.Instant;
 
 /**
  * A class used to place cursors on the timeline.
+ * This class can be subclassed and the render() method can be overwritten.
  */
 public class TimeCursor {
 
@@ -79,6 +80,8 @@ public class TimeCursor {
         gc.setLineWidth(2);
         gc.setLineDashes(4, 4);
         gc.strokeLine(startX, rc.getHeaderRowHeight() + 2, startX, rc.getImageAreaHeight());
+        gc.setLineDashes();
+        gc.setLineWidth(1);
     }
 
     @Override

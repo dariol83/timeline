@@ -116,7 +116,7 @@ public class GroupTaskLine implements ITaskLine {
     public void render(GraphicsContext gc, double taskLineXStart, double taskLineYStart, IRenderingContext rc) {
         int nbLines = getNbOfLines();
         double groupBoxWidth = rc.getLineRowHeight();
-        // Render the sublines
+        // Render the sub lines
         int i = 0;
         for(ITaskLine line : this.items) {
             line.render(gc, taskLineXStart + groupBoxWidth, taskLineYStart + i * rc.getLineRowHeight(), rc);

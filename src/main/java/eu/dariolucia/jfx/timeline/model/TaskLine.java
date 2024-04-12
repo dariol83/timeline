@@ -31,7 +31,7 @@ import java.util.List;
 
 /**
  * A task line represents a line in a timeline, and contains {@link TaskItem} instances.
- * In its current implementation, a task line is always rendered on a single line: overalapping task items are rendered
+ * In its current implementation, a task line is always rendered on a single line: overlapping task items are rendered
  * one on top of the other, therefore the end result might not be the best.
  * This class can be subclassed and the render() method can be overwritten. It is nevertheless important, that the
  * last rendered bounding box is saved/reset using the related methods.
@@ -47,7 +47,7 @@ public class TaskLine implements ITaskLine {
     private Timeline timeline;
     private BoundingBox lastRenderedBounds;
 
-    private List<RenderingLine> renderingLines = new ArrayList<>();
+    private final List<RenderingLine> renderingLines = new ArrayList<>();
 
     public TaskLine(String name) {
         this(name, null);

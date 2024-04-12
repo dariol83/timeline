@@ -236,8 +236,8 @@ public class TaskItem {
         long thisEndTime = Math.max(getStartTime().getEpochSecond() + getActualDuration(), getStartTime().getEpochSecond() + getExpectedDuration());
         long itemStartTime = item.getStartTime().getEpochSecond();
         long itemEndTime = Math.max(item.getStartTime().getEpochSecond() + item.getActualDuration(), item.getStartTime().getEpochSecond() + item.getExpectedDuration());
-        return (thisStartTime >= itemStartTime && thisStartTime <= itemEndTime) ||
-                (thisEndTime >= itemStartTime && thisEndTime <= itemEndTime) ||
+        return (thisStartTime >= itemStartTime && thisStartTime < itemEndTime) ||
+                (thisEndTime > itemStartTime && thisEndTime <= itemEndTime) ||
                 (thisStartTime <= itemStartTime && thisEndTime >= itemEndTime) ||
                 (itemStartTime <= thisStartTime && itemEndTime >= thisEndTime);
     }

@@ -19,17 +19,14 @@ package eu.dariolucia.jfx.timeline.internal;
 import eu.dariolucia.jfx.timeline.Timeline;
 import eu.dariolucia.jfx.timeline.model.*;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.scene.Scene;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
+import java.time.Duration;
 import java.time.Instant;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.time.temporal.ChronoUnit;
 
 public class TestApplication extends Application {
 
@@ -39,157 +36,76 @@ public class TestApplication extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("Timeline Test");
+        primaryStage.setTitle("Timeline Example");
         // Create timeline
         Timeline tl = new Timeline();
         // Add data defaults for testing
-        Instant currentTime = new GregorianCalendar(2024, Calendar.FEBRUARY, 10, 10, 0, 0).toInstant();
+        Instant currentTime = Instant.now();
         tl.setMinTime(currentTime);
         tl.setMaxTime(currentTime.plusSeconds(12800));
         tl.setViewPortStart(currentTime);
-        tl.setViewPortDuration(1200);
-
+        tl.setViewPortDuration(3600 * 24 * 20);
+        tl.setBackgroundColor(Color.BEIGE.brighter().brighter());
+        tl.setTaskPanelWidth(250);
         // Add task lines
-        TaskLine theLine = new TaskLine("Task Line 1", "First task line");
-        theLine.getItems().add(createTaskItem("Task 1", currentTime, 30, 98, 0));
-        theLine.getItems().add(createTaskItem("Task 2", currentTime, 130, 28, 0));
-        theLine.getItems().add(createTaskItem("Task 3", currentTime, 190, 5, 0));
-        theLine.getItems().add(createTaskItem("Task 4", currentTime, 60 * 11, 80, 140));
-        tl.getItems().add(theLine);
-
         {
-            TaskLine taskLine = new TaskLine("Task Line 2", "Second task line");
-            taskLine.getItems().add(createTaskItem("Task 1", currentTime, 600, 140, 0));
-            taskLine.getItems().add(createTaskItem("Task 2", currentTime, 0, 77, 0));
-            taskLine.getItems().add(createTaskItem("Task 3", currentTime, 920, 7000, 0));
-            tl.getItems().add(taskLine);
+            currentTime = currentTime.minus(2, ChronoUnit.DAYS);
+            // Design
+            GroupTaskLine designGroup = new GroupTaskLine("Design");
+            TaskLine backendDesign = new TaskLine("Backend", "Backend Design");
+            backendDesign.getItems().add(createTaskItem("General Design", currentTime.plus(3, ChronoUnit.DAYS), Duration.ofDays(2).toSeconds(), 3600 * 14));
+            backendDesign.getItems().add(createTaskItem("Optimisation", currentTime.plus(6, ChronoUnit.DAYS), Duration.ofDays(1).toSeconds(), 0));
+            TaskLine frontEndDesign = new TaskLine("Frontend", "Frontend Design");
+            frontEndDesign.getItems().add(createTaskItem("Design", currentTime.plus(3, ChronoUnit.DAYS), Duration.ofDays(4).toSeconds(), Duration.ofDays(3).toSeconds()));
+            designGroup.getItems().addAll(backendDesign, frontEndDesign);
+            tl.getItems().add(designGroup);
         }
         {
-            TaskLine taskLine = new TaskLine("Task Line 3 mega long task line name", "Third task line");
-            taskLine.getItems().add(createTaskItem("Task 1 with a super long name that cannot fit in the label", currentTime, 600, 140, 0));
-            taskLine.getItems().add(createTaskItem("Task 2", currentTime, 0, 77, 0));
-            taskLine.getItems().add(createTaskItem("Task 3", currentTime, 920, 7000, 0));
-            tl.getItems().add(taskLine);
+            currentTime = currentTime.plus(5, ChronoUnit.DAYS);
+            // Implementation
+            GroupTaskLine implementationGroup = new GroupTaskLine("Implementation");
+
+            GroupTaskLine backendGroup = new GroupTaskLine("Backend");
+            TaskLine backendImpl = new TaskLine("Development");
+            backendImpl.getItems().add(createTaskItem("General Implementation", currentTime.plus(1, ChronoUnit.DAYS), Duration.ofDays(8).toSeconds(), 0));
+            TaskLine backendTest = new TaskLine("Testing");
+            backendTest.getItems().add(createTaskItem("Unit Testing", currentTime.plus(3, ChronoUnit.DAYS), Duration.ofDays(4).toSeconds(), 0));
+            backendGroup.getItems().addAll(backendImpl, backendTest);
+
+            GroupTaskLine frontEndGroup = new GroupTaskLine("FrontEnd");
+            TaskLine frontEndImpl = new TaskLine("Development");
+            frontEndImpl.getItems().add(createTaskItem("Implementation", currentTime.plus(2, ChronoUnit.DAYS), Duration.ofDays(6).toSeconds(), 0));
+            TaskLine frontEndTest = new TaskLine("Testing");
+            frontEndTest.getItems().add(createTaskItem("Unit Testing", currentTime.plus(3, ChronoUnit.DAYS), Duration.ofDays(1).toSeconds(), 0));
+            frontEndGroup.getItems().addAll(frontEndImpl, frontEndTest);
+
+            TaskLine documentation = new TaskLine("Documentation", "Documentation");
+            documentation.getItems().add(createTaskItem("Writing Docs", currentTime.plus(1, ChronoUnit.DAYS), Duration.ofDays(8).toSeconds(), Duration.ofDays(1).toSeconds()));
+
+            implementationGroup.getItems().addAll(backendGroup, frontEndGroup, documentation);
+
+            tl.getItems().add(implementationGroup);
         }
-        GroupTaskLine group = new GroupTaskLine("Group 1");
-        GroupTaskLine group2 = new GroupTaskLine("Group 2");
         {
-            TaskLine taskLine = new TaskLine("Task Line 3 group 1", "Yet another task line");
-            taskLine.getItems().add(createTaskItem("Task 1", currentTime, 1600, 140, 0));
-            taskLine.getItems().add(createTaskItem("Task 2", currentTime, 123, 377, 0));
-            taskLine.getItems().add(createTaskItem("Task 3", currentTime, 920, 32, 0));
-
-            TaskLine taskLine2 = new TaskLine("Task Line 3 group 2", "Yet another task line");
-            taskLine2.getItems().add(createTaskItem("Task 1", currentTime, 600, 140, 0));
-            taskLine2.getItems().add(createTaskItem("Task 2", currentTime, 1, 77, 0));
-            taskLine2.getItems().add(createTaskItem("Task 3", currentTime, 120, 465, 0));
-
-            TaskLine taskLine3 = new TaskLine("Task Line 3 group 2", "Yet another task line");
-            taskLine3.getItems().add(createTaskItem("Task 1", currentTime, 600, 140, 0));
-            taskLine3.getItems().add(createTaskItem("Task 2", currentTime, 120, 465, 0));
-
-            TaskLine taskLine4 = new TaskLine("Task Line 4 group 1", "Yet another task line");
-            taskLine4.getItems().add(createTaskItem("Task 5", currentTime, 600, 140, 0));
-            taskLine4.getItems().add(createTaskItem("Task 6", currentTime, 120, 465, 0));
-
-            group2.getItems().addAll(taskLine2, taskLine3);
-            group.getItems().addAll(taskLine, group2, taskLine4);
-
-            tl.getItems().add(group);
-        }
-        GroupTaskLine group3 = new GroupTaskLine("Group 3");
-        {
-            TaskLine taskLine = new TaskLine("Task Line 1 group 3", "Yet another task line");
-            taskLine.getItems().add(createTaskItem("Task 1", currentTime, 1600, 140, 0));
-            taskLine.getItems().add(createTaskItem("Task 2", currentTime, 123, 377, 0));
-            taskLine.getItems().add(createTaskItem("Task 3", currentTime, 920, 32, 0));
-
-            TaskLine taskLine2 = new TaskLine("Task Line 2 group 3", "Yet another task line");
-            taskLine2.getItems().add(createTaskItem("Task 1", currentTime, 600, 140, 0));
-            taskLine2.getItems().add(createTaskItem("Task 2", currentTime, 1, 77, 0));
-            taskLine2.getItems().add(createTaskItem("Task 3", currentTime, 120, 465, 0));
-
-            TaskLine taskLine3 = new TaskLine("Task Line 3 group 3", "Yet another task line");
-            taskLine3.getItems().add(createTaskItem("Task 1", currentTime, 600, 140, 0));
-            taskLine3.getItems().add(createTaskItem("Task 2", currentTime, 120, 465, 0));
-
-            group3.getItems().addAll(taskLine, taskLine2, taskLine3);
-            tl.getItems().add(group3);
+            currentTime = currentTime.plus(10, ChronoUnit.DAYS);
+            // Acceptance
+            TaskLine acceptance = new TaskLine("Acceptance", "Acceptance");
+            acceptance.getItems().add(createTaskItem("Acceptance Tests", currentTime.plus(0, ChronoUnit.DAYS), Duration.ofDays(1).toSeconds(), 0));
+            tl.getItems().add(acceptance);
         }
 
-        for(int i = 4; i < 50; ++i) {
-            TaskLine taskLine = new TaskLine("Task Line " + i, i + "th task line");
-            taskLine.getItems().add(createTaskItem("Task 1 (" + i + ")", currentTime, 600, 140, 0));
-            taskLine.getItems().add(createTaskItem("Task 2 (" + i + ")", currentTime, 0, 77, 0));
-            taskLine.getItems().add(createTaskItem("Task 3 (" + i + ")", currentTime, 920, 7000, 0));
-            tl.getItems().add(taskLine);
-        }
-        tl.setTaskPanelWidth(200);
+        TimeInterval ti = new TimeInterval(null, currentTime.minus(9, ChronoUnit.DAYS).minusSeconds(9000));
+        ti.setColor(new Color(Color.PAPAYAWHIP.getRed(), Color.PAPAYAWHIP.getGreen(), Color.PAPAYAWHIP.getBlue(), 0.3));
+        ti.setForeground(true);
+        tl.getTimeIntervals().add(ti);
 
-        theLine.setName("Name is changed!sads ad as");
-        Platform.runLater(() -> tl.getTimeCursors().add(new TimeCursor(theLine.getItems().get(0).getStartTime().plusSeconds(50))));
-        Platform.runLater(() -> tl.getTimeIntervals().add(new TimeInterval(theLine.getItems().get(0).getStartTime().plusSeconds(120),
-                theLine.getItems().get(0).getStartTime().plusSeconds(220))));
-        TimeInterval timeInterval = new TimeInterval(theLine.getItems().get(0).getStartTime().plusSeconds(520),
-                theLine.getItems().get(0).getStartTime().plusSeconds(620));
-        timeInterval.setForeground(true);
-        Platform.runLater(() -> tl.getTimeIntervals().add(timeInterval));
-        tl.setEnableMouseScroll(false);
-        tl.getImageArea().setOnContextMenuRequested(contextMenuEvent -> {
-            ContextMenu cm = new ContextMenu();
-            cm.getItems().add(new MenuItem("This is node: " + tl.getTaskItemAt(contextMenuEvent.getX(), contextMenuEvent.getY())));
-            cm.show(tl.getImageArea().getScene().getWindow(), contextMenuEvent.getScreenX(), contextMenuEvent.getScreenY());
-        });
+        TimeCursor tc = new TimeCursor(currentTime.minus(9, ChronoUnit.DAYS).minusSeconds(9000));
+        tc.setColor(Color.LIGHTGRAY);
 
-        TimeInterval timeInterval2 = new TimeInterval(null,
-                theLine.getItems().get(0).getStartTime().plusSeconds(420));
-        timeInterval2.setForeground(true);
-        Platform.runLater(() -> tl.getTimeIntervals().add(timeInterval2));
+        TimeCursor deadline = new TimeCursor(currentTime.plus(1, ChronoUnit.DAYS).plusSeconds(15000));
+        deadline.setColor(Color.RED);
+        tl.getTimeCursors().addAll(tc, deadline);
 
-        // Launch a thread that does some changes
-        Thread t = new Thread(() -> {
-            try {
-                Thread.sleep(2000);
-                Platform.runLater(() -> tl.setHorizontalScrollbarVisible(true));
-                Thread.sleep(2000);
-                Platform.runLater(() -> tl.setVerticalScrollbarVisible(true));
-                Thread.sleep(2000);
-                Platform.runLater(() -> tl.setVerticalScrollbarVisible(false));
-                Thread.sleep(2000);
-                Platform.runLater(() -> tl.setHorizontalScrollbarVisible(false));
-                Thread.sleep(2000);
-                Platform.runLater(() -> tl.setVerticalScrollbarVisible(true));
-                Thread.sleep(2000);
-                Platform.runLater(() -> tl.setHorizontalScrollbarVisible(true));
-
-                TaskItem it = theLine.getItems().get(0);
-                for(int i = 0; i < 3; ++i) {
-                    Thread.sleep(3000);
-                    Platform.runLater(() -> it.setStartTime(it.getStartTime().plusSeconds(220)));
-                }
-                Thread.sleep(3000);
-                Platform.runLater(() -> tl.getSelectionModel().select(it));
-                for(int i = 0; i < 3; ++i) {
-                    Thread.sleep(3000);
-                    Platform.runLater(() -> it.setExpectedDuration(it.getExpectedDuration() + 60));
-                    Platform.runLater(() -> it.setActualDuration(it.getActualDuration() + 20));
-                }
-                Platform.runLater(() -> it.setTaskBackgroundColor(Color.RED));
-                Platform.runLater(() -> it.setName("New Task!"));
-                Thread.sleep(3000);
-                Platform.runLater(() -> tl.setEnableMouseScroll(true));
-
-                Platform.runLater(() -> it.setStartTime(it.getStartTime().minusSeconds(520)));
-                Thread.sleep(3000);
-                Platform.runLater(() -> theLine.getItems().remove(it));
-                Thread.sleep(3000);
-                Platform.runLater(() -> ((TaskLine) (group2.getItems().get(0))).getItems().add(createTaskItem("Task 4", currentTime, 123, 377, 0)));
-            } catch (InterruptedException e) {
-                // ignore
-            }
-        });
-        t.setDaemon(true);
-        t.start();
         // Add to application and render
         StackPane root = new StackPane();
         root.getChildren().add(tl);
@@ -197,7 +113,7 @@ public class TestApplication extends Application {
         primaryStage.show();
     }
 
-    private static TaskItem createTaskItem(String name, Instant currentTime, int secondsToAdd, int expectedDuration, int actualDuration) {
-        return new TaskItem(name, currentTime.plusSeconds(secondsToAdd), expectedDuration, actualDuration);
+    private static TaskItem createTaskItem(String name, Instant start, long duration, long actualDuration) {
+        return new TaskItem(name, start, duration, actualDuration);
     }
 }

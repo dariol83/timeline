@@ -47,7 +47,7 @@ public interface ITaskLine {
     int getNbOfLines();
 
     /**
-     * Ask the item to recompute the rendering structure and return whether there was a structural change (more/less lines
+     * Ask the item to recompute the rendering structure and return whether there was a structural change (more/fewer lines
      * to be drawn). The {@link ITaskLine} implementation shall use this opportunity to recompute the rendering structure.
      * This method is not supposed to be called by external class users.
      * @return true if the rendering structure changes, otherwise false

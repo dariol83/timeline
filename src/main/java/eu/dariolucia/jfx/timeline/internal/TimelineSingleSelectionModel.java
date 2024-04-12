@@ -20,6 +20,9 @@ import eu.dariolucia.jfx.timeline.Timeline;
 import eu.dariolucia.jfx.timeline.model.TaskItem;
 import javafx.scene.control.SingleSelectionModel;
 
+/**
+ * This class allows selection of a single {@link TaskItem} in a timeline.
+ */
 public class TimelineSingleSelectionModel extends SingleSelectionModel<TaskItem> {
 
     private final Timeline timeline;
