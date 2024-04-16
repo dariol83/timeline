@@ -22,6 +22,7 @@ import eu.dariolucia.jfx.timeline.model.TaskLine;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.time.Instant;
@@ -46,6 +47,7 @@ public class TestApplicationMinimal extends Application {
         theLine = new TaskLine("Task Line 2", "Second task line");
         theLine.getItems().add(new TaskItem("Task 2", Instant.now().plusSeconds(60), 90, 78));
         tl.getItems().add(theLine);
+        tl.setBackgroundColor(Color.BLACK);
         // Add to application and render
         StackPane root = new StackPane();
         root.getChildren().add(tl);

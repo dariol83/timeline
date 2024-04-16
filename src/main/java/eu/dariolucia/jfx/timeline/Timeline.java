@@ -106,6 +106,7 @@ public class Timeline extends GridPane implements IRenderingContext {
     private final SimpleBooleanProperty enableMouseScroll = new SimpleBooleanProperty(true);
     private final SimpleBooleanProperty enableZoomMouseScroll = new SimpleBooleanProperty(true);
     private final SimpleBooleanProperty enableVerticalLines = new SimpleBooleanProperty(true);
+    private final SimpleBooleanProperty enableAlternateColorLines = new SimpleBooleanProperty(true);
 
     /* *****************************************************************************************
      * Internal variables
@@ -181,6 +182,7 @@ public class Timeline extends GridPane implements IRenderingContext {
         selectBorderColorProperty().addListener((e, o, n) -> internalRefresh());
         selectBorderWidthProperty().addListener((e,v,n) -> internalRefresh());
         selectBorderEffectProperty().addListener((e,v,n) -> internalRefresh());
+        enableAlternateColorLinesProperty().addListener((e,v,n) -> internalRefresh());
         textFontProperty().addListener((e,v,n) -> textSettingsUpdated());
         textPaddingProperty().addListener((e,v,n) -> textSettingsUpdated());
         // Add listener when scrollbar visible is updated
@@ -509,6 +511,7 @@ public class Timeline extends GridPane implements IRenderingContext {
         this.enableMouseSelection.set(enableMouseSelection);
     }
 
+    @Override
     public Color getBackgroundColor() {
         return backgroundColor.get();
     }
@@ -728,6 +731,18 @@ public class Timeline extends GridPane implements IRenderingContext {
         this.enableVerticalLines.set(enableVerticalLines);
     }
 
+    public boolean isEnableAlternateColorLines() {
+        return enableAlternateColorLines.get();
+    }
+
+    public SimpleBooleanProperty enableAlternateColorLinesProperty() {
+        return enableAlternateColorLines;
+    }
+
+    public void setEnableAlternateColorLines(boolean enableAlternateColorLines) {
+        this.enableAlternateColorLines.set(enableAlternateColorLines);
+    }
+
     /* *****************************************************************************************
      * Utility access method
      * *****************************************************************************************/
@@ -754,43 +769,10 @@ public class Timeline extends GridPane implements IRenderingContext {
     /* *****************************************************************************************
      * Internal methods
      * *****************************************************************************************/
+
     private void textSettingsUpdated() {
         textHeight = -1;
         recomputeArea();
-    }
-
-    private void internalRefresh() {
-        GraphicsContext gc = this.imageArea.getGraphicsContext2D();
-        internalRefresh(gc);
-    }
-
-    private void internalRefresh(GraphicsContext gc) {
-        if(getTextFont() != null) {
-            gc.setFont(getTextFont());
-        }
-        gc.setFontSmoothingType(FontSmoothingType.LCD);
-        // Draw the background
-        drawBackground(gc);
-        // Draw calendar headers and lines
-        drawHeaders(gc);
-        // Draw empty side panel
-        drawEmptySidePanel(gc);
-        // Prepare the clipping
-        gc.save();
-        gc.beginPath();
-        gc.rect(0, getHeaderRowHeight(), this.imageArea.getWidth(), this.imageArea.getHeight() - getHeaderRowHeight());
-        gc.closePath();
-        gc.clip();
-        // Draw time intervals in background
-        drawTimeIntervals(gc, this, false);
-        // Draw task lines
-        drawTaskLines(gc, this);
-        // Draw time intervals in foreground
-        drawTimeIntervals(gc, this, true);
-        // Draw cursors
-        drawCursors(gc, this);
-        // Restore
-        gc.restore();
     }
 
     private void horizontalScrollbarStatusChanged() {
@@ -1149,6 +1131,131 @@ public class Timeline extends GridPane implements IRenderingContext {
         return theText.getBoundsInLocal().getWidth();
     }
 
+    private String formatHeaderText(Instant startTime, ChronoUnit headerElement) {
+        ZonedDateTime time = startTime.atZone(ZoneId.of("UTC"));
+        switch(headerElement) {
+            case SECONDS: return String.format("%02d:%02d:%02d", time.getHour(), time.getMinute(), time.getSecond());
+            case MINUTES: return String.format("%02d:%02d", time.getHour(), time.getMinute());
+            case HOURS: return String.format("%02d", time.getHour());
+            case DAYS: return String.format("%04d-%02d-%02d", time.getYear(), time.get(ChronoField.MONTH_OF_YEAR) + 1, time.getDayOfMonth());
+            case MONTHS: return String.format("%04d-%02d", time.getYear(), time.get(ChronoField.MONTH_OF_YEAR) + 1);
+            default: return String.format("%04d", time.getYear());
+        }
+    }
+
+    private Instant getAdjustedStartTime(Instant viewPortStart, ChronoUnit headerElement) {
+        switch (headerElement) {
+            case YEARS: {
+                // Truncate to day
+                Instant toReturn = viewPortStart.truncatedTo(ChronoUnit.DAYS);
+                // Count the days to the beginning of the month
+                LocalDateTime ldt = LocalDateTime.ofInstant(toReturn, ZoneId.of("UTC"));
+                int days = ldt.getDayOfYear();
+                // Subtract these
+                return ldt.minus(days, ChronoUnit.DAYS).toInstant(ZoneOffset.UTC);
+            }
+            case MONTHS: {
+                // Truncate to day
+                Instant toReturn = viewPortStart.truncatedTo(ChronoUnit.DAYS);
+                // Count the days to the beginning of the month
+                LocalDateTime ldt = LocalDateTime.ofInstant(toReturn, ZoneId.of("UTC"));
+                int days = ldt.getDayOfMonth();
+                // Subtract these
+                return ldt.minus(days, ChronoUnit.DAYS).toInstant(ZoneOffset.UTC);
+            }
+            default:
+                return viewPortStart.truncatedTo(headerElement);
+        }
+    }
+
+    private void measureFontHeight(Font font) {
+        if(textHeight == -1) {
+            Text text = new Text("Ig");
+            text.setBoundsType(TextBoundsType.VISUAL);
+            text.setFont(font);
+            textHeight = text.getBoundsInLocal().getHeight();
+            headerRowHeight = textHeight + 2 * getTextPadding();
+            lineRowHeight = textHeight + 6 * getTextPadding();
+        }
+    }
+
+    /* *****************************************************************************************
+     * Rendering methods
+     * *****************************************************************************************/
+
+    private void internalRefresh() {
+        GraphicsContext gc = this.imageArea.getGraphicsContext2D();
+        internalRefresh(gc);
+    }
+
+    private void internalRefresh(GraphicsContext gc) {
+        if(getTextFont() != null) {
+            gc.setFont(getTextFont());
+        }
+        gc.setFontSmoothingType(FontSmoothingType.GRAY);
+        gc.setImageSmoothing(false);
+        // Draw the background
+        drawBackground(gc);
+        // Draw calendar headers, no vertical lines
+        drawHeaders(gc);
+        // Draw empty side panel
+        drawEmptySidePanel(gc);
+        // Prepare the clipping
+        gc.save();
+        gc.beginPath();
+        gc.rect(0, getHeaderRowHeight(), this.imageArea.getWidth(), this.imageArea.getHeight() - getHeaderRowHeight());
+        gc.closePath();
+        gc.clip();
+        // Draw time lines background
+        drawTimeLineBackground(gc, this);
+        // Draw header vertical lines
+        drawHeadersVerticalLines(gc);
+        // Draw time intervals in background
+        drawTimeIntervals(gc, this, false);
+        // Draw task lines
+        drawTaskLines(gc, this);
+        // Draw time intervals in foreground
+        drawTimeIntervals(gc, this, true);
+        // Draw cursors
+        drawCursors(gc, this);
+        // Restore
+        gc.restore();
+    }
+
+    private void drawTimeLineBackground(GraphicsContext gc, IRenderingContext rc) {
+        if(isEnableAlternateColorLines()) {
+            // You render only line blocks that are contained in the viewport, as defined by the vertical scroll value
+            double yStart = this.verticalScroll.getValue();
+            double yEnd = yStart + this.imageArea.getHeight() - this.headerRowHeight;
+            int processedLines = 0;
+            int renderedLines = 0;
+            //
+            int startLine = -1;
+            int i = 0;
+            for (ITaskLine line : this.items) {
+                // Compute the Y span of the rendering for this task line
+                double taskLineYStart = processedLines * this.lineRowHeight;
+                processedLines += line.getNbOfLines();
+                double taskLineYEnd = processedLines * this.lineRowHeight;
+                if ((taskLineYStart >= yStart && taskLineYStart <= yEnd) ||
+                        (taskLineYEnd >= yStart && taskLineYEnd <= yEnd) ||
+                        (taskLineYStart <= yStart && taskLineYEnd >= yEnd)) {
+                    // Render: translate the taskLineYStart in the right viewport coordinates
+                    taskLineYStart -= yStart;
+                    taskLineYStart += this.headerRowHeight;
+                    // Ask the rendering of the timeline
+                    line.renderLineBackground(gc, getTaskPanelWidth(), taskLineYStart, renderedLines, rc);
+                    // Remember at this level what you rendered
+                    if (startLine == -1) {
+                        startLine = i;
+                    }
+                    renderedLines = processedLines;
+                }
+                ++i;
+            }
+        }
+    }
+
     private void drawTimeIntervals(GraphicsContext gc, IRenderingContext rc, boolean foreground) {
         for(TimeInterval tc : this.timeIntervals) {
             if(tc.isForeground() == foreground && inViewport(tc.getStartTime(), tc.getEndTime())) {
@@ -1245,6 +1352,41 @@ public class Timeline extends GridPane implements IRenderingContext {
         gc.strokeRect(0, 0, getTaskPanelWidth(), this.headerRowHeight);
     }
 
+    private void drawHeadersVerticalLines(GraphicsContext gc) {
+        if(isEnableVerticalLines()) {
+            Instant startTime = getAdjustedStartTime(getViewPortStart(), this.headerElement);
+            Instant finalTime = getViewPortStart().plusSeconds(getViewPortDuration());
+            // Now start rendering, until the end of the box falls outside the rendering area
+            boolean inArea = true;
+            while (inArea) {
+                Instant endTime;
+                if (this.headerElement == ChronoUnit.YEARS || this.headerElement == ChronoUnit.MONTHS) {
+                    endTime = startTime.atOffset(ZoneOffset.UTC).plus(1, this.headerElement).toInstant();
+                } else {
+                    endTime = startTime.plus(1, this.headerElement);
+                }
+                renderHeaderLine(gc, startTime);
+                if (endTime.isAfter(finalTime)) {
+                    inArea = false;
+                } else {
+                    startTime = endTime;
+                }
+            }
+        }
+    }
+
+    private void renderHeaderLine(GraphicsContext gc, Instant startTime) {
+        double xStart = toX(startTime);
+        if(xStart < getTaskPanelWidth()) {
+            return;
+        }
+        double height = this.headerRowHeight;
+        // Vertical line (start)
+        gc.setLineDashes(2, 2);
+        gc.strokeLine(xStart, height, xStart, this.imageArea.getHeight());
+        gc.setLineDashes();
+    }
+
     private void renderHeader(GraphicsContext gc, Instant startTime, Instant endTime, ChronoUnit headerElement) {
         double xStart = toX(startTime);
         double xEnd = toX(endTime);
@@ -1266,51 +1408,4 @@ public class Timeline extends GridPane implements IRenderingContext {
         gc.strokeText(toWrite, xStart + getTextPadding(), this.textHeight + getTextPadding());
     }
 
-    private String formatHeaderText(Instant startTime, ChronoUnit headerElement) {
-        ZonedDateTime time = startTime.atZone(ZoneId.of("UTC"));
-        switch(headerElement) {
-            case SECONDS: return String.format("%02d:%02d:%02d", time.getHour(), time.getMinute(), time.getSecond());
-            case MINUTES: return String.format("%02d:%02d", time.getHour(), time.getMinute());
-            case HOURS: return String.format("%02d", time.getHour());
-            case DAYS: return String.format("%04d-%02d-%02d", time.getYear(), time.get(ChronoField.MONTH_OF_YEAR) + 1, time.getDayOfMonth());
-            case MONTHS: return String.format("%04d-%02d", time.getYear(), time.get(ChronoField.MONTH_OF_YEAR) + 1);
-            default: return String.format("%04d", time.getYear());
-        }
-    }
-
-    private Instant getAdjustedStartTime(Instant viewPortStart, ChronoUnit headerElement) {
-        switch (headerElement) {
-            case YEARS: {
-                // Truncate to day
-                Instant toReturn = viewPortStart.truncatedTo(ChronoUnit.DAYS);
-                // Count the days to the beginning of the month
-                LocalDateTime ldt = LocalDateTime.ofInstant(toReturn, ZoneId.of("UTC"));
-                int days = ldt.getDayOfYear();
-                // Subtract these
-                return ldt.minus(days, ChronoUnit.DAYS).toInstant(ZoneOffset.UTC);
-            }
-            case MONTHS: {
-                // Truncate to day
-                Instant toReturn = viewPortStart.truncatedTo(ChronoUnit.DAYS);
-                // Count the days to the beginning of the month
-                LocalDateTime ldt = LocalDateTime.ofInstant(toReturn, ZoneId.of("UTC"));
-                int days = ldt.getDayOfMonth();
-                // Subtract these
-                return ldt.minus(days, ChronoUnit.DAYS).toInstant(ZoneOffset.UTC);
-            }
-            default:
-                return viewPortStart.truncatedTo(headerElement);
-        }
-    }
-
-    private void measureFontHeight(Font font) {
-        if(textHeight == -1) {
-            Text text = new Text("Ig");
-            text.setBoundsType(TextBoundsType.VISUAL);
-            text.setFont(font);
-            textHeight = text.getBoundsInLocal().getHeight();
-            headerRowHeight = textHeight + 2 * getTextPadding();
-            lineRowHeight = textHeight + 6 * getTextPadding();
-        }
-    }
 }

@@ -24,6 +24,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -214,6 +215,18 @@ public class TaskLine implements ITaskLine {
     }
 
     @Override
+    public void renderLineBackground(GraphicsContext gc, double taskLineXStart, double taskLineYStart, int renderedLines, IRenderingContext rc) {
+        // Render the tasks in each rendered line
+        double newTaskLineYStart = taskLineYStart;
+        int i = 0;
+        for(RenderingLine rl : this.renderingLines) {
+            rl.renderBackground(gc, taskLineXStart, newTaskLineYStart, (renderedLines + i) % 2 == 0, rc);
+            newTaskLineYStart += rc.getLineRowHeight();
+            ++i;
+        }
+    }
+
+    @Override
     public void setTimeline(Timeline timeline) {
         this.timeline = timeline;
         this.items.forEach(i -> i.setTimeline(timeline));
@@ -256,6 +269,21 @@ public class TaskLine implements ITaskLine {
             if(lastLine) {
                 gc.setStroke(rc.getPanelBorderColor());
                 gc.strokeLine(rc.getTaskPanelWidth(), taskLineYStart + rc.getLineRowHeight(), rc.getImageAreaWidth(), taskLineYStart + rc.getLineRowHeight());
+            }
+        }
+
+        public void renderBackground(GraphicsContext gc, double taskLineXStart, double taskLineYStart, boolean isEvenLine, IRenderingContext rc) {
+            gc.setFill(isEvenLine ? rc.getBackgroundColor() : computeOddColor(rc.getBackgroundColor()));
+            gc.fillRect(taskLineXStart, taskLineYStart, rc.getImageAreaWidth() - taskLineXStart, rc.getLineRowHeight());
+        }
+
+        private Color computeOddColor(Color reference) {
+            if(reference.equals(Color.WHITE)) {
+                return new Color(0.97, 0.97, 0.97, 1.0);
+            } else if(reference.equals(Color.BLACK)) {
+                return new Color(0.15, 0.15, 0.15, 1.0);
+            } else {
+                return reference.desaturate();
             }
         }
     }

@@ -124,4 +124,14 @@ public interface ITaskLine {
      * @return the owning {@link Timeline} of this task line, or null if this is not part of a {@link Timeline}
      */
     Timeline getTimeline();
+
+    /**
+     * Render the background of the task line
+     * @param gc the {@link GraphicsContext}
+     * @param taskLineXStart the X offset where the background coverage has to start
+     * @param taskLineYStart the Y offset where the background coverage has to start
+     * @param renderedLines the current number of lines rendered so far
+     * @param rc the {@link IRenderingContext}
+     */
+    void renderLineBackground(GraphicsContext gc, double taskLineXStart, double taskLineYStart, int renderedLines, IRenderingContext rc);
 }

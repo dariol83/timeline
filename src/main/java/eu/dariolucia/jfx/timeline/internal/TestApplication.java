@@ -45,7 +45,8 @@ public class TestApplication extends Application {
         tl.setMaxTime(currentTime.plusSeconds(12800));
         tl.setViewPortStart(currentTime);
         tl.setViewPortDuration(3600 * 24 * 20);
-        tl.setBackgroundColor(Color.BEIGE.brighter().brighter());
+        tl.setBackgroundColor(Color.WHITE);
+
         tl.setTaskPanelWidth(250);
         // Add task lines
         {

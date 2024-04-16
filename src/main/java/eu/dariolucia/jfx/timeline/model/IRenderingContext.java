@@ -59,6 +59,8 @@ public interface IRenderingContext {
 
     double getHeaderRowHeight();
 
+    Color getBackgroundColor();
+
     Color getPanelBackgroundColor();
 
     Color getPanelForegroundColor();

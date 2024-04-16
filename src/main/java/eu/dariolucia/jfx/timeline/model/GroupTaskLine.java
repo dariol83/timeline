@@ -192,6 +192,16 @@ public class GroupTaskLine implements ITaskLine {
     }
 
     @Override
+    public void renderLineBackground(GraphicsContext gc, double taskLineXStart, double taskLineYStart, int renderedLines, IRenderingContext rc) {
+        // Render the background of the sub-lines
+        int i = 0;
+        for(ITaskLine line : this.items) {
+            line.renderLineBackground(gc, taskLineXStart, taskLineYStart + i * rc.getLineRowHeight(), renderedLines + i, rc);
+            i += line.getNbOfLines();
+        }
+    }
+
+    @Override
     public void setTimeline(Timeline timeline) {
         this.timeline = timeline;
         this.items.forEach(i -> i.setTimeline(timeline));
