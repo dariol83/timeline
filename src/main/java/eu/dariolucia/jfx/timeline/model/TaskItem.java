@@ -133,7 +133,7 @@ public class TaskItem extends TimelineElement {
         if(rc.isInViewPort(getStartTime(), endTime)) {
             // Convert to X coordinates
             int startX = (int) rc.toX(getStartTime());
-            int startY = taskLineYStart + rc.getTextPadding();
+            int startY = taskLineYStart + (int) rc.getTextPadding();
             // Expected
             int endX = (int) rc.toX(endTimeExp);
             // Render now expected

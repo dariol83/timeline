@@ -69,7 +69,7 @@ public class HierarchicalTaskLine extends CompositeTaskLine {
         // Render the sub lines
         int i = 1;
         for(ITaskLine line : getItems()) {
-            line.render(gc, taskLineXStart + rc.getTextPadding(), taskLineYStart + i * rc.getLineRowHeight(), rc);
+            line.render(gc, taskLineXStart + (int) rc.getTextPadding(), taskLineYStart + i * rc.getLineRowHeight(), rc);
             i += line.getNbOfLines();
         }
         // Remember box

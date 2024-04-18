@@ -466,8 +466,8 @@ public class Timeline extends GridPane implements IRenderingContext {
     }
 
     @Override
-    public int getTaskPanelWidth() {
-        return (int) taskPanelWidth.get();
+    public double getTaskPanelWidth() {
+        return taskPanelWidth.get();
     }
 
     @Override
@@ -657,8 +657,8 @@ public class Timeline extends GridPane implements IRenderingContext {
     }
 
     @Override
-    public int getSelectBorderWidth() {
-        return (int) selectBorderWidth.get();
+    public double getSelectBorderWidth() {
+        return selectBorderWidth.get();
     }
 
     public SimpleDoubleProperty selectBorderWidthProperty() {
@@ -695,8 +695,8 @@ public class Timeline extends GridPane implements IRenderingContext {
     }
 
     @Override
-    public int getTextPadding() {
-        return (int) textPadding.get();
+    public double getTextPadding() {
+        return textPadding.get();
     }
 
     public SimpleDoubleProperty textPaddingProperty() {
@@ -761,7 +761,7 @@ public class Timeline extends GridPane implements IRenderingContext {
      */
     public Image print() {
         SnapshotParameters parameters = new SnapshotParameters();
-        final WritableImage snapshot = new WritableImage((int) (this.imageArea.getWidth()), (int) (this.imageArea.getHeight()));
+        final WritableImage snapshot = new WritableImage(getImageAreaWidth(), getImageAreaHeight());
         this.imageArea.snapshot(parameters, snapshot);
         return snapshot;
     }
@@ -1101,11 +1101,11 @@ public class Timeline extends GridPane implements IRenderingContext {
             // Use years, remove performance issue, not initialised
             return ChronoUnit.YEARS;
         }
-        int secondsSize = getTextWidth(gc, "00:00:00") + 4 * getTextPadding();
-        int minutesSize = getTextWidth(gc, "00:00") + 4 * getTextPadding();
-        int hoursSize = getTextWidth(gc, "00") + 4 * getTextPadding();
-        int daysSize = getTextWidth(gc, "0000-00-00") + 4 * getTextPadding();
-        int monthsSize = getTextWidth(gc, "0000-00") + 4 * getTextPadding();
+        int secondsSize = (int) (getTextWidth(gc, "00:00:00") + 4 * getTextPadding());
+        int minutesSize = (int) (getTextWidth(gc, "00:00") + 4 * getTextPadding());
+        int hoursSize = (int) (getTextWidth(gc, "00") + 4 * getTextPadding());
+        int daysSize = (int) (getTextWidth(gc, "0000-00-00") + 4 * getTextPadding());
+        int monthsSize = (int) (getTextWidth(gc, "0000-00") + 4 * getTextPadding());
 
         double pixelForSecond = pixelWidth / durationSeconds;
         double temp;
@@ -1174,8 +1174,8 @@ public class Timeline extends GridPane implements IRenderingContext {
             text.setBoundsType(TextBoundsType.VISUAL);
             text.setFont(font);
             textHeight = (int) text.getBoundsInLocal().getHeight();
-            headerRowHeight = textHeight + 2 * getTextPadding();
-            lineRowHeight = textHeight + 6 * getTextPadding();
+            headerRowHeight = textHeight + (int) (2 * getTextPadding());
+            lineRowHeight = textHeight + (int) (6 * getTextPadding());
         }
     }
 
@@ -1244,7 +1244,7 @@ public class Timeline extends GridPane implements IRenderingContext {
                     taskLineYStart -= yStart;
                     taskLineYStart += this.headerRowHeight;
                     // Ask the rendering of the timeline
-                    line.renderLineBackground(gc, getTaskPanelWidth(), taskLineYStart, renderedLines, rc);
+                    line.renderLineBackground(gc, (int) getTaskPanelWidth(), taskLineYStart, renderedLines, rc);
                     // Remember at this level what you rendered
                     if (startLine == -1) {
                         startLine = i;
