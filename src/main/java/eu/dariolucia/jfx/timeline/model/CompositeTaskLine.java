@@ -18,7 +18,6 @@ package eu.dariolucia.jfx.timeline.model;
 
 import eu.dariolucia.jfx.timeline.Timeline;
 import javafx.beans.Observable;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -29,35 +28,29 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * A composite task line represents a group of task lines or subgroups in a timeline.
- * This class must be subclassed and the render methods be provided. It is nevertheless important, that the
- * last rendered bounding box is saved/reset using the related methods.
+ * A composite task line represents a collection of task lines in a timeline.
+ * This class must be subclassed and the render methods be provided.
  */
-public abstract class AbstractCompositeTaskLine implements ITaskLine {
+public abstract class CompositeTaskLine extends TimelineElement implements ITaskLine {
 
-    private final SimpleStringProperty name = new SimpleStringProperty();
-    private final SimpleStringProperty description = new SimpleStringProperty();
     private final ObservableList<ITaskLine> items = FXCollections.observableArrayList(ITaskLine::getObservableProperties);
-    private ITaskLine parent;
-    private Timeline timeline;
     private BoundingBox lastRenderedBounds;
 
     /**
      * Class constructor with no description.
-     * @param name the name of the task group
+     * @param name the name of the composite
      */
-    protected AbstractCompositeTaskLine(String name) {
+    protected CompositeTaskLine(String name) {
         this(name, null);
     }
 
     /**
      * Class constructor with name and description.
-     * @param name the name of the task group
-     * @param description the description of the task group
+     * @param name the name of the composite
+     * @param description the description of the composite
      */
-    protected AbstractCompositeTaskLine(String name, String description) {
-        this.name.set(name);
-        this.description.set(description);
+    protected CompositeTaskLine(String name, String description) {
+        super(name, description);
         this.items.addListener(this::listUpdated);
     }
 
@@ -66,7 +59,7 @@ public abstract class AbstractCompositeTaskLine implements ITaskLine {
             if(change.wasAdded()) {
                 change.getAddedSubList().forEach(ti -> {
                     ti.setParent(this);
-                    ti.setTimeline(this.timeline);
+                    ti.setTimeline(getTimeline());
                 });
             }
             if(change.wasRemoved()) {
@@ -76,22 +69,6 @@ public abstract class AbstractCompositeTaskLine implements ITaskLine {
                 });
             }
         }
-    }
-
-    public String getName() {
-        return name.get();
-    }
-
-    public SimpleStringProperty nameProperty() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name.set(name);
-    }
-
-    public String getDescription() {
-        return description.get();
     }
 
     @Override
@@ -139,21 +116,8 @@ public abstract class AbstractCompositeTaskLine implements ITaskLine {
         return new Observable[] { nameProperty(), descriptionProperty(), getItems() };
     }
 
-    public SimpleStringProperty descriptionProperty() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description.set(description);
-    }
-
     public ObservableList<ITaskLine> getItems() {
         return items;
-    }
-
-    @Override
-    public ITaskLine getParent() {
-        return parent;
     }
 
     @Override
@@ -162,22 +126,12 @@ public abstract class AbstractCompositeTaskLine implements ITaskLine {
     }
 
     @Override
-    public Timeline getTimeline() {
-        return timeline;
-    }
-
-    @Override
     public void setTimeline(Timeline timeline) {
-        this.timeline = timeline;
+        super.setTimeline(timeline);
         this.items.forEach(i -> i.setTimeline(timeline));
-        if(this.timeline != null) {
+        if(getTimeline() != null) {
             // If added to a new timeline, the rendering structure must be recomputed
             computeRenderingStructure();
         }
-    }
-
-    @Override
-    public void setParent(ITaskLine parent) {
-        this.parent = parent;
     }
 }

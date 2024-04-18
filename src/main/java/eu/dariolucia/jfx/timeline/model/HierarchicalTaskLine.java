@@ -19,16 +19,16 @@ package eu.dariolucia.jfx.timeline.model;
 import javafx.scene.canvas.GraphicsContext;
 
 /**
- * A task tree represents a group of {@link ITaskLine} in a timeline with hierarchical representation.
+ * A hierarchical task line represents a group of {@link ITaskLine} in a timeline with hierarchical representation.
  * This class can be subclassed and the doRender() method can be overwritten.
  */
-public class TreeTaskLine extends AbstractCompositeTaskLine {
+public class HierarchicalTaskLine extends CompositeTaskLine {
 
     /**
      * Class constructor with no description.
      * @param name the name of the task group
      */
-    public TreeTaskLine(String name) {
+    public HierarchicalTaskLine(String name) {
         this(name, null);
     }
 
@@ -37,7 +37,7 @@ public class TreeTaskLine extends AbstractCompositeTaskLine {
      * @param name the name of the task group
      * @param description the description of the task group
      */
-    public TreeTaskLine(String name, String description) {
+    public HierarchicalTaskLine(String name, String description) {
         super(name, description);
     }
 

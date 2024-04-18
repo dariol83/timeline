@@ -438,7 +438,7 @@ public class Timeline extends GridPane implements IRenderingContext {
 
     @Override
     public int getHeaderRowHeight() {
-        return (int) this.headerRowHeight;
+        return this.headerRowHeight;
     }
 
     public ReadOnlyObjectProperty<Instant> viewPortEndProperty() {
@@ -472,12 +472,12 @@ public class Timeline extends GridPane implements IRenderingContext {
 
     @Override
     public int getTextHeight() {
-        return (int) this.textHeight;
+        return this.textHeight;
     }
 
     @Override
     public int getLineRowHeight() {
-        return (int) this.lineRowHeight;
+        return this.lineRowHeight;
     }
 
     public SimpleDoubleProperty taskPanelWidthProperty() {
@@ -966,7 +966,7 @@ public class Timeline extends GridPane implements IRenderingContext {
         int totalLines = getTotalNbOfLines();
         if(totalLines > 0) {
             // Compute the max size
-            double fullSize = totalLines * this.lineRowHeight;
+            int fullSize = totalLines * this.lineRowHeight;
             double totalSize = fullSize - this.imageArea.getHeight() + this.headerRowHeight;
             if(totalSize < 0) {
                 // There is no need of a scrollbar in this case
@@ -1101,11 +1101,11 @@ public class Timeline extends GridPane implements IRenderingContext {
             // Use years, remove performance issue, not initialised
             return ChronoUnit.YEARS;
         }
-        double secondsSize = getTextWidth(gc, "00:00:00") + 4*getTextPadding();
-        double minutesSize = getTextWidth(gc, "00:00") + 4*getTextPadding();
-        double hoursSize = getTextWidth(gc, "00") + 4*getTextPadding();
-        double daysSize = getTextWidth(gc, "0000-00-00") + 4*getTextPadding();
-        double monthsSize = getTextWidth(gc, "0000-00") + 4*getTextPadding();
+        int secondsSize = getTextWidth(gc, "00:00:00") + 4 * getTextPadding();
+        int minutesSize = getTextWidth(gc, "00:00") + 4 * getTextPadding();
+        int hoursSize = getTextWidth(gc, "00") + 4 * getTextPadding();
+        int daysSize = getTextWidth(gc, "0000-00-00") + 4 * getTextPadding();
+        int monthsSize = getTextWidth(gc, "0000-00") + 4 * getTextPadding();
 
         double pixelForSecond = pixelWidth / durationSeconds;
         double temp;
@@ -1206,7 +1206,7 @@ public class Timeline extends GridPane implements IRenderingContext {
         gc.rect(0, getHeaderRowHeight(), this.imageArea.getWidth(), this.imageArea.getHeight() - getHeaderRowHeight());
         gc.closePath();
         gc.clip();
-        // Draw time lines background
+        // Draw timeline background
         drawTimeLineBackground(gc, this);
         // Draw header vertical lines
         drawHeadersVerticalLines(gc);
@@ -1320,8 +1320,8 @@ public class Timeline extends GridPane implements IRenderingContext {
     private void drawEmptySidePanel(GraphicsContext gc) {
         gc.setFill(getPanelBackgroundColor());
         gc.setStroke(getPanelBorderColor());
-        gc.fillRect(0,this.headerRowHeight, getTaskPanelWidth(), getImageAreaHeight() - this.headerRowHeight);
-        gc.strokeRect(0,this.headerRowHeight, getTaskPanelWidth(), getImageAreaHeight() - this.headerRowHeight);
+        gc.fillRect(0, this.headerRowHeight, getTaskPanelWidth(), getImageAreaHeight() - this.headerRowHeight);
+        gc.strokeRect(0, this.headerRowHeight, getTaskPanelWidth(), getImageAreaHeight() - this.headerRowHeight);
     }
 
     private void drawHeaders(GraphicsContext gc) {

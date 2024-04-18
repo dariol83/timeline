@@ -19,10 +19,10 @@ package eu.dariolucia.jfx.timeline.model;
 import javafx.scene.canvas.GraphicsContext;
 
 /**
- * A task group represents a fixed group of {@link ITaskLine} in a timeline.
+ * A task group represents a fixed group of {@link ITaskLine} in a timeline, grouped together with a vertical task label.
  * This class can be subclassed and the doRender() method can be overwritten.
  */
-public class GroupTaskLine extends AbstractCompositeTaskLine {
+public class GroupTaskLine extends CompositeTaskLine {
 
     /**
      * Class constructor with no description.

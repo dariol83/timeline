@@ -16,10 +16,8 @@
 
 package eu.dariolucia.jfx.timeline.model;
 
-import eu.dariolucia.jfx.timeline.Timeline;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -31,64 +29,32 @@ import java.time.Instant;
  * This class can be subclassed and the render() method can be overwritten. It is nevertheless important, that the
  * last rendered bounding box is saved/reset using the related methods.
  */
-public class TaskItem {
+public class TaskItem extends TimelineElement {
 
     /* *****************************************************************************************
      * Properties
      * *****************************************************************************************/
-    private final SimpleStringProperty name = new SimpleStringProperty();
     private final SimpleObjectProperty<Instant> startTime = new SimpleObjectProperty<>();
     private final SimpleLongProperty expectedDuration = new SimpleLongProperty();
     private final SimpleLongProperty actualDuration = new SimpleLongProperty();
     private final SimpleObjectProperty<Color> taskBackgroundColor = new SimpleObjectProperty<>(Color.PAPAYAWHIP);
     private final SimpleObjectProperty<Color> taskTextColor = new SimpleObjectProperty<>(Color.BLACK);
-    private TaskLine parent;
-    private Timeline timeline;
 
     /* *****************************************************************************************
      * Internal variables
      * *****************************************************************************************/
     private BoundingBox lastRenderedBounds;
-
     private Object userData;
 
     public TaskItem(String name, Instant startTime, long expectedDuration) {
         this(name, startTime, expectedDuration, 0);
     }
 
-    TaskLine getParent() {
-        return parent;
-    }
-
-    void setParent(TaskLine parent) {
-        this.parent = parent;
-    }
-
-    public Timeline getTimeline() {
-        return timeline;
-    }
-
-    public void setTimeline(Timeline timeline) {
-        this.timeline = timeline;
-    }
-
     public TaskItem(String name, Instant startTime, long expectedDuration, long actualDuration) {
-        this.name.set(name);
+        super(name, null);
         this.startTime.set(startTime);
         this.expectedDuration.set(expectedDuration);
         this.actualDuration.set(actualDuration);
-    }
-
-    public String getName() {
-        return name.get();
-    }
-
-    public SimpleStringProperty nameProperty() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name.set(name);
     }
 
     public Instant getStartTime() {
@@ -180,7 +146,7 @@ public class TaskItem {
                 gc.setLineWidth(rc.getSelectBorderWidth());
                 gc.setEffect(rc.getSelectBorderEffect());
             }
-            double taskHeight = rc.getLineRowHeight() - 2*rc.getTextPadding();
+            double taskHeight = rc.getLineRowHeight() - 2 * rc.getTextPadding();
             gc.fillRect(startX, startY, endX - startX, taskHeight);
             // Draw the selection
             gc.strokeRect(startX, startY, endX - startX, taskHeight);
