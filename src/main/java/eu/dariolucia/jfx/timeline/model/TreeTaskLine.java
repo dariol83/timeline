@@ -19,16 +19,16 @@ package eu.dariolucia.jfx.timeline.model;
 import javafx.scene.canvas.GraphicsContext;
 
 /**
- * A task group represents a fixed group of {@link ITaskLine} in a timeline.
+ * A task tree represents a group of {@link ITaskLine} in a timeline with hierarchical representation.
  * This class can be subclassed and the doRender() method can be overwritten.
  */
-public class GroupTaskLine extends AbstractCompositeTaskLine {
+public class TreeTaskLine extends AbstractCompositeTaskLine {
 
     /**
      * Class constructor with no description.
      * @param name the name of the task group
      */
-    public GroupTaskLine(String name) {
+    public TreeTaskLine(String name) {
         this(name, null);
     }
 
@@ -37,7 +37,7 @@ public class GroupTaskLine extends AbstractCompositeTaskLine {
      * @param name the name of the task group
      * @param description the description of the task group
      */
-    public GroupTaskLine(String name, String description) {
+    public TreeTaskLine(String name, String description) {
         super(name, description);
     }
 
@@ -47,43 +47,42 @@ public class GroupTaskLine extends AbstractCompositeTaskLine {
         for(ITaskLine tl : getItems()) {
             nbLines += tl.getNbOfLines();
         }
-        return nbLines;
+        return nbLines + 1;
     }
 
     @Override
     protected int doRender(GraphicsContext gc, int taskLineXStart, int taskLineYStart, IRenderingContext rc) {
         int nbLines = getNbOfLines();
-        int groupBoxWidth = rc.getLineRowHeight();
-        // Render the sub lines
-        int i = 0;
-        for(ITaskLine line : getItems()) {
-            line.render(gc, taskLineXStart + groupBoxWidth, taskLineYStart + i * rc.getLineRowHeight(), rc);
-            i += line.getNbOfLines();
-        }
-        int groupBoxHeight = getNbOfLines() * rc.getLineRowHeight();
+        int groupBoxHeight = nbLines * rc.getLineRowHeight();
         // Draw the group box
         gc.setFill(rc.getPanelBackgroundColor());
         gc.setStroke(rc.getPanelBorderColor());
-        gc.fillRect(taskLineXStart, taskLineYStart, groupBoxWidth, groupBoxHeight);
-        gc.strokeRect(taskLineXStart, taskLineYStart, groupBoxWidth, groupBoxHeight);
+        gc.fillRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, groupBoxHeight);
+        gc.strokeRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, groupBoxHeight);
+        // Render the bottom line
+        gc.strokeLine(rc.getTaskPanelWidth(), taskLineYStart + rc.getLineRowHeight(), rc.getImageAreaWidth(), taskLineYStart + rc.getLineRowHeight());
+        // Render text
         gc.setStroke(rc.getPanelForegroundColor());
-
-        gc.save();
-        gc.translate(taskLineXStart, taskLineYStart);
-        gc.rotate(-90);
-        // Render in the middle
-        int textWidth = rc.getTextWidth(gc, getName());
-        double offset = nbLines * rc.getLineRowHeight()/2.0;
-        gc.strokeText(getName(), (int) Math.round(- offset - textWidth/2.0), (int) Math.round(groupBoxWidth/2.0 + rc.getTextHeight()/2.0));
-        gc.restore();
-        // Return the box height
+        gc.strokeText(getName(), taskLineXStart + rc.getTextPadding(),
+                (int) Math.round(taskLineYStart + rc.getLineRowHeight()/2.0 + rc.getTextHeight()/2.0),
+                rc.getTaskPanelWidth() - taskLineXStart - rc.getTextPadding());
+        // Render the sub lines
+        int i = 1;
+        for(ITaskLine line : getItems()) {
+            line.render(gc, taskLineXStart + rc.getTextPadding(), taskLineYStart + i * rc.getLineRowHeight(), rc);
+            i += line.getNbOfLines();
+        }
+        // Remember box
         return groupBoxHeight;
     }
 
     @Override
     public void renderLineBackground(GraphicsContext gc, int taskLineXStart, int taskLineYStart, int renderedLines, IRenderingContext rc) {
+        // Render the background of the tree line
+        gc.setFill(renderedLines % 2 == 0 ? rc.getBackgroundColor() : TaskLine.computeOddColor(rc.getBackgroundColor()));
+        gc.fillRect(taskLineXStart, taskLineYStart, rc.getImageAreaWidth() - taskLineXStart, rc.getLineRowHeight());
         // Render the background of the sub-lines
-        int i = 0;
+        int i = 1;
         for(ITaskLine line : getItems()) {
             line.renderLineBackground(gc, taskLineXStart, taskLineYStart + i * rc.getLineRowHeight(), renderedLines + i, rc);
             i += line.getNbOfLines();

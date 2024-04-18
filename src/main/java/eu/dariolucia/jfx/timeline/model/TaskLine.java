@@ -130,9 +130,9 @@ public class TaskLine implements ITaskLine {
     }
 
     @Override
-    public void render(GraphicsContext gc, double taskLineXStart, double taskLineYStart, IRenderingContext rc) {
+    public void render(GraphicsContext gc, int taskLineXStart, int taskLineYStart, IRenderingContext rc) {
         // Render the tasks in each rendered line
-        double newTaskLineYStart = taskLineYStart;
+        int newTaskLineYStart = taskLineYStart;
         int i = 0;
         for(RenderingLine rl : this.renderingLines) {
             rl.render(gc, newTaskLineYStart, i == this.renderingLines.size() - 1, rc);
@@ -140,14 +140,14 @@ public class TaskLine implements ITaskLine {
             ++i;
         }
         // Render the line in the task panel
-        double taskLineHeight = rc.getLineRowHeight() * getNbOfLines();
+        int taskLineHeight = rc.getLineRowHeight() * getNbOfLines();
         gc.setStroke(rc.getPanelBorderColor());
         gc.setFill(rc.getPanelBackgroundColor());
         gc.fillRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight);
         gc.strokeRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight);
         // Render text
         gc.setStroke(rc.getPanelForegroundColor());
-        gc.strokeText(getName(), taskLineXStart + rc.getTextPadding(), taskLineYStart + taskLineHeight/2 + rc.getTextHeight()/2, rc.getTaskPanelWidth() - 2 * rc.getTextPadding() - taskLineXStart);
+        gc.strokeText(getName(), taskLineXStart + rc.getTextPadding(), taskLineYStart + (int) Math.round(taskLineHeight/2.0 + rc.getTextHeight()/2.0), rc.getTaskPanelWidth() - 2 * rc.getTextPadding() - taskLineXStart);
         // Remember boundaries
         updateLastRenderedBounds(new BoundingBox(taskLineXStart, taskLineYStart,
                 rc.getImageAreaWidth() - taskLineXStart, taskLineHeight));
@@ -215,9 +215,9 @@ public class TaskLine implements ITaskLine {
     }
 
     @Override
-    public void renderLineBackground(GraphicsContext gc, double taskLineXStart, double taskLineYStart, int renderedLines, IRenderingContext rc) {
+    public void renderLineBackground(GraphicsContext gc, int taskLineXStart, int taskLineYStart, int renderedLines, IRenderingContext rc) {
         // Render the tasks in each rendered line
-        double newTaskLineYStart = taskLineYStart;
+        int newTaskLineYStart = taskLineYStart;
         int i = 0;
         for(RenderingLine rl : this.renderingLines) {
             rl.renderBackground(gc, taskLineXStart, newTaskLineYStart, (renderedLines + i) % 2 == 0, rc);
@@ -261,7 +261,7 @@ public class TaskLine implements ITaskLine {
             return false;
         }
 
-        public void render(GraphicsContext gc, double taskLineYStart, boolean lastLine, IRenderingContext rc) {
+        public void render(GraphicsContext gc, int taskLineYStart, boolean lastLine, IRenderingContext rc) {
             for(TaskItem ti : this.line) {
                 ti.render(gc, taskLineYStart, rc);
             }
@@ -272,19 +272,19 @@ public class TaskLine implements ITaskLine {
             }
         }
 
-        public void renderBackground(GraphicsContext gc, double taskLineXStart, double taskLineYStart, boolean isEvenLine, IRenderingContext rc) {
+        public void renderBackground(GraphicsContext gc, int taskLineXStart, int taskLineYStart, boolean isEvenLine, IRenderingContext rc) {
             gc.setFill(isEvenLine ? rc.getBackgroundColor() : computeOddColor(rc.getBackgroundColor()));
             gc.fillRect(taskLineXStart, taskLineYStart, rc.getImageAreaWidth() - taskLineXStart, rc.getLineRowHeight());
         }
+    }
 
-        private Color computeOddColor(Color reference) {
-            if(reference.equals(Color.WHITE)) {
-                return new Color(0.97, 0.97, 0.97, 1.0);
-            } else if(reference.equals(Color.BLACK)) {
-                return new Color(0.15, 0.15, 0.15, 1.0);
-            } else {
-                return reference.desaturate();
-            }
+    public static Color computeOddColor(Color reference) {
+        if(reference.equals(Color.WHITE)) {
+            return new Color(0.97, 0.97, 0.97, 1.0);
+        } else if(reference.equals(Color.BLACK)) {
+            return new Color(0.15, 0.15, 0.15, 1.0);
+        } else {
+            return reference.desaturate();
         }
     }
 }

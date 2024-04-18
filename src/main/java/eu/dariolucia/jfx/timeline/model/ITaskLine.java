@@ -55,6 +55,16 @@ public interface ITaskLine {
     boolean computeRenderingStructure();
 
     /**
+     * Render the background of the task line
+     * @param gc the {@link GraphicsContext}
+     * @param taskLineXStart the X offset where the background coverage has to start
+     * @param taskLineYStart the Y offset where the background coverage has to start
+     * @param renderedLines the current number of lines rendered so far
+     * @param rc the {@link IRenderingContext}
+     */
+    void renderLineBackground(GraphicsContext gc, int taskLineXStart, int taskLineYStart, int renderedLines, IRenderingContext rc);
+
+    /**
      * This method requests the rendering of this task line, in line with the information provided as method's arguments.
      * This method is not supposed to be called by external class users.
      * @param gc the {@link GraphicsContext}
@@ -62,7 +72,7 @@ public interface ITaskLine {
      * @param taskLineYStart the Y offset where the task line has to start
      * @param rc the {@link IRenderingContext}
      */
-    void render(GraphicsContext gc, double taskLineXStart, double taskLineYStart, IRenderingContext rc);
+    void render(GraphicsContext gc, int taskLineXStart, int taskLineYStart, IRenderingContext rc);
 
     /**
      * Inform this task line that there is a rendering cycle but the line won't be rendered because it is not in the viewport.
@@ -125,13 +135,4 @@ public interface ITaskLine {
      */
     Timeline getTimeline();
 
-    /**
-     * Render the background of the task line
-     * @param gc the {@link GraphicsContext}
-     * @param taskLineXStart the X offset where the background coverage has to start
-     * @param taskLineYStart the Y offset where the background coverage has to start
-     * @param renderedLines the current number of lines rendered so far
-     * @param rc the {@link IRenderingContext}
-     */
-    void renderLineBackground(GraphicsContext gc, double taskLineXStart, double taskLineYStart, int renderedLines, IRenderingContext rc);
 }

@@ -159,17 +159,17 @@ public class TaskItem {
         this.userData = userData;
     }
 
-    public void render(GraphicsContext gc, double taskLineYStart, IRenderingContext rc) {
+    public void render(GraphicsContext gc, int taskLineYStart, IRenderingContext rc) {
         Instant endTimeExp = getStartTime().plusSeconds(getExpectedDuration());
         Instant endTimeAct = getActualDuration() >= 0 ? getStartTime().plusSeconds(getActualDuration()) : null;
         Instant endTime = endTimeAct != null && endTimeAct.isAfter(endTimeExp) ? endTimeAct : endTimeExp;
         // Render only if in viewport
         if(rc.isInViewPort(getStartTime(), endTime)) {
             // Convert to X coordinates
-            double startX = rc.toX(getStartTime());
-            double startY = taskLineYStart + rc.getTextPadding();
+            int startX = (int) rc.toX(getStartTime());
+            int startY = taskLineYStart + rc.getTextPadding();
             // Expected
-            double endX = rc.toX(endTimeExp);
+            int endX = (int) rc.toX(endTimeExp);
             // Render now expected
             boolean isSelected = rc.getSelectedTaskItems().contains(this);
             Color bgColor = getTaskBackgroundColor();
@@ -188,17 +188,17 @@ public class TaskItem {
             gc.setLineWidth(1);
             gc.setEffect(null);
             // Render now actual
-            double actualEndX = -1;
+            int actualEndX = -1;
             if(endTimeAct != null) {
-                actualEndX = rc.toX(endTimeAct);
-                double actualStartX = startX + (isSelected ? 1 : 0); // Account for selection
+                actualEndX = (int) rc.toX(endTimeAct);
+                int actualStartX = startX + (isSelected ? 1 : 0); // Account for selection
                 gc.setFill(bgColor.darker());
                 gc.fillRect(actualStartX, startY + rc.getTextPadding(), actualEndX - actualStartX, rc.getLineRowHeight() - 4*rc.getTextPadding());
             }
             gc.setStroke(getTaskTextColor());
             // Render in the middle
-            double textWidth = rc.getTextWidth(gc, getName());
-            gc.strokeText(getName(), startX + (endX - startX)/2 - textWidth/2, startY - rc.getTextPadding() + rc.getLineRowHeight()/2 + rc.getTextHeight()/2);
+            int textWidth = rc.getTextWidth(gc, getName());
+            gc.strokeText(getName(), (int) Math.round(startX + (endX - startX)/2.0 - textWidth/2.0), (int) Math.round(startY - rc.getTextPadding() + rc.getLineRowHeight()/2.0 + rc.getTextHeight()/2.0));
             // Remember rendering box in pixel coordinates
             updateLastRenderedBounds(new BoundingBox(startX, startY, Math.max(endX, actualEndX) - startX, taskHeight));
         }

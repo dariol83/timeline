@@ -111,9 +111,9 @@ public class Timeline extends GridPane implements IRenderingContext {
     /* *****************************************************************************************
      * Internal variables
      * *****************************************************************************************/
-    private double textHeight = -1;
-    private double headerRowHeight = -1;
-    private double lineRowHeight = -1;
+    private int textHeight = -1;
+    private int headerRowHeight = -1;
+    private int lineRowHeight = -1;
     private ChronoUnit headerElement = ChronoUnit.YEARS;
     private int[] currentYViewportItems;
     private List<TaskItem> flatTaskItem;
@@ -427,18 +427,18 @@ public class Timeline extends GridPane implements IRenderingContext {
     }
 
     @Override
-    public double getImageAreaHeight() {
-        return this.imageArea.getHeight();
+    public int getImageAreaHeight() {
+        return (int) this.imageArea.getHeight();
     }
 
     @Override
-    public double getImageAreaWidth() {
-        return this.imageArea.getWidth();
+    public int getImageAreaWidth() {
+        return (int) this.imageArea.getWidth();
     }
 
     @Override
-    public double getHeaderRowHeight() {
-        return this.headerRowHeight;
+    public int getHeaderRowHeight() {
+        return (int) this.headerRowHeight;
     }
 
     public ReadOnlyObjectProperty<Instant> viewPortEndProperty() {
@@ -466,18 +466,18 @@ public class Timeline extends GridPane implements IRenderingContext {
     }
 
     @Override
-    public double getTaskPanelWidth() {
-        return taskPanelWidth.get();
+    public int getTaskPanelWidth() {
+        return (int) taskPanelWidth.get();
     }
 
     @Override
-    public double getTextHeight() {
-        return this.textHeight;
+    public int getTextHeight() {
+        return (int) this.textHeight;
     }
 
     @Override
-    public double getLineRowHeight() {
-        return this.lineRowHeight;
+    public int getLineRowHeight() {
+        return (int) this.lineRowHeight;
     }
 
     public SimpleDoubleProperty taskPanelWidthProperty() {
@@ -657,8 +657,8 @@ public class Timeline extends GridPane implements IRenderingContext {
     }
 
     @Override
-    public double getSelectBorderWidth() {
-        return selectBorderWidth.get();
+    public int getSelectBorderWidth() {
+        return (int) selectBorderWidth.get();
     }
 
     public SimpleDoubleProperty selectBorderWidthProperty() {
@@ -695,8 +695,8 @@ public class Timeline extends GridPane implements IRenderingContext {
     }
 
     @Override
-    public double getTextPadding() {
-        return textPadding.get();
+    public int getTextPadding() {
+        return (int) textPadding.get();
     }
 
     public SimpleDoubleProperty textPaddingProperty() {
@@ -1125,10 +1125,10 @@ public class Timeline extends GridPane implements IRenderingContext {
     }
 
     @Override
-    public double getTextWidth(GraphicsContext gc, String text) {
+    public int getTextWidth(GraphicsContext gc, String text) {
         Text theText = new Text(text);
         theText.setFont(gc.getFont());
-        return theText.getBoundsInLocal().getWidth();
+        return (int) theText.getBoundsInLocal().getWidth();
     }
 
     private String formatHeaderText(Instant startTime, ChronoUnit headerElement) {
@@ -1173,7 +1173,7 @@ public class Timeline extends GridPane implements IRenderingContext {
             Text text = new Text("Ig");
             text.setBoundsType(TextBoundsType.VISUAL);
             text.setFont(font);
-            textHeight = text.getBoundsInLocal().getHeight();
+            textHeight = (int) text.getBoundsInLocal().getHeight();
             headerRowHeight = textHeight + 2 * getTextPadding();
             lineRowHeight = textHeight + 6 * getTextPadding();
         }
@@ -1225,8 +1225,8 @@ public class Timeline extends GridPane implements IRenderingContext {
     private void drawTimeLineBackground(GraphicsContext gc, IRenderingContext rc) {
         if(isEnableAlternateColorLines()) {
             // You render only line blocks that are contained in the viewport, as defined by the vertical scroll value
-            double yStart = this.verticalScroll.getValue();
-            double yEnd = yStart + this.imageArea.getHeight() - this.headerRowHeight;
+            int yStart = (int) this.verticalScroll.getValue();
+            int yEnd = yStart + getImageAreaHeight() - getHeaderRowHeight();
             int processedLines = 0;
             int renderedLines = 0;
             //
@@ -1234,9 +1234,9 @@ public class Timeline extends GridPane implements IRenderingContext {
             int i = 0;
             for (ITaskLine line : this.items) {
                 // Compute the Y span of the rendering for this task line
-                double taskLineYStart = processedLines * this.lineRowHeight;
+                int taskLineYStart = processedLines * this.lineRowHeight;
                 processedLines += line.getNbOfLines();
-                double taskLineYEnd = processedLines * this.lineRowHeight;
+                int taskLineYEnd = processedLines * this.lineRowHeight;
                 if ((taskLineYStart >= yStart && taskLineYStart <= yEnd) ||
                         (taskLineYEnd >= yStart && taskLineYEnd <= yEnd) ||
                         (taskLineYStart <= yStart && taskLineYEnd >= yEnd)) {
@@ -1275,15 +1275,15 @@ public class Timeline extends GridPane implements IRenderingContext {
     }
 
     private void drawBackground(GraphicsContext gc) {
-        gc.clearRect(0, 0, this.imageArea.getWidth(), this.imageArea.getHeight());
+        gc.clearRect(0, 0, getImageAreaWidth(), getImageAreaHeight());
         gc.setFill(getBackgroundColor());
-        gc.fillRect(0, 0, this.imageArea.getWidth(), this.imageArea.getHeight());
+        gc.fillRect(0, 0, getImageAreaWidth(), getImageAreaHeight());
     }
 
     private void drawTaskLines(GraphicsContext gc, IRenderingContext rc) {
         // You render only line blocks that are contained in the viewport, as defined by the vertical scroll value
-        double yStart = this.verticalScroll.getValue();
-        double yEnd = yStart + this.imageArea.getHeight() - this.headerRowHeight;
+        int yStart = (int) this.verticalScroll.getValue();
+        int yEnd = yStart + getImageAreaHeight() - getHeaderRowHeight();
         int processedLines = 0;
         //
         int startLine = -1;
@@ -1291,9 +1291,9 @@ public class Timeline extends GridPane implements IRenderingContext {
         int i = 0;
         for(ITaskLine line : this.items) {
             // Compute the Y span of the rendering for this task line
-            double taskLineYStart = processedLines * this.lineRowHeight;
+            int taskLineYStart = processedLines * this.lineRowHeight;
             processedLines += line.getNbOfLines();
-            double taskLineYEnd = processedLines * this.lineRowHeight;
+            int taskLineYEnd = processedLines * this.lineRowHeight;
             if((taskLineYStart >= yStart && taskLineYStart <= yEnd) ||
                     (taskLineYEnd >= yStart && taskLineYEnd <= yEnd) ||
                     (taskLineYStart <= yStart && taskLineYEnd >= yEnd)) {
@@ -1320,8 +1320,8 @@ public class Timeline extends GridPane implements IRenderingContext {
     private void drawEmptySidePanel(GraphicsContext gc) {
         gc.setFill(getPanelBackgroundColor());
         gc.setStroke(getPanelBorderColor());
-        gc.fillRect(0,this.headerRowHeight, getTaskPanelWidth(), this.imageArea.getHeight() - this.headerRowHeight);
-        gc.strokeRect(0,this.headerRowHeight, getTaskPanelWidth(), this.imageArea.getHeight() - this.headerRowHeight);
+        gc.fillRect(0,this.headerRowHeight, getTaskPanelWidth(), getImageAreaHeight() - this.headerRowHeight);
+        gc.strokeRect(0,this.headerRowHeight, getTaskPanelWidth(), getImageAreaHeight() - this.headerRowHeight);
     }
 
     private void drawHeaders(GraphicsContext gc) {
@@ -1376,36 +1376,29 @@ public class Timeline extends GridPane implements IRenderingContext {
     }
 
     private void renderHeaderLine(GraphicsContext gc, Instant startTime) {
-        double xStart = toX(startTime);
+        int xStart = (int) toX(startTime);
         if(xStart < getTaskPanelWidth()) {
             return;
         }
-        double height = this.headerRowHeight;
+        int height = this.headerRowHeight;
         // Vertical line (start)
-        gc.setLineDashes(2, 2);
-        gc.strokeLine(xStart, height, xStart, this.imageArea.getHeight());
+        gc.setLineDashes(1, 3);
+        gc.strokeLine(xStart, height, xStart, getImageAreaHeight());
         gc.setLineDashes();
     }
 
     private void renderHeader(GraphicsContext gc, Instant startTime, Instant endTime, ChronoUnit headerElement) {
-        double xStart = toX(startTime);
-        double xEnd = toX(endTime);
-        double height = this.headerRowHeight;
+        int xStart = (int) toX(startTime);
+        int xEnd = (int) toX(endTime);
+        int height = this.headerRowHeight;
         // Fill rectangle
         gc.setFill(getHeaderBackgroundColor());
         gc.setStroke(getHeaderBorderColor());
         gc.fillRect(xStart, 0, xEnd - xStart, height);
         gc.strokeRect(xStart, 0, xEnd - xStart, height);
-        // Vertical line (start)
-        if(isEnableVerticalLines()) {
-            gc.setLineDashes(2, 2);
-            gc.strokeLine(xStart, height, xStart, this.imageArea.getHeight());
-            gc.setLineDashes();
-        }
         // Write text
         gc.setStroke(getHeaderForegroundColor());
         String toWrite = formatHeaderText(startTime, headerElement);
         gc.strokeText(toWrite, xStart + getTextPadding(), this.textHeight + getTextPadding());
     }
-
 }

@@ -31,21 +31,21 @@ public interface IRenderingContext {
 
     Effect getSelectBorderEffect();
 
-    double getSelectBorderWidth();
+    int getSelectBorderWidth();
 
     Font getTextFont();
 
-    double getTextWidth(GraphicsContext gc, String text);
+    int getTextWidth(GraphicsContext gc, String text);
 
-    double getTaskPanelWidth();
+    int getTaskPanelWidth();
 
-    double getTextHeight();
+    int getTextHeight();
 
-    double getLineRowHeight();
+    int getLineRowHeight();
 
     double toX(Instant time);
 
-    double getTextPadding();
+    int getTextPadding();
 
     Instant getViewPortStart();
 
@@ -53,11 +53,11 @@ public interface IRenderingContext {
 
     Set<TaskItem> getSelectedTaskItems();
 
-    double getImageAreaHeight();
+    int getImageAreaHeight();
 
-    double getImageAreaWidth();
+    int getImageAreaWidth();
 
-    double getHeaderRowHeight();
+    int getHeaderRowHeight();
 
     Color getBackgroundColor();
 
