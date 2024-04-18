@@ -31,13 +31,13 @@ public interface IRenderingContext {
 
     Effect getSelectBorderEffect();
 
-    int getSelectBorderWidth();
+    double getSelectBorderWidth();
 
     Font getTextFont();
 
     int getTextWidth(GraphicsContext gc, String text);
 
-    int getTaskPanelWidth();
+    double getTaskPanelWidth();
 
     int getTextHeight();
 
@@ -45,7 +45,7 @@ public interface IRenderingContext {
 
     double toX(Instant time);
 
-    int getTextPadding();
+    double getTextPadding();
 
     Instant getViewPortStart();
 
