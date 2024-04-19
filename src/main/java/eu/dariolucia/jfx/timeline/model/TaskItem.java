@@ -29,7 +29,7 @@ import java.time.Instant;
  * This class can be subclassed and the render() method can be overwritten. It is nevertheless important, that the
  * last rendered bounding box is saved/reset using the related methods.
  */
-public class TaskItem extends TimelineElement {
+public class TaskItem extends LineElement {
 
     /* *****************************************************************************************
      * Properties

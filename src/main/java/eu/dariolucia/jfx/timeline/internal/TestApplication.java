@@ -52,7 +52,7 @@ public class TestApplication extends Application {
         {
             currentTime = currentTime.minus(2, ChronoUnit.DAYS);
             // Design
-            GroupTaskLine designGroup = new GroupTaskLine("Design");
+            FlatGroupTaskLine designGroup = new FlatGroupTaskLine("Design");
             TaskLine backendDesign = new TaskLine("Backend", "Backend Design");
             backendDesign.getItems().add(createTaskItem("General Design", currentTime.plus(3, ChronoUnit.DAYS), Duration.ofDays(2).toSeconds(), 3600 * 14));
             backendDesign.getItems().add(createTaskItem("Optimisation", currentTime.plus(6, ChronoUnit.DAYS), Duration.ofDays(1).toSeconds(), 0));
@@ -64,16 +64,16 @@ public class TestApplication extends Application {
         {
             currentTime = currentTime.plus(5, ChronoUnit.DAYS);
             // Implementation
-            GroupTaskLine implementationGroup = new GroupTaskLine("Implementation");
+            FlatGroupTaskLine implementationGroup = new FlatGroupTaskLine("Implementation");
 
-            GroupTaskLine backendGroup = new GroupTaskLine("Backend");
+            FlatGroupTaskLine backendGroup = new FlatGroupTaskLine("Backend");
             TaskLine backendImpl = new TaskLine("Development");
             backendImpl.getItems().add(createTaskItem("General Implementation", currentTime.plus(1, ChronoUnit.DAYS), Duration.ofDays(8).toSeconds(), 0));
             TaskLine backendTest = new TaskLine("Testing");
             backendTest.getItems().add(createTaskItem("Unit Testing", currentTime.plus(3, ChronoUnit.DAYS), Duration.ofDays(4).toSeconds(), 0));
             backendGroup.getItems().addAll(backendImpl, backendTest);
 
-            GroupTaskLine frontEndGroup = new GroupTaskLine("FrontEnd");
+            FlatGroupTaskLine frontEndGroup = new FlatGroupTaskLine("FrontEnd");
             TaskLine frontEndImpl = new TaskLine("Development");
             frontEndImpl.getItems().add(createTaskItem("Implementation", currentTime.plus(2, ChronoUnit.DAYS), Duration.ofDays(6).toSeconds(), 0));
             TaskLine frontEndTest = new TaskLine("Testing");

@@ -5,4 +5,5 @@ open module eu.dariolucia.jfx.timeline {
 
     exports eu.dariolucia.jfx.timeline;
     exports eu.dariolucia.jfx.timeline.model;
+    exports eu.dariolucia.jfx.timeline.internal;
 }

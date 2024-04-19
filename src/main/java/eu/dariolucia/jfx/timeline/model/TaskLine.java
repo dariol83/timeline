@@ -18,13 +18,12 @@ package eu.dariolucia.jfx.timeline.model;
 
 import eu.dariolucia.jfx.timeline.Timeline;
 import javafx.beans.Observable;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.event.Event;
 import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,15 +36,12 @@ import java.util.List;
  * This class can be subclassed and the render() method can be overwritten. It is nevertheless important, that the
  * last rendered bounding box is saved/reset using the related methods.
  */
-public class TaskLine implements ITaskLine {
+public class TaskLine extends LineElement implements ITaskLine {
 
-    private final SimpleStringProperty name = new SimpleStringProperty();
-    private final SimpleStringProperty description = new SimpleStringProperty();
     private final ObservableList<TaskItem> items = FXCollections.observableArrayList(param -> new Observable[] {
             param.startTimeProperty(), param.nameProperty(), param.expectedDurationProperty(), param.actualDurationProperty(),
             param.taskBackgroundColorProperty(), param.taskTextColorProperty() });
-    private ITaskLine parent;
-    private Timeline timeline;
+
     private BoundingBox lastRenderedBounds;
 
     private final List<RenderingLine> renderingLines = new ArrayList<>();
@@ -55,8 +51,7 @@ public class TaskLine implements ITaskLine {
     }
 
     public TaskLine(String name, String description) {
-        this.name.set(name);
-        this.description.set(description);
+        super(name, description);
         this.items.addListener(this::listUpdated);
     }
 
@@ -65,7 +60,7 @@ public class TaskLine implements ITaskLine {
             if(change.wasAdded()) {
                 change.getAddedSubList().forEach(ti -> {
                     ti.setParent(this);
-                    ti.setTimeline(this.timeline);
+                    ti.setTimeline(getTimeline());
                 });
             }
             if(change.wasRemoved()) {
@@ -75,22 +70,6 @@ public class TaskLine implements ITaskLine {
                 });
             }
         }
-    }
-
-    public String getName() {
-        return name.get();
-    }
-
-    public SimpleStringProperty nameProperty() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name.set(name);
-    }
-
-    public String getDescription() {
-        return description.get();
     }
 
     @Override
@@ -177,14 +156,6 @@ public class TaskLine implements ITaskLine {
         return this.lastRenderedBounds != null;
     }
 
-    public SimpleStringProperty descriptionProperty() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description.set(description);
-    }
-
     public ObservableList<TaskItem> getItems() {
         return items;
     }
@@ -195,23 +166,8 @@ public class TaskLine implements ITaskLine {
     }
 
     @Override
-    public ITaskLine getParent() {
-        return parent;
-    }
-
-    @Override
     public List<TaskItem> getTaskItems() {
         return Collections.unmodifiableList(this.items);
-    }
-
-    @Override
-    public void setParent(ITaskLine parent) {
-        this.parent = parent;
-    }
-
-    @Override
-    public Timeline getTimeline() {
-        return timeline;
     }
 
     @Override
@@ -228,9 +184,9 @@ public class TaskLine implements ITaskLine {
 
     @Override
     public void setTimeline(Timeline timeline) {
-        this.timeline = timeline;
+        super.setTimeline(timeline);
         this.items.forEach(i -> i.setTimeline(timeline));
-        if(this.timeline != null) {
+        if(getTimeline() != null) {
             // If added to a new timeline, the rendering structure must be recomputed
             computeRenderingStructure();
         }
@@ -242,6 +198,11 @@ public class TaskLine implements ITaskLine {
                 "name=" + getName() +
                 ", description=" + getDescription() +
                 '}';
+    }
+
+    @Override
+    public void notifyEvent(Event e, double x, double y) {
+        // Nothing
     }
 
     private static class RenderingLine {
@@ -273,18 +234,8 @@ public class TaskLine implements ITaskLine {
         }
 
         public void renderBackground(GraphicsContext gc, int taskLineXStart, int taskLineYStart, boolean isEvenLine, IRenderingContext rc) {
-            gc.setFill(isEvenLine ? rc.getBackgroundColor() : computeOddColor(rc.getBackgroundColor()));
+            gc.setFill(isEvenLine ? rc.getBackgroundColor() : ColorUtil.computeOddColor(rc.getBackgroundColor()));
             gc.fillRect(taskLineXStart, taskLineYStart, rc.getImageAreaWidth() - taskLineXStart, rc.getLineRowHeight());
-        }
-    }
-
-    public static Color computeOddColor(Color reference) {
-        if(reference.equals(Color.WHITE)) {
-            return new Color(0.97, 0.97, 0.97, 1.0);
-        } else if(reference.equals(Color.BLACK)) {
-            return new Color(0.15, 0.15, 0.15, 1.0);
-        } else {
-            return reference.desaturate();
         }
     }
 }

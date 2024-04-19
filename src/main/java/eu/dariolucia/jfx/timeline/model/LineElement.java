@@ -20,11 +20,10 @@ import eu.dariolucia.jfx.timeline.Timeline;
 import javafx.beans.property.SimpleStringProperty;
 
 /** Common abstract class for elements handled in a timeline */
-public abstract class TimelineElement {
+public abstract class LineElement implements ILineElement {
 
     private final SimpleStringProperty name = new SimpleStringProperty();
     private final SimpleStringProperty description = new SimpleStringProperty();
-
     private ITaskLine parent;
     private Timeline timeline;
 
@@ -32,7 +31,7 @@ public abstract class TimelineElement {
      * Class constructor with no description.
      * @param name the name of the element
      */
-    protected TimelineElement(String name) {
+    protected LineElement(String name) {
         this(name, null);
     }
 
@@ -41,11 +40,12 @@ public abstract class TimelineElement {
      * @param name the name of the element
      * @param description the description of the element
      */
-    protected TimelineElement(String name, String description) {
+    protected LineElement(String name, String description) {
         this.name.set(name);
         this.description.set(description);
     }
 
+    @Override
     public String getName() {
         return name.get();
     }
@@ -58,6 +58,7 @@ public abstract class TimelineElement {
         this.name.set(name);
     }
 
+    @Override
     public String getDescription() {
         return description.get();
     }
@@ -70,18 +71,22 @@ public abstract class TimelineElement {
         this.description.set(description);
     }
 
+    @Override
     public ITaskLine getParent() {
         return parent;
     }
 
+    @Override
     public Timeline getTimeline() {
         return timeline;
     }
 
+    @Override
     public void setTimeline(Timeline timeline) {
         this.timeline = timeline;
     }
 
+    @Override
     public void setParent(ITaskLine parent) {
         this.parent = parent;
     }

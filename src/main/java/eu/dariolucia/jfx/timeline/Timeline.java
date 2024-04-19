@@ -920,6 +920,14 @@ public class Timeline extends GridPane implements IRenderingContext {
         if(isEnableMouseSelection() && !Objects.equals(selectedTaskItem, this.selectionModel.getSelectedItem())) {
             this.selectionModel.select(selectedTaskItem);
         }
+        // Check if anything must be done at the level of task lines
+        for(ITaskLine tl : getItems()) {
+            if(tl.isRendered() && tl.contains(mouseEvent.getX(), mouseEvent.getY())) {
+                tl.notifyEvent(mouseEvent, mouseEvent.getX(), mouseEvent.getY());
+                // It can only go in one task line
+                break;
+            }
+        }
     }
 
     private void itemsUpdated(ListChangeListener.Change<? extends ITaskLine> c) {

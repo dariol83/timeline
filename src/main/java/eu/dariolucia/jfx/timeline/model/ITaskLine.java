@@ -16,8 +16,8 @@
 
 package eu.dariolucia.jfx.timeline.model;
 
-import eu.dariolucia.jfx.timeline.Timeline;
 import javafx.beans.Observable;
+import javafx.event.Event;
 import javafx.scene.canvas.GraphicsContext;
 
 import java.util.List;
@@ -25,19 +25,7 @@ import java.util.List;
 /**
  * This interface is used to abstract the access to the lines of a timeline (group or single).
  */
-public interface ITaskLine {
-
-    /**
-     * Return the name of the task line, which is display in the task panel.
-     * @return the name of the task line
-     */
-    String getName();
-
-    /**
-     * Return the description of the task line.
-     * @return the name of the task line
-     */
-    String getDescription();
+public interface ITaskLine extends ILineElement {
 
     /**
      * Return the number of lines rendered by this task line. This number changes depending on the type and number of
@@ -95,6 +83,16 @@ public interface ITaskLine {
     boolean contains(double x, double y);
 
     /**
+     * This method is used to propagate {@link eu.dariolucia.jfx.timeline.Timeline}'s registered events down to ITaskLine
+     * objects for possible graphical reactions. Actions to be performed at the level of {@link TaskItem} must be externally
+     * handled.
+     * @param e the raised event
+     * @param x the x coordinate in Canvas area coordinates
+     * @param y the y coordinate in Canvas area coordinates
+     */
+    void notifyEvent(Event e, double x, double y);
+
+    /**
      * Return the list of the observable properties, used to monitor the inner list of task lines or task items.
      * This method is not supposed to be called by external class users.
      * @return the observable properties
@@ -102,37 +100,9 @@ public interface ITaskLine {
     Observable[] getObservableProperties();
 
     /**
-     * Set the parent task line of this task line. This is null if the task line is a top level task line.
-     * This method is not supposed to be called by external class users.
-     * @param parent the parent task line
-     */
-    void setParent(ITaskLine parent);
-
-    /**
-     * Get the parent task line of this task line. This is null if the task line is a top level task line.
-     * This method is not supposed to be called by external class users.
-     * @return the parent task line, or null if this is a top level task line
-     */
-    ITaskLine getParent();
-
-    /**
      * Return all the {@link TaskItem} contained in this task line. This method computes recursively all such items.
      * @return all the {@link TaskItem} contained in this task line
      */
     List<TaskItem> getTaskItems();
-
-    /**
-     * Set the owning timeline of this task line. This is null if the task line is not in a timeline.
-     * This method is not supposed to be called by external class users.
-     * @param timeline the owning timeline
-     */
-    void setTimeline(Timeline timeline);
-
-    /**
-     * Get the owning {@link Timeline} of this task line. This is null if the task line is not in a {@link Timeline}.
-     * This method is not supposed to be called by external class users.
-     * @return the owning {@link Timeline} of this task line, or null if this is not part of a {@link Timeline}
-     */
-    Timeline getTimeline();
 
 }

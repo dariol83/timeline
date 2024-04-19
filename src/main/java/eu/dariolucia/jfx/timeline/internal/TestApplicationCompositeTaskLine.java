@@ -28,7 +28,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
-public class TestApplicationTreeTaskLine extends Application {
+public class TestApplicationCompositeTaskLine extends Application {
 
     public static void main(String[] args) {
         launch(args);
@@ -52,10 +52,12 @@ public class TestApplicationTreeTaskLine extends Application {
         {
             currentTime = currentTime.minus(2, ChronoUnit.DAYS);
             // Design
-            HierarchicalTaskLine designGroup = new HierarchicalTaskLine("Design");
+            HierarchicalGroupTaskLine designGroup = new HierarchicalGroupTaskLine("Design");
+            designGroup.setTaskProjectionHint(TaskItemProjection.ALWAYS);
             TaskLine backendDesign = new TaskLine("Backend", "Backend Design");
             backendDesign.getItems().add(createTaskItem("General Design", currentTime.plus(3, ChronoUnit.DAYS), Duration.ofDays(2).toSeconds(), 3600 * 14));
             backendDesign.getItems().add(createTaskItem("Optimisation", currentTime.plus(6, ChronoUnit.DAYS), Duration.ofDays(1).toSeconds(), 0));
+            backendDesign.getItems().add(createTaskItem("QA Assurance", currentTime.plus(14, ChronoUnit.DAYS), Duration.ofDays(1).toSeconds(), 0));
             TaskLine frontEndDesign = new TaskLine("Frontend", "Frontend Design");
             frontEndDesign.getItems().add(createTaskItem("Design", currentTime.plus(3, ChronoUnit.DAYS), Duration.ofDays(4).toSeconds(), Duration.ofDays(3).toSeconds()));
             designGroup.getItems().addAll(backendDesign, frontEndDesign);
@@ -64,16 +66,17 @@ public class TestApplicationTreeTaskLine extends Application {
         {
             currentTime = currentTime.plus(5, ChronoUnit.DAYS);
             // Implementation
-            HierarchicalTaskLine implementationGroup = new HierarchicalTaskLine("Implementation 1");
-
-            GroupTaskLine backendGroup = new GroupTaskLine("Backend");
+            HierarchicalGroupTaskLine implementationGroup = new HierarchicalGroupTaskLine("Implementation 1");
+            implementationGroup.setCollapsible(true);
+            implementationGroup.setTaskProjectionHint(TaskItemProjection.COLLAPSE);
+            FlatGroupTaskLine backendGroup = new FlatGroupTaskLine("Backend");
             TaskLine backendImpl = new TaskLine("Development");
             backendImpl.getItems().add(createTaskItem("General Implementation", currentTime.plus(1, ChronoUnit.DAYS), Duration.ofDays(8).toSeconds(), 0));
             TaskLine backendTest = new TaskLine("Testing");
             backendTest.getItems().add(createTaskItem("Unit Testing", currentTime.plus(3, ChronoUnit.DAYS), Duration.ofDays(4).toSeconds(), 0));
             backendGroup.getItems().addAll(backendImpl, backendTest);
 
-            GroupTaskLine frontEndGroup = new GroupTaskLine("FrontEnd");
+            FlatGroupTaskLine frontEndGroup = new FlatGroupTaskLine("FrontEnd");
             TaskLine frontEndImpl = new TaskLine("Development");
             frontEndImpl.getItems().add(createTaskItem("Implementation", currentTime.plus(2, ChronoUnit.DAYS), Duration.ofDays(6).toSeconds(), 0));
             TaskLine frontEndTest = new TaskLine("Testing");
@@ -81,7 +84,7 @@ public class TestApplicationTreeTaskLine extends Application {
             frontEndGroup.getItems().addAll(frontEndImpl, frontEndTest);
 
             TaskLine documentation = new TaskLine("Documentation", "Documentation");
-            documentation.getItems().add(createTaskItem("Writing Docs", currentTime.plus(1, ChronoUnit.DAYS), Duration.ofDays(8).toSeconds(), Duration.ofDays(1).toSeconds()));
+            documentation.getItems().add(createTaskItem("Writing Docs", currentTime.plus(2, ChronoUnit.DAYS), Duration.ofDays(9).toSeconds(), Duration.ofDays(1).toSeconds()));
 
             implementationGroup.getItems().addAll(backendGroup, frontEndGroup, documentation);
 
@@ -90,16 +93,19 @@ public class TestApplicationTreeTaskLine extends Application {
         {
             currentTime = currentTime.plus(5, ChronoUnit.DAYS);
             // Implementation
-            GroupTaskLine implementationGroup = new GroupTaskLine("Implementation 2");
-
-            HierarchicalTaskLine backendGroup = new HierarchicalTaskLine("Backend");
+            FlatGroupTaskLine implementationGroup = new FlatGroupTaskLine("Implementation 2");
+            implementationGroup.setCollapsible(true);
+            implementationGroup.setTaskProjectionHint(TaskItemProjection.COLLAPSE);
+            HierarchicalGroupTaskLine backendGroup = new HierarchicalGroupTaskLine("Backend");
+            backendGroup.setCollapsible(true);
             TaskLine backendImpl = new TaskLine("Development");
             backendImpl.getItems().add(createTaskItem("General Implementation", currentTime.plus(1, ChronoUnit.DAYS), Duration.ofDays(8).toSeconds(), 0));
             TaskLine backendTest = new TaskLine("Testing");
             backendTest.getItems().add(createTaskItem("Unit Testing", currentTime.plus(3, ChronoUnit.DAYS), Duration.ofDays(4).toSeconds(), 0));
             backendGroup.getItems().addAll(backendImpl, backendTest);
 
-            HierarchicalTaskLine frontEndGroup = new HierarchicalTaskLine("FrontEnd");
+            HierarchicalGroupTaskLine frontEndGroup = new HierarchicalGroupTaskLine("FrontEnd");
+            frontEndGroup.setCollapsible(true);
             TaskLine frontEndImpl = new TaskLine("Development");
             frontEndImpl.getItems().add(createTaskItem("Implementation", currentTime.plus(2, ChronoUnit.DAYS), Duration.ofDays(6).toSeconds(), 0));
             TaskLine frontEndTest = new TaskLine("Testing");
