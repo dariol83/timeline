@@ -38,6 +38,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontSmoothingType;
 import javafx.scene.text.Text;
@@ -85,15 +86,16 @@ public class Timeline extends GridPane implements IRenderingContext {
     private final SimpleDoubleProperty taskPanelWidth = new SimpleDoubleProperty(TASK_PANEL_WIDTH_DEFAULT);
     private final SimpleDoubleProperty textPadding = new SimpleDoubleProperty(TEXT_PADDING_DEFAULT);
     private final SimpleObjectProperty<Color> backgroundColor = new SimpleObjectProperty<>(Color.WHITE);
-    private final SimpleObjectProperty<Color> headerBackgroundColor = new SimpleObjectProperty<>(Color.LIGHTGRAY);
+    private final SimpleObjectProperty<Paint> headerBackground = new SimpleObjectProperty<>(Color.LIGHTGRAY);
     private final SimpleObjectProperty<Color> headerForegroundColor = new SimpleObjectProperty<>(Color.BLACK);
-    private final SimpleObjectProperty<Color> headerBorderColor = new SimpleObjectProperty<>(headerBackgroundColor.get().darker());
-    private final SimpleObjectProperty<Color> panelBackgroundColor = new SimpleObjectProperty<>(Color.LIGHTGRAY);
+    private final SimpleObjectProperty<Color> headerBorderColor = new SimpleObjectProperty<>(Color.BLACK);
+    private final SimpleObjectProperty<Paint> panelBackground = new SimpleObjectProperty<>(Color.LIGHTGRAY);
     private final SimpleObjectProperty<Color> panelForegroundColor = new SimpleObjectProperty<>(Color.BLACK);
-    private final SimpleObjectProperty<Color> panelBorderColor = new SimpleObjectProperty<>(panelBackgroundColor.get().darker());
+    private final SimpleObjectProperty<Color> panelBorderColor = new SimpleObjectProperty<>(Color.BLACK);
     private final SimpleObjectProperty<Color> selectBorderColor = new SimpleObjectProperty<>(Color.BLACK);
     private final SimpleObjectProperty<Effect> selectBorderEffect = new SimpleObjectProperty<>(null);
-    private final SimpleDoubleProperty selectBorderWidth = new SimpleDoubleProperty(2.0);
+    private final SimpleObjectProperty<Color> taskBorderColor = new SimpleObjectProperty<>(Color.BLACK);
+    private final SimpleDoubleProperty selectBorderWidth = new SimpleDoubleProperty(3.0);
     private final SimpleObjectProperty<Font> textFont = new SimpleObjectProperty<>(null);
     private final SimpleBooleanProperty horizontalScrollbarVisible = new SimpleBooleanProperty();
     private final SimpleBooleanProperty verticalScrollbarVisible = new SimpleBooleanProperty();
@@ -107,6 +109,10 @@ public class Timeline extends GridPane implements IRenderingContext {
     private final SimpleBooleanProperty enableZoomMouseScroll = new SimpleBooleanProperty(true);
     private final SimpleBooleanProperty enableVerticalLines = new SimpleBooleanProperty(true);
     private final SimpleBooleanProperty enableAlternateColorLines = new SimpleBooleanProperty(true);
+    private final SimpleBooleanProperty highlightLine = new SimpleBooleanProperty(true);
+    private final SimpleObjectProperty<Color> taskProjectionBackgroundColor = new SimpleObjectProperty<>(Color.BURLYWOOD);
+    private final SimpleObjectProperty<TaskItemProjection> taskProjectionHint = new SimpleObjectProperty<>(TaskItemProjection.COLLAPSE);
+
 
     /* *****************************************************************************************
      * Internal variables
@@ -172,17 +178,21 @@ public class Timeline extends GridPane implements IRenderingContext {
         taskPanelWidthProperty().addListener((e,o,n) -> recomputeViewport());
         // Add listener when colors are updated
         backgroundColorProperty().addListener((e,o,n) -> internalRefresh());
-        headerBackgroundColorProperty().addListener((e, o, n) -> internalRefresh());
+        headerBackgroundProperty().addListener((e, o, n) -> internalRefresh());
         headerForegroundColorProperty().addListener((e, o, n) -> internalRefresh());
-        panelBackgroundColorProperty().addListener((e, o, n) -> internalRefresh());
+        panelBackgroundProperty().addListener((e, o, n) -> internalRefresh());
         panelForegroundColorProperty().addListener((e, o, n) -> internalRefresh());
         panelBorderColorProperty().addListener((e, o, n) -> internalRefresh());
+        taskBorderColorProperty().addListener((e, o, n) -> internalRefresh());
         headerBorderColorProperty().addListener((e, o, n) -> internalRefresh());
         enableVerticalLinesProperty().addListener((e, o, n) -> internalRefresh());
         selectBorderColorProperty().addListener((e, o, n) -> internalRefresh());
         selectBorderWidthProperty().addListener((e,v,n) -> internalRefresh());
         selectBorderEffectProperty().addListener((e,v,n) -> internalRefresh());
         enableAlternateColorLinesProperty().addListener((e,v,n) -> internalRefresh());
+        highlightLineProperty().addListener((e,v,n) -> internalRefresh());
+        taskProjectionBackgroundColorProperty().addListener((e, v, n) -> internalRefresh());
+        taskProjectionHintProperty().addListener((e,v,n) -> internalRefresh());
         textFontProperty().addListener((e,v,n) -> textSettingsUpdated());
         textPaddingProperty().addListener((e,v,n) -> textSettingsUpdated());
         // Add listener when scrollbar visible is updated
@@ -548,16 +558,16 @@ public class Timeline extends GridPane implements IRenderingContext {
         this.verticalScrollbarVisible.set(verticalScrollbarVisible);
     }
 
-    public Color getHeaderBackgroundColor() {
-        return headerBackgroundColor.get();
+    public Paint getHeaderBackground() {
+        return headerBackground.get();
     }
 
-    public SimpleObjectProperty<Color> headerBackgroundColorProperty() {
-        return headerBackgroundColor;
+    public SimpleObjectProperty<Paint> headerBackgroundProperty() {
+        return headerBackground;
     }
 
-    public void setHeaderBackgroundColor(Color headerBackgroundColor) {
-        this.headerBackgroundColor.set(headerBackgroundColor);
+    public void setHeaderBackground(Paint headerBackground) {
+        this.headerBackground.set(headerBackground);
     }
 
     public Color getHeaderForegroundColor() {
@@ -573,16 +583,16 @@ public class Timeline extends GridPane implements IRenderingContext {
     }
 
     @Override
-    public Color getPanelBackgroundColor() {
-        return panelBackgroundColor.get();
+    public Paint getPanelBackground() {
+        return panelBackground.get();
     }
 
-    public SimpleObjectProperty<Color> panelBackgroundColorProperty() {
-        return panelBackgroundColor;
+    public SimpleObjectProperty<Paint> panelBackgroundProperty() {
+        return panelBackground;
     }
 
-    public void setPanelBackgroundColor(Color panelBackgroundColor) {
-        this.panelBackgroundColor.set(panelBackgroundColor);
+    public void setPanelBackground(Paint panelBackground) {
+        this.panelBackground.set(panelBackground);
     }
 
     @Override
@@ -741,6 +751,58 @@ public class Timeline extends GridPane implements IRenderingContext {
 
     public void setEnableAlternateColorLines(boolean enableAlternateColorLines) {
         this.enableAlternateColorLines.set(enableAlternateColorLines);
+    }
+
+    @Override
+    public boolean isHighlightLine() {
+        return highlightLine.get();
+    }
+
+    public SimpleBooleanProperty highlightLineProperty() {
+        return highlightLine;
+    }
+
+    public void setHighlightLine(boolean highlightLine) {
+        this.highlightLine.set(highlightLine);
+    }
+
+    @Override
+    public TaskItemProjection getTaskProjectionHint() {
+        return taskProjectionHint.get();
+    }
+
+    public SimpleObjectProperty<TaskItemProjection> taskProjectionHintProperty() {
+        return taskProjectionHint;
+    }
+
+    public void setTaskProjectionHint(TaskItemProjection taskProjectionHint) {
+        this.taskProjectionHint.set(taskProjectionHint);
+    }
+
+    @Override
+    public Color getTaskProjectionBackgroundColor() {
+        return taskProjectionBackgroundColor.get();
+    }
+
+    public SimpleObjectProperty<Color> taskProjectionBackgroundColorProperty() {
+        return taskProjectionBackgroundColor;
+    }
+
+    public void setTaskProjectionBackgroundColor(Color taskProjectionBackgroundColor) {
+        this.taskProjectionBackgroundColor.set(taskProjectionBackgroundColor);
+    }
+
+    @Override
+    public Color getTaskBorderColor() {
+        return taskBorderColor.get();
+    }
+
+    public SimpleObjectProperty<Color> taskBorderColorProperty() {
+        return taskBorderColor;
+    }
+
+    public void setTaskBorderColor(Color taskBorderColor) {
+        this.taskBorderColor.set(taskBorderColor);
     }
 
     /* *****************************************************************************************
@@ -1326,7 +1388,7 @@ public class Timeline extends GridPane implements IRenderingContext {
     }
 
     private void drawEmptySidePanel(GraphicsContext gc) {
-        gc.setFill(getPanelBackgroundColor());
+        gc.setFill(getPanelBackground());
         gc.setStroke(getPanelBorderColor());
         gc.fillRect(0, this.headerRowHeight, getTaskPanelWidth(), getImageAreaHeight() - this.headerRowHeight);
         gc.strokeRect(0, this.headerRowHeight, getTaskPanelWidth(), getImageAreaHeight() - this.headerRowHeight);
@@ -1354,7 +1416,7 @@ public class Timeline extends GridPane implements IRenderingContext {
             }
         }
         // Fill the TL corner block
-        gc.setFill(getHeaderBackgroundColor());
+        gc.setFill(getHeaderBackground());
         gc.setStroke(getHeaderBorderColor());
         gc.fillRect(0, 0, getTaskPanelWidth(), this.headerRowHeight);
         gc.strokeRect(0, 0, getTaskPanelWidth(), this.headerRowHeight);
@@ -1400,7 +1462,7 @@ public class Timeline extends GridPane implements IRenderingContext {
         int xEnd = (int) toX(endTime);
         int height = this.headerRowHeight;
         // Fill rectangle
-        gc.setFill(getHeaderBackgroundColor());
+        gc.setFill(getHeaderBackground());
         gc.setStroke(getHeaderBorderColor());
         gc.fillRect(xStart, 0, xEnd - xStart, height);
         gc.strokeRect(xStart, 0, xEnd - xStart, height);

@@ -45,7 +45,6 @@ public class TestApplicationCompositeTaskLine extends Application {
         tl.setMaxTime(currentTime.plusSeconds(12800));
         tl.setViewPortStart(currentTime);
         tl.setViewPortDuration(3600 * 24 * 20);
-        tl.setBackgroundColor(Color.WHITE);
 
         tl.setTaskPanelWidth(250);
         // Add task lines
@@ -53,7 +52,6 @@ public class TestApplicationCompositeTaskLine extends Application {
             currentTime = currentTime.minus(2, ChronoUnit.DAYS);
             // Design
             HierarchicalGroupTaskLine designGroup = new HierarchicalGroupTaskLine("Design");
-            designGroup.setTaskProjectionHint(TaskItemProjection.ALWAYS);
             TaskLine backendDesign = new TaskLine("Backend", "Backend Design");
             backendDesign.getItems().add(createTaskItem("General Design", currentTime.plus(3, ChronoUnit.DAYS), Duration.ofDays(2).toSeconds(), 3600 * 14));
             backendDesign.getItems().add(createTaskItem("Optimisation", currentTime.plus(6, ChronoUnit.DAYS), Duration.ofDays(1).toSeconds(), 0));
@@ -68,7 +66,6 @@ public class TestApplicationCompositeTaskLine extends Application {
             // Implementation
             HierarchicalGroupTaskLine implementationGroup = new HierarchicalGroupTaskLine("Implementation 1");
             implementationGroup.setCollapsible(true);
-            implementationGroup.setTaskProjectionHint(TaskItemProjection.COLLAPSE);
             FlatGroupTaskLine backendGroup = new FlatGroupTaskLine("Backend");
             TaskLine backendImpl = new TaskLine("Development");
             backendImpl.getItems().add(createTaskItem("General Implementation", currentTime.plus(1, ChronoUnit.DAYS), Duration.ofDays(8).toSeconds(), 0));
@@ -95,7 +92,6 @@ public class TestApplicationCompositeTaskLine extends Application {
             // Implementation
             FlatGroupTaskLine implementationGroup = new FlatGroupTaskLine("Implementation 2");
             implementationGroup.setCollapsible(true);
-            implementationGroup.setTaskProjectionHint(TaskItemProjection.COLLAPSE);
             HierarchicalGroupTaskLine backendGroup = new HierarchicalGroupTaskLine("Backend");
             backendGroup.setCollapsible(true);
             TaskLine backendImpl = new TaskLine("Development");

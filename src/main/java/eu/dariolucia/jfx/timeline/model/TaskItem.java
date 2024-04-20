@@ -16,11 +16,13 @@
 
 package eu.dariolucia.jfx.timeline.model;
 
+import javafx.beans.Observable;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 
 import java.time.Instant;
 
@@ -37,7 +39,8 @@ public class TaskItem extends LineElement {
     private final SimpleObjectProperty<Instant> startTime = new SimpleObjectProperty<>();
     private final SimpleLongProperty expectedDuration = new SimpleLongProperty();
     private final SimpleLongProperty actualDuration = new SimpleLongProperty();
-    private final SimpleObjectProperty<Color> taskBackgroundColor = new SimpleObjectProperty<>(Color.PAPAYAWHIP);
+    private final SimpleObjectProperty<Paint> taskBackground = new SimpleObjectProperty<>(Color.PAPAYAWHIP);
+    private final SimpleObjectProperty<Paint> taskProgressBackground = new SimpleObjectProperty<>(Color.PAPAYAWHIP.darker());
     private final SimpleObjectProperty<Color> taskTextColor = new SimpleObjectProperty<>(Color.BLACK);
 
     /* *****************************************************************************************
@@ -55,6 +58,17 @@ public class TaskItem extends LineElement {
         this.startTime.set(startTime);
         this.expectedDuration.set(expectedDuration);
         this.actualDuration.set(actualDuration);
+    }
+
+    /**
+     * Return the properties that should trigger an update notification in case of
+     * change. Subclasses should override, if properties are added.
+     * @return the list of properties as array of {@link Observable}
+     */
+    public Observable[] getObservableProperties() {
+        return new Observable[] {
+                startTimeProperty(), nameProperty(), expectedDurationProperty(), actualDurationProperty(),
+                taskBackgroundProperty(), taskTextColorProperty(), taskProgressBackgroundProperty() };
     }
 
     public Instant getStartTime() {
@@ -93,16 +107,16 @@ public class TaskItem extends LineElement {
         this.actualDuration.set(actualDuration);
     }
 
-    public Color getTaskBackgroundColor() {
-        return taskBackgroundColor.get();
+    public Paint getTaskBackground() {
+        return taskBackground.get();
     }
 
-    public SimpleObjectProperty<Color> taskBackgroundColorProperty() {
-        return taskBackgroundColor;
+    public SimpleObjectProperty<Paint> taskBackgroundProperty() {
+        return taskBackground;
     }
 
-    public void setTaskBackgroundColor(Color taskBackgroundColor) {
-        this.taskBackgroundColor.set(taskBackgroundColor);
+    public void setTaskBackground(Paint taskBackground) {
+        this.taskBackground.set(taskBackground);
     }
 
     public Color getTaskTextColor() {
@@ -115,6 +129,18 @@ public class TaskItem extends LineElement {
 
     public void setTaskTextColor(Color taskTextColor) {
         this.taskTextColor.set(taskTextColor);
+    }
+
+    public Paint getTaskProgressBackground() {
+        return taskProgressBackground.get();
+    }
+
+    public SimpleObjectProperty<Paint> taskProgressBackgroundProperty() {
+        return taskProgressBackground;
+    }
+
+    public void setTaskProgressBackground(Paint taskProgressBackground) {
+        this.taskProgressBackground.set(taskProgressBackground);
     }
 
     public Object getUserData() {
@@ -134,39 +160,82 @@ public class TaskItem extends LineElement {
             // Convert to X coordinates
             int startX = (int) rc.toX(getStartTime());
             int startY = taskLineYStart + (int) rc.getTextPadding();
-            // Expected
+            // Expected end coordinate
             int endX = (int) rc.toX(endTimeExp);
-            // Render now expected
+            // Is selected
             boolean isSelected = rc.getSelectedTaskItems().contains(this);
-            Color bgColor = getTaskBackgroundColor();
-            Color borderColor = isSelected ? rc.getSelectBorderColor() : bgColor.darker();
-            gc.setFill(bgColor);
-            gc.setStroke(borderColor);
-            if(isSelected) {
-                gc.setLineWidth(rc.getSelectBorderWidth());
-                gc.setEffect(rc.getSelectBorderEffect());
-            }
-            double taskHeight = rc.getLineRowHeight() - 2 * rc.getTextPadding();
-            gc.fillRect(startX, startY, endX - startX, taskHeight);
-            // Draw the selection
-            gc.strokeRect(startX, startY, endX - startX, taskHeight);
-            // Restore effect and line
-            gc.setLineWidth(1);
-            gc.setEffect(null);
+            // Render now expected
+            int taskHeight = (int) Math.round(rc.getLineRowHeight() - 2 * rc.getTextPadding());
+            drawTaskItem(gc, startX, startY, endX - startX, taskHeight, isSelected, rc);
             // Render now actual
             int actualEndX = -1;
             if(endTimeAct != null) {
                 actualEndX = (int) rc.toX(endTimeAct);
-                int actualStartX = startX + (isSelected ? 1 : 0); // Account for selection
-                gc.setFill(bgColor.darker());
-                gc.fillRect(actualStartX, startY + rc.getTextPadding(), actualEndX - actualStartX, rc.getLineRowHeight() - 4*rc.getTextPadding());
+                // Draw task progress
+                drawTaskItemProgress(gc, startX, startY, actualEndX - startX, taskHeight, isSelected, rc);
             }
-            gc.setStroke(getTaskTextColor());
-            // Render in the middle
-            int textWidth = rc.getTextWidth(gc, getName());
-            gc.strokeText(getName(), (int) Math.round(startX + (endX - startX)/2.0 - textWidth/2.0), (int) Math.round(startY - rc.getTextPadding() + rc.getLineRowHeight()/2.0 + rc.getTextHeight()/2.0));
+            // Render text
+            drawTaskText(gc, startX, startY, endX - startX, taskHeight, isSelected, rc);
             // Remember rendering box in pixel coordinates
             updateLastRenderedBounds(new BoundingBox(startX, startY, Math.max(endX, actualEndX) - startX, taskHeight));
+        }
+    }
+
+    protected void drawTaskText(GraphicsContext gc, int startX, int startY, int width, int height, boolean isSelected, IRenderingContext rc) {
+        gc.setStroke(getTaskTextColor());
+        // Render text in the middle
+        int textWidth = rc.getTextWidth(gc, getName());
+        gc.strokeText(getName(), (int) Math.round(startX + (width)/2.0 - textWidth/2.0), (int) Math.round(startY - rc.getTextPadding() + rc.getLineRowHeight()/2.0 + rc.getTextHeight()/2.0));
+    }
+
+    /**
+     * Draw the task progress. Subclasses can override, as long as the bounding box is preserved. The boundaries defined
+     * by the arguments are those falling within the task item, and the width is proportional to the length of the progress.
+     * @param gc the {@link GraphicsContext}
+     * @param startX the start X of the progress in Canvas coordinates
+     * @param startY the start Y of the progress in Canvas coordinates
+     * @param width the width - actual progress
+     * @param height the height
+     * @param isSelected whether the task item is selected
+     * @param rc the {@link IRenderingContext}
+     */
+    protected void drawTaskItemProgress(GraphicsContext gc, int startX, int startY, int width, int height, boolean isSelected, IRenderingContext rc) {
+        int actualStartX = startX + (isSelected ? 1 : 0); // Account for selection
+        int actualStartY = (int) Math.round(startY + rc.getTextPadding());
+        // Take the selection into account
+        width -= isSelected ? 1 : 0;
+        height = (int) Math.round(height - 2 * rc.getTextPadding());
+        gc.setFill(getTaskProgressBackground());
+        gc.fillRect(actualStartX, actualStartY, width, height);
+    }
+
+    /**
+     * Draw the task item. Subclasses can override, as long as the bounding box is preserved.
+     * @param gc the {@link GraphicsContext}
+     * @param startX the start X of the progress in Canvas coordinates
+     * @param startY the start Y of the progress in Canvas coordinates
+     * @param width the width
+     * @param height the height
+     * @param isSelected whether the task item is selected
+     * @param rc the {@link IRenderingContext}
+     */
+    protected void drawTaskItem(GraphicsContext gc, int startX, int startY, int width, int height, boolean isSelected, IRenderingContext rc) {
+        Paint bgColor = getTaskBackground();
+        Color borderColor = isSelected ? rc.getSelectBorderColor() : rc.getTaskBorderColor();
+        gc.setFill(bgColor);
+        gc.setStroke(borderColor);
+        if(isSelected) {
+            gc.setLineWidth(rc.getSelectBorderWidth());
+            gc.setEffect(rc.getSelectBorderEffect());
+        }
+        // Fill task bar
+        gc.fillRoundRect(startX, startY, width, height, rc.getTextPadding(), rc.getTextPadding());
+        // Draw task border
+        gc.strokeRoundRect(startX, startY, width, height, rc.getTextPadding(), rc.getTextPadding());
+        // Restore effect and line
+        if(isSelected) {
+            gc.setLineWidth(1);
+            gc.setEffect(null);
         }
     }
 

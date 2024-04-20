@@ -38,12 +38,9 @@ import java.util.List;
  */
 public class TaskLine extends LineElement implements ITaskLine {
 
-    private final ObservableList<TaskItem> items = FXCollections.observableArrayList(param -> new Observable[] {
-            param.startTimeProperty(), param.nameProperty(), param.expectedDurationProperty(), param.actualDurationProperty(),
-            param.taskBackgroundColorProperty(), param.taskTextColorProperty() });
+    private final ObservableList<TaskItem> items = FXCollections.observableArrayList(TaskItem::getObservableProperties);
 
     private BoundingBox lastRenderedBounds;
-
     private final List<RenderingLine> renderingLines = new ArrayList<>();
 
     public TaskLine(String name) {
@@ -121,7 +118,7 @@ public class TaskLine extends LineElement implements ITaskLine {
         // Render the line in the task panel
         int taskLineHeight = rc.getLineRowHeight() * getNbOfLines();
         gc.setStroke(rc.getPanelBorderColor());
-        gc.setFill(rc.getPanelBackgroundColor());
+        gc.setFill(rc.getPanelBackground());
         gc.fillRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight);
         gc.strokeRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight);
         // Render text

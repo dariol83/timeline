@@ -70,7 +70,7 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
         // Render the line in the task panel
         int taskLineHeight = rc.getLineRowHeight();
         gc.setStroke(rc.getPanelBorderColor());
-        gc.setFill(rc.getPanelBackgroundColor());
+        gc.setFill(rc.getPanelBackground());
         gc.fillRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight);
         gc.strokeRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight);
         // If collapsible, render the symbol
@@ -97,7 +97,7 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
         gc.setStroke(rc.getPanelBorderColor());
         gc.strokeLine(rc.getTaskPanelWidth(), taskLineYStart + rc.getLineRowHeight(), rc.getImageAreaWidth(), taskLineYStart + rc.getLineRowHeight());
         // Task projection
-        if(getTaskProjectionHint() == TaskItemProjection.ALWAYS || getTaskProjectionHint() == TaskItemProjection.COLLAPSE) {
+        if(rc.getTaskProjectionHint() == TaskItemProjection.ALWAYS || rc.getTaskProjectionHint() == TaskItemProjection.COLLAPSE) {
             drawProjectedTasks(gc, taskLineYStart, rc);
         }
         return taskLineHeight;
@@ -114,7 +114,7 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
         }
         int groupBoxHeight = getNbOfLines() * rc.getLineRowHeight();
         // Draw the group box
-        gc.setFill(rc.getPanelBackgroundColor());
+        gc.setFill(rc.getPanelBackground());
         gc.setStroke(rc.getPanelBorderColor());
         gc.fillRect(taskLineXStart, taskLineYStart, groupBoxWidth, groupBoxHeight);
         gc.strokeRect(taskLineXStart, taskLineYStart, groupBoxWidth, groupBoxHeight);
@@ -157,7 +157,7 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
         } else {
             // Render the background of the hierarchical line
             Color bgColor = renderedLines % 2 == 0 ? rc.getBackgroundColor() : ColorUtil.computeOddColor(rc.getBackgroundColor());
-            gc.setFill(isHighlightLine() ? ColorUtil.percentageUpdate(rc.getBackgroundColor(), -0.15) : bgColor);
+            gc.setFill(rc.isHighlightLine() ? ColorUtil.percentageUpdate(rc.getBackgroundColor(), -0.15) : bgColor);
             gc.fillRect(taskLineXStart, taskLineYStart, rc.getImageAreaWidth() - taskLineXStart, rc.getLineRowHeight());
         }
     }

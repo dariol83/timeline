@@ -19,7 +19,6 @@ package eu.dariolucia.jfx.timeline.model;
 import eu.dariolucia.jfx.timeline.Timeline;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -27,7 +26,6 @@ import javafx.event.Event;
 import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.paint.Color;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,9 +39,6 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
     private final SimpleBooleanProperty collapsible = new SimpleBooleanProperty(false);
     private final SimpleBooleanProperty collapsed = new SimpleBooleanProperty(false);
     private final SimpleBooleanProperty mouseCollapsingEnabled = new SimpleBooleanProperty(true);
-    private final SimpleBooleanProperty highlightLine = new SimpleBooleanProperty(true); // TODO: add color to timeline
-    private final SimpleObjectProperty<TaskItemProjection> taskProjectionHint = new SimpleObjectProperty<>(TaskItemProjection.NONE);
-    private final SimpleObjectProperty<Color> taskProjectionColor = new SimpleObjectProperty<>(Color.BURLYWOOD); // TODO: move to timeline
     private final ObservableList<ITaskLine> items = FXCollections.observableArrayList(ITaskLine::getObservableProperties);
     private boolean collapsedState = false;
     private BoundingBox collapseButtonBoundingBox = null;
@@ -91,8 +86,9 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
      * @param rc the {@link IRenderingContext}
      */
     protected void drawProjectedTasks(GraphicsContext gc, int taskLineYStart, IRenderingContext rc) {
+        // Consider only the tasks in the viewport visibility
         List<TaskItem> tasksToMerge = getTaskItems().stream().filter(task -> rc.isInViewPort(task.getStartTime(), task.getStartTime().plusSeconds(Math.max(task.getExpectedDuration(), task.getActualDuration())))).collect(Collectors.toList());
-        gc.setFill(getTaskProjectionColor());
+        gc.setFill(rc.getTaskProjectionBackgroundColor());
         int startY = taskLineYStart + (int) rc.getTextPadding();
         for(TaskItem ti : tasksToMerge) {
             int startX = Math.max((int) rc.toX(ti.getStartTime()), (int) rc.getTaskPanelWidth());
@@ -158,7 +154,7 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
     @Override
     public Observable[] getObservableProperties() {
         return new Observable[] { nameProperty(), descriptionProperty(), getItems(), collapsibleProperty(),
-        collapsedProperty(), highlightLineProperty(), taskProjectionHintProperty(), taskProjectionColorProperty() };
+        collapsedProperty() };
     }
 
     public ObservableList<ITaskLine> getItems() {
@@ -227,41 +223,5 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
 
     public void setMouseCollapsingEnabled(boolean mouseCollapsingEnabled) {
         this.mouseCollapsingEnabled.set(mouseCollapsingEnabled);
-    }
-
-    public boolean isHighlightLine() {
-        return highlightLine.get();
-    }
-
-    public SimpleBooleanProperty highlightLineProperty() {
-        return highlightLine;
-    }
-
-    public void setHighlightLine(boolean highlightLine) {
-        this.highlightLine.set(highlightLine);
-    }
-
-    public TaskItemProjection getTaskProjectionHint() {
-        return taskProjectionHint.get();
-    }
-
-    public SimpleObjectProperty<TaskItemProjection> taskProjectionHintProperty() {
-        return taskProjectionHint;
-    }
-
-    public void setTaskProjectionHint(TaskItemProjection taskProjectionHint) {
-        this.taskProjectionHint.set(taskProjectionHint);
-    }
-
-    public Color getTaskProjectionColor() {
-        return taskProjectionColor.get();
-    }
-
-    public SimpleObjectProperty<Color> taskProjectionColorProperty() {
-        return taskProjectionColor;
-    }
-
-    public void setTaskProjectionColor(Color taskProjectionColor) {
-        this.taskProjectionColor.set(taskProjectionColor);
     }
 }

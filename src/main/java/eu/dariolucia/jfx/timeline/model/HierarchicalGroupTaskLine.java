@@ -67,7 +67,7 @@ public class HierarchicalGroupTaskLine extends CompositeTaskLine {
         int nbLines = getNbOfLines();
         int groupBoxHeight = nbLines * rc.getLineRowHeight();
         // Draw the group box
-        gc.setFill(rc.getPanelBackgroundColor());
+        gc.setFill(rc.getPanelBackground());
         gc.setStroke(rc.getPanelBorderColor());
         gc.fillRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, groupBoxHeight);
         gc.strokeRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, groupBoxHeight);
@@ -106,7 +106,7 @@ public class HierarchicalGroupTaskLine extends CompositeTaskLine {
             }
         }
         // Task projection
-        if(getTaskProjectionHint() == TaskItemProjection.ALWAYS || (getTaskProjectionHint() == TaskItemProjection.COLLAPSE && isCollapsedState())) {
+        if(rc.getTaskProjectionHint() == TaskItemProjection.ALWAYS || (rc.getTaskProjectionHint() == TaskItemProjection.COLLAPSE && isCollapsedState())) {
             drawProjectedTasks(gc, taskLineYStart, rc);
         }
         // Remember box
@@ -117,7 +117,7 @@ public class HierarchicalGroupTaskLine extends CompositeTaskLine {
     public void renderLineBackground(GraphicsContext gc, int taskLineXStart, int taskLineYStart, int renderedLines, IRenderingContext rc) {
         // Render the background of the hierarchical line
         Color bgColor = renderedLines % 2 == 0 ? rc.getBackgroundColor() : ColorUtil.computeOddColor(rc.getBackgroundColor());
-        gc.setFill(isHighlightLine() ? ColorUtil.percentageUpdate(rc.getBackgroundColor(), -0.15) : bgColor);
+        gc.setFill(rc.isHighlightLine() ? ColorUtil.percentageUpdate(rc.getBackgroundColor(), -0.15) : bgColor);
         gc.fillRect(taskLineXStart, taskLineYStart, rc.getImageAreaWidth() - taskLineXStart, rc.getLineRowHeight());
         // Render the background of the sub-lines
         if(!isCollapsedState()) {

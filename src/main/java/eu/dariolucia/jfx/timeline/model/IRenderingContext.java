@@ -19,6 +19,7 @@ package eu.dariolucia.jfx.timeline.model;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.effect.Effect;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 
 import java.time.Instant;
@@ -34,6 +35,14 @@ public interface IRenderingContext {
     double getSelectBorderWidth();
 
     Font getTextFont();
+
+    boolean isHighlightLine();
+
+    TaskItemProjection getTaskProjectionHint();
+
+    Color getTaskProjectionBackgroundColor();
+
+    Color getTaskBorderColor();
 
     int getTextWidth(GraphicsContext gc, String text);
 
@@ -61,7 +70,7 @@ public interface IRenderingContext {
 
     Color getBackgroundColor();
 
-    Color getPanelBackgroundColor();
+    Paint getPanelBackground();
 
     Color getPanelForegroundColor();
 
