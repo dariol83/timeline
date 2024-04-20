@@ -41,9 +41,9 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
     private final SimpleBooleanProperty collapsible = new SimpleBooleanProperty(false);
     private final SimpleBooleanProperty collapsed = new SimpleBooleanProperty(false);
     private final SimpleBooleanProperty mouseCollapsingEnabled = new SimpleBooleanProperty(true);
-    private final SimpleBooleanProperty highlightLine = new SimpleBooleanProperty(true);
+    private final SimpleBooleanProperty highlightLine = new SimpleBooleanProperty(true); // TODO: add color to timeline
     private final SimpleObjectProperty<TaskItemProjection> taskProjectionHint = new SimpleObjectProperty<>(TaskItemProjection.NONE);
-    private final SimpleObjectProperty<Color> taskProjectionColor = new SimpleObjectProperty<>(Color.BURLYWOOD);
+    private final SimpleObjectProperty<Color> taskProjectionColor = new SimpleObjectProperty<>(Color.BURLYWOOD); // TODO: move to timeline
     private final ObservableList<ITaskLine> items = FXCollections.observableArrayList(ITaskLine::getObservableProperties);
     private boolean collapsedState = false;
     private BoundingBox collapseButtonBoundingBox = null;
