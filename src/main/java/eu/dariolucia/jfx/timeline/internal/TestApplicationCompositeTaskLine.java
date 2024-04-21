@@ -46,12 +46,13 @@ public class TestApplicationCompositeTaskLine extends Application {
         tl.setViewPortStart(currentTime);
         tl.setViewPortDuration(3600 * 24 * 20);
 
-        tl.setTaskPanelWidth(250);
+        tl.setTaskPanelWidth(150);
         // Add task lines
         {
             currentTime = currentTime.minus(2, ChronoUnit.DAYS);
             // Design
             HierarchicalGroupTaskLine designGroup = new HierarchicalGroupTaskLine("Design");
+            designGroup.setCollapsible(true);
             TaskLine backendDesign = new TaskLine("Backend", "Backend Design");
             backendDesign.getItems().add(createTaskItem("General Design", currentTime.plus(3, ChronoUnit.DAYS), Duration.ofDays(2).toSeconds(), 3600 * 14));
             backendDesign.getItems().add(createTaskItem("Optimisation", currentTime.plus(6, ChronoUnit.DAYS), Duration.ofDays(1).toSeconds(), 0));

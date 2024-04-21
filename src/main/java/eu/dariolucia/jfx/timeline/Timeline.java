@@ -1171,19 +1171,16 @@ public class Timeline extends GridPane implements IRenderingContext {
             // Use years, remove performance issue, not initialised
             return ChronoUnit.YEARS;
         }
-        int secondsSize = (int) (getTextWidth(gc, "00:00:00") + 4 * getTextPadding());
-        int minutesSize = (int) (getTextWidth(gc, "00:00") + 4 * getTextPadding());
-        int hoursSize = (int) (getTextWidth(gc, "00") + 4 * getTextPadding());
         int daysSize = (int) (getTextWidth(gc, "0000-00-00") + 4 * getTextPadding());
         int monthsSize = (int) (getTextWidth(gc, "0000-00") + 4 * getTextPadding());
 
         double pixelForSecond = pixelWidth / durationSeconds;
         double temp;
-        if(pixelForSecond > secondsSize) {
+        if(pixelForSecond > daysSize) {
             return ChronoUnit.SECONDS;
-        } else if((temp = pixelForSecond * 60) > minutesSize) {
+        } else if((temp = pixelForSecond * 60) > daysSize) {
             return ChronoUnit.MINUTES;
-        } else if((temp = temp * 60) > hoursSize) {
+        } else if((temp = temp * 60) > daysSize) {
             return ChronoUnit.HOURS;
         } else if((temp = temp * 24) > daysSize) {
             return ChronoUnit.DAYS;
@@ -1205,8 +1202,8 @@ public class Timeline extends GridPane implements IRenderingContext {
         ZonedDateTime time = startTime.atZone(ZoneId.of("UTC"));
         switch(headerElement) {
             case SECONDS: return String.format("%02d:%02d:%02d", time.getHour(), time.getMinute(), time.getSecond());
-            case MINUTES: return String.format("%02d:%02d", time.getHour(), time.getMinute());
-            case HOURS: return String.format("%02d", time.getHour());
+            case MINUTES: return String.format("%02d:%02d:00", time.getHour(), time.getMinute());
+            case HOURS: return String.format("%02d:00:00", time.getHour());
             case DAYS: return String.format("%04d-%02d-%02d", time.getYear(), time.get(ChronoField.MONTH_OF_YEAR) + 1, time.getDayOfMonth());
             case MONTHS: return String.format("%04d-%02d", time.getYear(), time.get(ChronoField.MONTH_OF_YEAR) + 1);
             default: return String.format("%04d", time.getYear());
@@ -1244,7 +1241,7 @@ public class Timeline extends GridPane implements IRenderingContext {
             text.setBoundsType(TextBoundsType.VISUAL);
             text.setFont(font);
             textHeight = (int) text.getBoundsInLocal().getHeight();
-            headerRowHeight = textHeight + (int) (2 * getTextPadding());
+            headerRowHeight = 2 * textHeight + (int) (3 * getTextPadding());
             lineRowHeight = textHeight + (int) (6 * getTextPadding());
         }
     }
@@ -1279,7 +1276,7 @@ public class Timeline extends GridPane implements IRenderingContext {
         // Draw timeline background
         drawTimeLineBackground(gc, this);
         // Draw header vertical lines
-        drawHeadersVerticalLines(gc);
+        drawHeaderVerticalLines(gc);
         // Draw time intervals in background
         drawTimeIntervals(gc, this, false);
         // Draw task lines
@@ -1408,7 +1405,7 @@ public class Timeline extends GridPane implements IRenderingContext {
             } else {
                 endTime = startTime.plus(1, this.headerElement);
             }
-            renderHeader(gc, startTime, endTime, this.headerElement);
+            drawHeaderBox(gc, startTime, endTime, this.headerElement);
             if(endTime.isAfter(finalTime)) {
                 inArea = false;
             } else {
@@ -1422,7 +1419,7 @@ public class Timeline extends GridPane implements IRenderingContext {
         gc.strokeRect(0, 0, getTaskPanelWidth(), this.headerRowHeight);
     }
 
-    private void drawHeadersVerticalLines(GraphicsContext gc) {
+    private void drawHeaderVerticalLines(GraphicsContext gc) {
         if(isEnableVerticalLines()) {
             Instant startTime = getAdjustedStartTime(getViewPortStart(), this.headerElement);
             Instant finalTime = getViewPortStart().plusSeconds(getViewPortDuration());
@@ -1435,7 +1432,7 @@ public class Timeline extends GridPane implements IRenderingContext {
                 } else {
                     endTime = startTime.plus(1, this.headerElement);
                 }
-                renderHeaderLine(gc, startTime);
+                drawHeaderLine(gc, startTime);
                 if (endTime.isAfter(finalTime)) {
                     inArea = false;
                 } else {
@@ -1445,7 +1442,7 @@ public class Timeline extends GridPane implements IRenderingContext {
         }
     }
 
-    private void renderHeaderLine(GraphicsContext gc, Instant startTime) {
+    protected void drawHeaderLine(GraphicsContext gc, Instant startTime) {
         int xStart = (int) toX(startTime);
         if(xStart < getTaskPanelWidth()) {
             return;
@@ -1457,7 +1454,7 @@ public class Timeline extends GridPane implements IRenderingContext {
         gc.setLineDashes();
     }
 
-    private void renderHeader(GraphicsContext gc, Instant startTime, Instant endTime, ChronoUnit headerElement) {
+    protected void drawHeaderBox(GraphicsContext gc, Instant startTime, Instant endTime, ChronoUnit headerElement) {
         int xStart = (int) toX(startTime);
         int xEnd = (int) toX(endTime);
         int height = this.headerRowHeight;
@@ -1468,7 +1465,16 @@ public class Timeline extends GridPane implements IRenderingContext {
         gc.strokeRect(xStart, 0, xEnd - xStart, height);
         // Write text
         gc.setStroke(getHeaderForegroundColor());
-        String toWrite = formatHeaderText(startTime, headerElement);
-        gc.strokeText(toWrite, xStart + getTextPadding(), this.textHeight + getTextPadding());
+        if(headerElement == ChronoUnit.SECONDS || headerElement == ChronoUnit.MINUTES || headerElement == ChronoUnit.HOURS) {
+            // Two lines
+            String toWriteDays = formatHeaderText(startTime, ChronoUnit.DAYS);
+            gc.strokeText(toWriteDays, xStart + getTextPadding(), getTextHeight() + getTextPadding());
+            String toWrite = formatHeaderText(startTime, headerElement);
+            gc.strokeText(toWrite, xStart + getTextPadding(), 2 * getTextHeight() + 2 * getTextPadding());
+        } else {
+            // One line
+            String toWrite = formatHeaderText(startTime, headerElement);
+            gc.strokeText(toWrite, xStart + getTextPadding(), getTextHeight()/2.0 + height/2.0);
+        }
     }
 }

@@ -30,23 +30,38 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * A task line represents a line in a timeline, and contains {@link TaskItem} instances.
- * In its current implementation, a task line is always rendered on a single line: overlapping task items are rendered
- * one on top of the other, therefore the end result might not be the best.
+ * A task line represents a line in a timeline, and it is the only {@link ITaskLine} object that contains {@link TaskItem}
+ * instances.
+ * Depending on the overlaps among contained task items, a task line can be rendered on multiple lines.
  * This class can be subclassed and the render() method can be overwritten. It is nevertheless important, that the
  * last rendered bounding box is saved/reset using the related methods.
  */
 public class TaskLine extends LineElement implements ITaskLine {
 
+    /* *****************************************************************************************
+     * Properties
+     * *****************************************************************************************/
     private final ObservableList<TaskItem> items = FXCollections.observableArrayList(TaskItem::getObservableProperties);
 
+    /* *****************************************************************************************
+     * Internal variables
+     * *****************************************************************************************/
     private BoundingBox lastRenderedBounds;
-    private final List<RenderingLine> renderingLines = new ArrayList<>();
+    protected final List<RenderingLine> renderingLines = new ArrayList<>();
 
+    /**
+     * Constructor of a task line.
+     * @param name the name of the task line, as it appears in the task panel
+     */
     public TaskLine(String name) {
         this(name, null);
     }
 
+    /**
+     * Constructor of a task line.
+     * @param name the name of the task line, as it appears in the task panel
+     * @param description the description of the task line
+     */
     public TaskLine(String name, String description) {
         super(name, description);
         this.items.addListener(this::listUpdated);
@@ -74,6 +89,13 @@ public class TaskLine extends LineElement implements ITaskLine {
         return Math.max(1, this.renderingLines.size());
     }
 
+    /**
+     * This method is called by the {@link Timeline} class - directly or indirectly - when an update is detected, and
+     * the timeline must know if a change in the rendering structure occurred. Subclasses can override, e.g. to implement
+     * different rendering approaches.
+     * @return true if a change in the rendering structure of the task line occurred (i.e. one rendering line added or removed),
+     * otherwise false
+     */
     @Override
     public boolean computeRenderingStructure() {
         int oldSize = this.renderingLines.size();
@@ -106,28 +128,98 @@ public class TaskLine extends LineElement implements ITaskLine {
     }
 
     @Override
+    public void renderLineBackground(GraphicsContext gc, int taskLineXStart, int taskLineYStart, int renderedLines, IRenderingContext rc) {
+        // Render the background of the lines
+        int newTaskLineYStart = taskLineYStart;
+        for(int i = 0; i < this.renderingLines.size(); ++i) {
+            drawTaskLineSingleLineBackground(gc, taskLineXStart, newTaskLineYStart, (renderedLines + i) % 2 == 0, rc);
+            newTaskLineYStart += rc.getLineRowHeight();
+        }
+    }
+
+    /**
+     * Draw the background of a rendering line. Subclasses can override.
+     * @param gc the {@link GraphicsContext}
+     * @param taskLineXStart the start X in Canvas coordinates of the task line
+     * @param taskLineYStart the start Y in Canvas coordinates of the task line
+     * @param isEvenLine whether the line is even or odd
+     * @param rc the {@link IRenderingContext}
+     */
+    protected void drawTaskLineSingleLineBackground(GraphicsContext gc, int taskLineXStart, int taskLineYStart, boolean isEvenLine, IRenderingContext rc) {
+        gc.setFill(isEvenLine ? rc.getBackgroundColor() : ColorUtil.computeOddColor(rc.getBackgroundColor()));
+        gc.fillRect(taskLineXStart, taskLineYStart, rc.getImageAreaWidth() - taskLineXStart, rc.getLineRowHeight());
+    }
+
+    @Override
     public void render(GraphicsContext gc, int taskLineXStart, int taskLineYStart, IRenderingContext rc) {
+        int taskLineHeight = rc.getLineRowHeight() * getNbOfLines();
         // Render the tasks in each rendered line
         int newTaskLineYStart = taskLineYStart;
         int i = 0;
         for(RenderingLine rl : this.renderingLines) {
-            rl.render(gc, newTaskLineYStart, i == this.renderingLines.size() - 1, rc);
+            drawTaskLineSingleLine(gc, rl.getLine(), newTaskLineYStart, i == this.renderingLines.size() - 1, rc);
             newTaskLineYStart += rc.getLineRowHeight();
             ++i;
         }
-        // Render the line in the task panel
-        int taskLineHeight = rc.getLineRowHeight() * getNbOfLines();
-        gc.setStroke(rc.getPanelBorderColor());
-        gc.setFill(rc.getPanelBackground());
-        gc.fillRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight);
-        gc.strokeRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight);
+        // Render the task line box in the task panel
+        drawTaskLinePanelBox(gc, taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight, rc);
         // Render text
-        gc.setStroke(rc.getPanelForegroundColor());
-        gc.strokeText(getName(), taskLineXStart + rc.getTextPadding(), taskLineYStart + (int) Math.round(taskLineHeight/2.0 + rc.getTextHeight()/2.0), rc.getTaskPanelWidth() - 2 * rc.getTextPadding() - taskLineXStart);
+        drawTaskLineName(gc, taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight, rc);
         // Remember boundaries
         updateLastRenderedBounds(new BoundingBox(taskLineXStart, taskLineYStart,
                 rc.getImageAreaWidth() - taskLineXStart, taskLineHeight));
     }
+
+    /**
+     * Draw the contents of a single rendering line. Subclasses can override.
+     * @param gc the {@link GraphicsContext}
+     * @param taskItemsInLine the {@link TaskItem} to be rendered
+     * @param taskLineYStart the start Y in Canvas coordinates of the task line
+     * @param lastLine whether this is the last rendering line of the task line
+     * @param rc the {@link IRenderingContext}
+     */
+    protected void drawTaskLineSingleLine(GraphicsContext gc, List<TaskItem> taskItemsInLine, int taskLineYStart, boolean lastLine, IRenderingContext rc) {
+        // Render task items
+        for(TaskItem ti : taskItemsInLine) {
+            ti.render(gc, taskLineYStart, rc);
+        }
+        // Render bottom line
+        if(lastLine) {
+            gc.setStroke(rc.getPanelBorderColor());
+            gc.strokeLine(rc.getTaskPanelWidth(), taskLineYStart + rc.getLineRowHeight(), rc.getImageAreaWidth(), taskLineYStart + rc.getLineRowHeight());
+        }
+    }
+
+    /**
+     * Draw the name of the task line in the task panel box. Subclasses can override.
+     * @param gc the {@link GraphicsContext}
+     * @param taskLineXStart the start X in Canvas coordinates of the task line
+     * @param taskLineYStart the start Y in Canvas coordinates of the task line
+     * @param taskLinePanelBoxWidth the width of the task line box in the task panel
+     * @param taskLineHeight the full height of the task line, i.e. including all rendering lines heights
+     * @param rc the {@link IRenderingContext}
+     */
+    protected void drawTaskLineName(GraphicsContext gc, int taskLineXStart, int taskLineYStart, double taskLinePanelBoxWidth, int taskLineHeight, IRenderingContext rc) {
+        gc.setStroke(rc.getPanelForegroundColor());
+        gc.strokeText(getName(), taskLineXStart + rc.getTextPadding(), taskLineYStart + (int) Math.round(taskLineHeight/2.0 + rc.getTextHeight()/2.0), taskLinePanelBoxWidth - 2 * rc.getTextPadding());
+    }
+
+    /**
+     * Draw the box of the task line in the task panel. Subclasses can override.
+     * @param gc the {@link GraphicsContext}
+     * @param taskLineXStart the start X in Canvas coordinates of the task line
+     * @param taskLineYStart the start Y in Canvas coordinates of the task line
+     * @param taskLinePanelBoxWidth the width of the task line box in the task panel
+     * @param taskLineHeight the full height of the task line, i.e. including all rendering lines heights
+     * @param rc the {@link IRenderingContext}
+     */
+    protected void drawTaskLinePanelBox(GraphicsContext gc, int taskLineXStart, int taskLineYStart, double taskLinePanelBoxWidth, int taskLineHeight, IRenderingContext rc) {
+        gc.setStroke(rc.getPanelBorderColor());
+        gc.setFill(rc.getPanelBackground());
+        gc.fillRect(taskLineXStart, taskLineYStart, taskLinePanelBoxWidth, taskLineHeight);
+        gc.strokeRect(taskLineXStart, taskLineYStart, taskLinePanelBoxWidth, taskLineHeight);
+    }
+
 
     protected void updateLastRenderedBounds(BoundingBox boundingBox) {
         this.lastRenderedBounds = boundingBox;
@@ -168,18 +260,6 @@ public class TaskLine extends LineElement implements ITaskLine {
     }
 
     @Override
-    public void renderLineBackground(GraphicsContext gc, int taskLineXStart, int taskLineYStart, int renderedLines, IRenderingContext rc) {
-        // Render the tasks in each rendered line
-        int newTaskLineYStart = taskLineYStart;
-        int i = 0;
-        for(RenderingLine rl : this.renderingLines) {
-            rl.renderBackground(gc, taskLineXStart, newTaskLineYStart, (renderedLines + i) % 2 == 0, rc);
-            newTaskLineYStart += rc.getLineRowHeight();
-            ++i;
-        }
-    }
-
-    @Override
     public void setTimeline(Timeline timeline) {
         super.setTimeline(timeline);
         this.items.forEach(i -> i.setTimeline(timeline));
@@ -202,7 +282,7 @@ public class TaskLine extends LineElement implements ITaskLine {
         // Nothing
     }
 
-    private static class RenderingLine {
+    protected static class RenderingLine {
 
         private final List<TaskItem> line = new ArrayList<>();
 
@@ -217,22 +297,6 @@ public class TaskLine extends LineElement implements ITaskLine {
                 }
             }
             return false;
-        }
-
-        public void render(GraphicsContext gc, int taskLineYStart, boolean lastLine, IRenderingContext rc) {
-            for(TaskItem ti : this.line) {
-                ti.render(gc, taskLineYStart, rc);
-            }
-            // Render bottom line
-            if(lastLine) {
-                gc.setStroke(rc.getPanelBorderColor());
-                gc.strokeLine(rc.getTaskPanelWidth(), taskLineYStart + rc.getLineRowHeight(), rc.getImageAreaWidth(), taskLineYStart + rc.getLineRowHeight());
-            }
-        }
-
-        public void renderBackground(GraphicsContext gc, int taskLineXStart, int taskLineYStart, boolean isEvenLine, IRenderingContext rc) {
-            gc.setFill(isEvenLine ? rc.getBackgroundColor() : ColorUtil.computeOddColor(rc.getBackgroundColor()));
-            gc.fillRect(taskLineXStart, taskLineYStart, rc.getImageAreaWidth() - taskLineXStart, rc.getLineRowHeight());
         }
     }
 }

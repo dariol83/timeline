@@ -2,6 +2,9 @@ package eu.dariolucia.jfx.timeline.model;
 
 import javafx.scene.paint.Color;
 
+/**
+ * Utility class with static methods for {@link Color} handling.
+ */
 public class ColorUtil {
 
     private ColorUtil() {

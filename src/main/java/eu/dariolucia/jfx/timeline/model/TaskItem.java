@@ -23,11 +23,12 @@ import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.text.Font;
 
 import java.time.Instant;
 
 /**
- * A task item is a concrete task, with a name, start time, expected duration, actual duration and color.
+ * A task item is a concrete task, with a name, description, start time, expected duration, actual duration and color.
  * This class can be subclassed and the render() method can be overwritten. It is nevertheless important, that the
  * last rendered bounding box is saved/reset using the related methods.
  */
@@ -49,10 +50,23 @@ public class TaskItem extends LineElement {
     private BoundingBox lastRenderedBounds;
     private Object userData;
 
+    /**
+     * Constructor of a task item.
+     * @param name the name of the task item
+     * @param startTime the start time of the task item
+     * @param expectedDuration the expected duration of the task item
+     */
     public TaskItem(String name, Instant startTime, long expectedDuration) {
         this(name, startTime, expectedDuration, 0);
     }
 
+    /**
+     Constructor of a task item.
+     * @param name the name of the task item
+     * @param startTime the start time of the task item
+     * @param expectedDuration the expected duration of the task item
+     * @param actualDuration the actual duration of the task item
+     */
     public TaskItem(String name, Instant startTime, long expectedDuration, long actualDuration) {
         super(name, null);
         this.startTime.set(startTime);
@@ -143,14 +157,31 @@ public class TaskItem extends LineElement {
         this.taskProgressBackground.set(taskProgressBackground);
     }
 
+    /**
+     * Return the user data object attached to this task item. Task item can contain a user data object, i.e. an opaque
+     * object that users of this class can attach to a task item.
+     * @return the user data
+     */
     public Object getUserData() {
         return userData;
     }
 
+    /**
+     * Set the user data object attached to this task item. Task item can contain a user data object, i.e. an opaque
+     * object that users of this class can attach to a task item.
+     * @param userData the user data object
+     */
     public void setUserData(Object userData) {
         this.userData = userData;
     }
 
+    /**
+     * Task rendering method. Subclasses could override this method, but it is recommended to override the specific
+     * draw methods, which handle the rendering of the specific parts of the task item in isolation.
+     * @param gc the {@link GraphicsContext}
+     * @param taskLineYStart the start Y of the parent {@link TaskLine}
+     * @param rc the {@link IRenderingContext}
+     */
     public void render(GraphicsContext gc, int taskLineYStart, IRenderingContext rc) {
         Instant endTimeExp = getStartTime().plusSeconds(getExpectedDuration());
         Instant endTimeAct = getActualDuration() >= 0 ? getStartTime().plusSeconds(getActualDuration()) : null;
@@ -166,7 +197,7 @@ public class TaskItem extends LineElement {
             boolean isSelected = rc.getSelectedTaskItems().contains(this);
             // Render now expected
             int taskHeight = (int) Math.round(rc.getLineRowHeight() - 2 * rc.getTextPadding());
-            drawTaskItem(gc, startX, startY, endX - startX, taskHeight, isSelected, rc);
+            drawTaskItemBox(gc, startX, startY, endX - startX, taskHeight, isSelected, rc);
             // Render now actual
             int actualEndX = -1;
             if(endTimeAct != null) {
@@ -175,51 +206,71 @@ public class TaskItem extends LineElement {
                 drawTaskItemProgress(gc, startX, startY, actualEndX - startX, taskHeight, isSelected, rc);
             }
             // Render text
-            drawTaskText(gc, startX, startY, endX - startX, taskHeight, isSelected, rc);
+            drawTaskItemName(gc, startX, startY, endX - startX, taskHeight, isSelected, rc);
             // Remember rendering box in pixel coordinates
             updateLastRenderedBounds(new BoundingBox(startX, startY, Math.max(endX, actualEndX) - startX, taskHeight));
         }
     }
 
-    protected void drawTaskText(GraphicsContext gc, int startX, int startY, int width, int height, boolean isSelected, IRenderingContext rc) {
+    /**
+     * Draw the name of the task item. Subclasses can override.
+     * @param gc the {@link GraphicsContext}
+     * @param taskItemStartX the start X of the task item in Canvas coordinates
+     * @param taskItemStartY the start Y of the task item in Canvas coordinates
+     * @param taskItemWidth the width of the task item
+     * @param taskItemHeight the height of the task item
+     * @param isSelected whether the task item is selected
+     * @param rc the {@link IRenderingContext}
+     */
+    protected void drawTaskItemName(GraphicsContext gc, int taskItemStartX, int taskItemStartY, int taskItemWidth, int taskItemHeight, boolean isSelected, IRenderingContext rc) {
+        // Set the text color
         gc.setStroke(getTaskTextColor());
+        Font original = gc.getFont();
+        // If selected, use bold text
+        if(isSelected) {
+            gc.setFont(Font.font(original.getFamily(), original.getSize() + 2));
+        }
         // Render text in the middle
         int textWidth = rc.getTextWidth(gc, getName());
-        gc.strokeText(getName(), (int) Math.round(startX + (width)/2.0 - textWidth/2.0), (int) Math.round(startY - rc.getTextPadding() + rc.getLineRowHeight()/2.0 + rc.getTextHeight()/2.0));
+        gc.strokeText(getName(), (int) Math.round(taskItemStartX + (taskItemWidth)/2.0 - textWidth/2.0), (int) Math.round(taskItemStartY + taskItemHeight/2.0 + rc.getTextHeight()/2.0));
+        // If selected, restore font
+        if(isSelected) {
+            gc.setFont(original);
+        }
     }
 
     /**
-     * Draw the task progress. Subclasses can override, as long as the bounding box is preserved. The boundaries defined
+     * Draw the task progress. Subclasses can override. The boundaries defined
      * by the arguments are those falling within the task item, and the width is proportional to the length of the progress.
      * @param gc the {@link GraphicsContext}
-     * @param startX the start X of the progress in Canvas coordinates
-     * @param startY the start Y of the progress in Canvas coordinates
-     * @param width the width - actual progress
-     * @param height the height
+     * @param taskItemStartX the start X of the task item in Canvas coordinates
+     * @param taskItemStartY the start Y of the task item in Canvas coordinates
+     * @param actualProgressWidth the width of the actual progress, it can go beyond the width of the task item
+     * @param taskItemHeight the height of the task item
      * @param isSelected whether the task item is selected
      * @param rc the {@link IRenderingContext}
      */
-    protected void drawTaskItemProgress(GraphicsContext gc, int startX, int startY, int width, int height, boolean isSelected, IRenderingContext rc) {
-        int actualStartX = startX + (isSelected ? 1 : 0); // Account for selection
-        int actualStartY = (int) Math.round(startY + rc.getTextPadding());
+    protected void drawTaskItemProgress(GraphicsContext gc, int taskItemStartX, int taskItemStartY, int actualProgressWidth, int taskItemHeight, boolean isSelected, IRenderingContext rc) {
+        int actualStartX = taskItemStartX + (isSelected ? 1 : 0); // Account for selection
+        int actualStartY = (int) Math.round(taskItemStartY + rc.getTextPadding());
         // Take the selection into account
-        width -= isSelected ? 1 : 0;
-        height = (int) Math.round(height - 2 * rc.getTextPadding());
+        actualProgressWidth -= isSelected ? 1 : 0;
+        taskItemHeight = (int) Math.round(taskItemHeight - 2 * rc.getTextPadding());
         gc.setFill(getTaskProgressBackground());
-        gc.fillRect(actualStartX, actualStartY, width, height);
+        gc.fillRect(actualStartX, actualStartY, actualProgressWidth, taskItemHeight);
     }
 
     /**
-     * Draw the task item. Subclasses can override, as long as the bounding box is preserved.
+     * Draw the task item. Subclasses can override.
      * @param gc the {@link GraphicsContext}
-     * @param startX the start X of the progress in Canvas coordinates
-     * @param startY the start Y of the progress in Canvas coordinates
-     * @param width the width
-     * @param height the height
+     * @param taskItemStartX the start X of the task item in Canvas coordinates
+     * @param taskItemStartY the start Y of the task item in Canvas coordinates
+     * @param taskItemWidth the width of the task item
+     * @param taskItemHeight the height of the task item
      * @param isSelected whether the task item is selected
      * @param rc the {@link IRenderingContext}
      */
-    protected void drawTaskItem(GraphicsContext gc, int startX, int startY, int width, int height, boolean isSelected, IRenderingContext rc) {
+    protected void drawTaskItemBox(GraphicsContext gc, int taskItemStartX, int taskItemStartY, int taskItemWidth, int taskItemHeight, boolean isSelected, IRenderingContext rc) {
         Paint bgColor = getTaskBackground();
         Color borderColor = isSelected ? rc.getSelectBorderColor() : rc.getTaskBorderColor();
         gc.setFill(bgColor);
@@ -229,9 +280,9 @@ public class TaskItem extends LineElement {
             gc.setEffect(rc.getSelectBorderEffect());
         }
         // Fill task bar
-        gc.fillRoundRect(startX, startY, width, height, rc.getTextPadding(), rc.getTextPadding());
+        gc.fillRoundRect(taskItemStartX, taskItemStartY, taskItemWidth, taskItemHeight, rc.getTextPadding(), rc.getTextPadding());
         // Draw task border
-        gc.strokeRoundRect(startX, startY, width, height, rc.getTextPadding(), rc.getTextPadding());
+        gc.strokeRoundRect(taskItemStartX, taskItemStartY, taskItemWidth, taskItemHeight, rc.getTextPadding(), rc.getTextPadding());
         // Restore effect and line
         if(isSelected) {
             gc.setLineWidth(1);
@@ -239,29 +290,39 @@ public class TaskItem extends LineElement {
         }
     }
 
-    protected void updateLastRenderedBounds(BoundingBox boundingBox) {
+    /**
+     * To be called by subclasses.
+     * @param boundingBox the bounding box or null
+     */
+    protected final void updateLastRenderedBounds(BoundingBox boundingBox) {
         this.lastRenderedBounds = boundingBox;
     }
 
-    protected BoundingBox getLastRenderedBounds() {
+    /**
+     * To be called by subclasses.
+     */
+    protected final BoundingBox getLastRenderedBounds() {
         return lastRenderedBounds;
     }
 
-    public boolean contains(double x, double y) {
+    public final boolean contains(double x, double y) {
         return this.lastRenderedBounds != null && this.lastRenderedBounds.contains(x, y);
     }
 
-    public boolean isRendered() {
+    public final boolean isRendered() {
         return this.lastRenderedBounds != null;
     }
 
-    public boolean contains(Instant time) {
+    public final boolean contains(Instant time) {
         long timeSeconds = time.getEpochSecond();
         long startTimeSecond = getStartTime().getEpochSecond();
         long endTimeSecond = getStartTime().plusSeconds(Math.max(getActualDuration(), getExpectedDuration())).getEpochSecond();
         return timeSeconds >= startTimeSecond && timeSeconds <= endTimeSecond;
     }
 
+    /**
+     * Subclasses can override, as long as the update of the boundaries in set to null.
+     */
     public void noRender() {
         updateLastRenderedBounds(null);
     }

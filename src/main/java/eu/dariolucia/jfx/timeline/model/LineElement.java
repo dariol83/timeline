@@ -19,7 +19,7 @@ package eu.dariolucia.jfx.timeline.model;
 import eu.dariolucia.jfx.timeline.Timeline;
 import javafx.beans.property.SimpleStringProperty;
 
-/** Common abstract class for elements handled in a timeline */
+/** Common abstract class for elements handled in a {@link Timeline}. */
 public abstract class LineElement implements ILineElement {
 
     private final SimpleStringProperty name = new SimpleStringProperty();
