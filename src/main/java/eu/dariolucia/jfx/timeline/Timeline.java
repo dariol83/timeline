@@ -16,7 +16,7 @@
 
 package eu.dariolucia.jfx.timeline;
 
-import eu.dariolucia.jfx.timeline.internal.TimelineSingleSelectionModel;
+import eu.dariolucia.jfx.timeline.model.TimelineSingleSelectionModel;
 import eu.dariolucia.jfx.timeline.model.*;
 import javafx.application.Platform;
 import javafx.beans.Observable;

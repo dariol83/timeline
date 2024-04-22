@@ -43,6 +43,153 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
         super(name, description);
     }
 
+    /* *****************************************************************************************
+     * Rendering Methods
+     * *****************************************************************************************/
+
+    @Override
+    protected int doRender(GraphicsContext gc, int groupXStart, int groupYStart, IRenderingContext rc) {
+        if(isCollapsedState()) {
+            return renderCollapsedGroup(gc, groupXStart, groupYStart, rc);
+        } else {
+            return renderExpandedGroup(gc, groupXStart, groupYStart, rc);
+        }
+    }
+
+    /**
+     * Render the flat group in a collapsed state.
+     * @param gc the {@link GraphicsContext}
+     * @param groupXStart the start X of the group in Canvas coordinates
+     * @param groupYStart the start Y of the group in Canvas coordinates
+     * @param rc the {@link IRenderingContext}
+     * @return the complete height of the group
+     */
+    protected int renderCollapsedGroup(GraphicsContext gc, int groupXStart, int groupYStart, IRenderingContext rc) {
+        // Render the line in the task panel
+        int taskLineHeight = rc.getLineRowHeight();
+        drawCollapsedGroupPanelBox(gc, groupXStart, groupYStart, (int) Math.round(rc.getTaskPanelWidth() - groupXStart), taskLineHeight, rc);
+        // If collapsible, render the symbol
+        int textOffset = 0;
+        if(isCollapsible()) {
+            int squareSize = rc.getTextHeight();
+            // Draw a full square
+            drawCollapsedToggleButton(gc, groupXStart, groupYStart, squareSize, rc);
+            textOffset = squareSize + (int) rc.getTextPadding();
+            // Remember square location for event processing
+            setCollapseButtonBoundingBox(new BoundingBox(groupXStart, groupYStart, squareSize, squareSize));
+        } else {
+            // Reset square location
+            setCollapseButtonBoundingBox(null);
+        }
+        // Render name
+        drawCollapsedGroupName(gc, groupXStart, groupYStart, textOffset, rc);
+        // Render task bottom line
+        gc.setStroke(rc.getPanelBorderColor());
+        gc.strokeLine(rc.getTaskPanelWidth(), groupYStart + rc.getLineRowHeight(), rc.getImageAreaWidth(), groupYStart + rc.getLineRowHeight());
+        // Task projection
+        if(rc.getTaskProjectionHint() == TaskItemProjection.ALWAYS || rc.getTaskProjectionHint() == TaskItemProjection.COLLAPSE) {
+            drawProjectedTasks(gc, groupYStart, rc);
+        }
+        return taskLineHeight;
+    }
+
+    protected void drawCollapsedGroupName(GraphicsContext gc, int groupXStart, int groupYStart, int textOffset, IRenderingContext rc) {
+        gc.setStroke(rc.getPanelForegroundColor());
+        gc.strokeText(getName(), groupXStart + textOffset + rc.getTextPadding(),
+                (int) Math.round(groupYStart + rc.getLineRowHeight()/2.0 + rc.getTextHeight()/2.0),
+                rc.getTaskPanelWidth() - 2 * rc.getTextPadding() - groupXStart);
+    }
+
+    protected void drawCollapsedToggleButton(GraphicsContext gc, int groupXStart, int groupYStart, int squareSize, IRenderingContext rc) {
+        gc.setFill(rc.getPanelBorderColor());
+        gc.fillRect(groupXStart, groupYStart, squareSize, squareSize);
+    }
+
+    protected void drawCollapsedGroupPanelBox(GraphicsContext gc, int groupXStart, int groupYStart, int groupBoxWidth, int groupHeight, IRenderingContext rc) {
+        gc.setStroke(rc.getPanelBorderColor());
+        gc.setFill(rc.getPanelBackground());
+        gc.fillRect(groupXStart, groupYStart, groupBoxWidth, groupHeight);
+        gc.strokeRect(groupXStart, groupYStart, groupBoxWidth, groupHeight);
+    }
+
+    protected int renderExpandedGroup(GraphicsContext gc, int groupXStart, int groupYStart, IRenderingContext rc) {
+        int groupBoxWidth = rc.getLineRowHeight();
+        // Render the sub lines
+        int i = 0;
+        for(ITaskLine line : getItems()) {
+            line.render(gc, groupXStart + groupBoxWidth, groupYStart + i * rc.getLineRowHeight(), rc);
+            i += line.getNbOfLines();
+        }
+        int groupBoxHeight = getNbOfLines() * rc.getLineRowHeight();
+        // Draw the group box
+        drawExpandedGroupPanelBox(gc, groupXStart, groupYStart, groupBoxWidth, groupBoxHeight, rc);
+        // If collapsible, render the symbol
+        if(isCollapsible()) {
+            int squareSize = rc.getTextHeight();
+            // Draw an empty square
+            drawExpandedToggleButton(gc, groupXStart, groupYStart, squareSize, rc);
+            // Remember square location for event processing
+            setCollapseButtonBoundingBox(new BoundingBox(groupXStart, groupYStart, squareSize, squareSize));
+        } else {
+            // Reset square location
+            setCollapseButtonBoundingBox(null);
+        }
+        // Render text
+        drawExpandedGroupName(gc, groupXStart, groupYStart, groupBoxWidth, groupBoxHeight, rc);
+        // If not collapsed, the task projection cannot be rendered in any case
+        // Return the box height
+        return groupBoxHeight;
+    }
+
+    protected void drawExpandedGroupName(GraphicsContext gc, int groupXStart, int groupYStart, int groupBoxWidth, int groupBoxHeight, IRenderingContext rc) {
+        gc.setStroke(rc.getPanelForegroundColor());
+        gc.save();
+        gc.translate(groupXStart, groupYStart);
+        gc.rotate(-90);
+        // Render in the middle
+        int textWidth = rc.getTextWidth(gc, getName());
+        double offset = groupBoxHeight/2.0;
+        gc.strokeText(getName(), (int) Math.round(-offset - textWidth/2.0), (int) Math.round(groupBoxWidth/2.0 + rc.getTextHeight()/2.0));
+        gc.restore();
+    }
+
+    protected void drawExpandedToggleButton(GraphicsContext gc, int groupXStart, int groupYStart, int squareSize, IRenderingContext rc) {
+        gc.setFill(rc.getPanelBorderColor());
+        gc.strokeRect(groupXStart, groupYStart, squareSize, squareSize);
+    }
+
+    protected void drawExpandedGroupPanelBox(GraphicsContext gc, int groupXStart, int groupYStart, int groupBoxWidth, int groupBoxHeight, IRenderingContext rc) {
+        gc.setFill(rc.getPanelBackground());
+        gc.setStroke(rc.getPanelBorderColor());
+        gc.fillRect(groupXStart, groupYStart, groupBoxWidth, groupBoxHeight);
+        gc.strokeRect(groupXStart, groupYStart, groupBoxWidth, groupBoxHeight);
+    }
+
+    @Override
+    public void renderLineBackground(GraphicsContext gc, int groupXStart, int groupYStart, int renderedLines, IRenderingContext rc) {
+        // Render the background of the sub-lines in expanded state
+        if(!isCollapsedState()) {
+            int i = 0;
+            for(ITaskLine line : getItems()) {
+                line.renderLineBackground(gc, groupXStart, groupYStart + i * rc.getLineRowHeight(), renderedLines + i, rc);
+                i += line.getNbOfLines();
+            }
+        } else {
+            // Render the background of the flat group line in collapsed state
+            drawCollapsedLineBackground(gc, groupXStart, groupYStart, renderedLines, rc);
+        }
+    }
+
+    protected void drawCollapsedLineBackground(GraphicsContext gc, int groupXStart, int groupYStart, int renderedLines, IRenderingContext rc) {
+        Color bgColor = renderedLines % 2 == 0 ? rc.getBackgroundColor() : ColorUtil.computeOddColor(rc.getBackgroundColor());
+        gc.setFill(rc.isHighlightLine() ? ColorUtil.percentageUpdate(rc.getBackgroundColor(), -0.15) : bgColor);
+        gc.fillRect(groupXStart, groupYStart, rc.getImageAreaWidth() - groupXStart, rc.getLineRowHeight());
+    }
+
+    /* *****************************************************************************************
+     * Class-specific Methods
+     * *****************************************************************************************/
+
     @Override
     public int getNbOfLines() {
         if(!isCollapsedState()) {
@@ -54,111 +201,6 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
         } else {
             // Collapsed: 1 line
             return 1;
-        }
-    }
-
-    @Override
-    protected int doRender(GraphicsContext gc, int taskLineXStart, int taskLineYStart, IRenderingContext rc) {
-        if(isCollapsedState()) {
-            return renderCollapsed(gc, taskLineXStart, taskLineYStart, rc);
-        } else {
-            return renderNotCollapsed(gc, taskLineXStart, taskLineYStart, rc);
-        }
-    }
-
-    private int renderCollapsed(GraphicsContext gc, int taskLineXStart, int taskLineYStart, IRenderingContext rc) {
-        // Render the line in the task panel
-        int taskLineHeight = rc.getLineRowHeight();
-        gc.setStroke(rc.getPanelBorderColor());
-        gc.setFill(rc.getPanelBackground());
-        gc.fillRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight);
-        gc.strokeRect(taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight);
-        // If collapsible, render the symbol
-        int textOffset = 0;
-        if(isCollapsible()) {
-            int squareSize = rc.getTextHeight();
-            // Draw a full square
-            gc.setFill(rc.getPanelBorderColor());
-            gc.fillRect(taskLineXStart, taskLineYStart,
-                    squareSize, squareSize);
-            textOffset = squareSize + (int) rc.getTextPadding();
-            // Remember square location for event processing
-            setCollapseButtonBoundingBox(new BoundingBox(taskLineXStart, taskLineYStart, squareSize, squareSize));
-        } else {
-            // Reset square location
-            setCollapseButtonBoundingBox(null);
-        }
-        // Render text
-        gc.setStroke(rc.getPanelForegroundColor());
-        gc.strokeText(getName(), taskLineXStart + textOffset + rc.getTextPadding(),
-                (int) Math.round(taskLineYStart + rc.getLineRowHeight()/2.0 + rc.getTextHeight()/2.0),
-                rc.getTaskPanelWidth() - 2 * rc.getTextPadding() - taskLineXStart);
-        // Render task bottom line
-        gc.setStroke(rc.getPanelBorderColor());
-        gc.strokeLine(rc.getTaskPanelWidth(), taskLineYStart + rc.getLineRowHeight(), rc.getImageAreaWidth(), taskLineYStart + rc.getLineRowHeight());
-        // Task projection
-        if(rc.getTaskProjectionHint() == TaskItemProjection.ALWAYS || rc.getTaskProjectionHint() == TaskItemProjection.COLLAPSE) {
-            drawProjectedTasks(gc, taskLineYStart, rc);
-        }
-        return taskLineHeight;
-    }
-
-    private int renderNotCollapsed(GraphicsContext gc, int taskLineXStart, int taskLineYStart, IRenderingContext rc) {
-        int nbLines = getNbOfLines();
-        int groupBoxWidth = rc.getLineRowHeight();
-        // Render the sub lines
-        int i = 0;
-        for(ITaskLine line : getItems()) {
-            line.render(gc, taskLineXStart + groupBoxWidth, taskLineYStart + i * rc.getLineRowHeight(), rc);
-            i += line.getNbOfLines();
-        }
-        int groupBoxHeight = getNbOfLines() * rc.getLineRowHeight();
-        // Draw the group box
-        gc.setFill(rc.getPanelBackground());
-        gc.setStroke(rc.getPanelBorderColor());
-        gc.fillRect(taskLineXStart, taskLineYStart, groupBoxWidth, groupBoxHeight);
-        gc.strokeRect(taskLineXStart, taskLineYStart, groupBoxWidth, groupBoxHeight);
-        // If collapsible, render the symbol
-        if(isCollapsible()) {
-            int squareSize = rc.getTextHeight();
-            // Draw an empty square
-            gc.strokeRect(taskLineXStart, taskLineYStart,
-                    squareSize, squareSize);
-            // Remember square location for event processing
-            setCollapseButtonBoundingBox(new BoundingBox(taskLineXStart, taskLineYStart, squareSize, squareSize));
-        } else {
-            // Reset square location
-            setCollapseButtonBoundingBox(null);
-        }
-        // Render text
-        gc.setStroke(rc.getPanelForegroundColor());
-        gc.save();
-        gc.translate(taskLineXStart, taskLineYStart);
-        gc.rotate(-90);
-        // Render in the middle
-        int textWidth = rc.getTextWidth(gc, getName());
-        double offset = nbLines * rc.getLineRowHeight()/2.0;
-        gc.strokeText(getName(), (int) Math.round(- offset - textWidth/2.0), (int) Math.round(groupBoxWidth/2.0 + rc.getTextHeight()/2.0));
-        gc.restore();
-        // If not collapsed, the task projection cannot be rendered in any case
-        // Return the box height
-        return groupBoxHeight;
-    }
-
-    @Override
-    public void renderLineBackground(GraphicsContext gc, int taskLineXStart, int taskLineYStart, int renderedLines, IRenderingContext rc) {
-        // Render the background of the sub-lines
-        if(!isCollapsedState()) {
-            int i = 0;
-            for(ITaskLine line : getItems()) {
-                line.renderLineBackground(gc, taskLineXStart, taskLineYStart + i * rc.getLineRowHeight(), renderedLines + i, rc);
-                i += line.getNbOfLines();
-            }
-        } else {
-            // Render the background of the hierarchical line
-            Color bgColor = renderedLines % 2 == 0 ? rc.getBackgroundColor() : ColorUtil.computeOddColor(rc.getBackgroundColor());
-            gc.setFill(rc.isHighlightLine() ? ColorUtil.percentageUpdate(rc.getBackgroundColor(), -0.15) : bgColor);
-            gc.fillRect(taskLineXStart, taskLineYStart, rc.getImageAreaWidth() - taskLineXStart, rc.getLineRowHeight());
         }
     }
 }

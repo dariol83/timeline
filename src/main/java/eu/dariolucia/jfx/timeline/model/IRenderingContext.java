@@ -30,53 +30,158 @@ import java.util.Set;
  */
 public interface IRenderingContext {
 
+    /**
+     * Return the effect to be applied to selected {@link TaskItem} when rendered.
+     * @return the effect for selected {@link TaskItem}
+     */
     Effect getSelectBorderEffect();
 
+    /**
+     * Return the width to be used for the border of selected {@link TaskItem}.
+     * @return the border width for selected {@link TaskItem}
+     */
     double getSelectBorderWidth();
 
-    Font getTextFont();
-
-    boolean isHighlightLine();
-
-    TaskItemProjection getTaskProjectionHint();
-
-    Color getTaskProjectionBackgroundColor();
-
-    Color getTaskBorderColor();
-
-    int getTextWidth(GraphicsContext gc, String text);
-
-    double getTaskPanelWidth();
-
-    int getTextHeight();
-
-    int getLineRowHeight();
-
-    double toX(Instant time);
-
-    double getTextPadding();
-
-    Instant getViewPortStart();
-
-    Instant getViewPortEnd();
-
-    Set<TaskItem> getSelectedTaskItems();
-
-    int getImageAreaHeight();
-
-    int getImageAreaWidth();
-
-    int getHeaderRowHeight();
-
-    Color getBackgroundColor();
-
-    Paint getPanelBackground();
-
-    Color getPanelForegroundColor();
-
+    /**
+     * Return the color to be used for the border of selected {@link TaskItem}.
+     * @return the border color for selected {@link TaskItem}
+     */
     Color getSelectBorderColor();
 
+    /**
+     * Return the font to be used to render text strings.
+     * @return the font
+     */
+    Font getTextFont();
+
+    /**
+     * Return true if group lines must be highlighted (when rendered)
+     * @return true if group lines must be highlighted, otherwise false
+     */
+    boolean isHighlightLine();
+
+    /**
+     * Return the hint for the rendering of task item projections on group lines.
+     * @return the projection hint for group lines
+     */
+    TaskItemProjection getTaskProjectionHint();
+
+    /**
+     * Return the color for the rendering of task item projections on group lines.
+     * @return the color for task item projections
+     */
+    Color getTaskProjectionBackgroundColor();
+
+    /**
+     * Return the color for the {@link TaskItem} when not selected
+     * @return the {@link TaskItem} border color
+     */
+    Color getTaskBorderColor();
+
+    /**
+     * Calculate the rendered width of the provided text string with the provided {@link GraphicsContext}
+     * @param gc the {@link GraphicsContext}
+     * @param text the string to render
+     * @return the size in pixel of the rendered text
+     */
+    int getTextWidth(GraphicsContext gc, String text);
+
+    /**
+     * Return the size in pixel of the task panel (left).
+     * @return the size in pixel of the task panel
+     */
+    double getTaskPanelWidth();
+
+    /**
+     * Return the height in pixel of a text line with the configured font (hardcoded string "Ig" used for the measure)
+     * @return the height in pixel of a text line
+     */
+    int getTextHeight();
+
+    /**
+     * Return the height in pixel of a task line.
+     * @return the height in pixel of a task line
+     */
+    int getLineRowHeight();
+
+    /**
+     * Convert the provided time into an X value in Canvas coordinate system. The value can be offscreen.
+     * @param time the time to convert
+     * @return the X coordinate in Canvas coordinate system
+     */
+    double toX(Instant time);
+
+    /**
+     * Return the amount of padding in pixel between rendered text and the container element.
+     * @return the text padding in pixel
+     */
+    double getTextPadding();
+
+    /**
+     * Return the start time configured for the viewport.
+     * @return the viewport start time
+     */
+    Instant getViewPortStart();
+
+    /**
+     * Return the end time configured for the viewport (start plus duration).
+     * @return the viewport end time
+     */
+    Instant getViewPortEnd();
+
+    /**
+     * Return the set of selected {@link TaskItem} (only 1 in the current implementation)
+     * @return the set of selected {@link TaskItem}
+     */
+    Set<TaskItem> getSelectedTaskItems();
+
+    /**
+     * Return the height of the canvas in pixel.
+     * @return the height of the canvas in pixel
+     */
+    int getImageAreaHeight();
+
+    /**
+     * Return the width of the canvas in pixel.
+     * @return the width of the canvas in pixel
+     */
+    int getImageAreaWidth();
+
+    /**
+     * Return the height of the header row in pixel.
+     * @return the height of the header row in pixel
+     */
+    int getHeaderRowHeight();
+
+    /**
+     * Return the background color of the canvas.
+     * @return the background color of the canvas
+     */
+    Color getBackgroundColor();
+
+    /**
+     * Return the background color of the task panel.
+     * @return the background color of the task panel
+     */
+    Paint getPanelBackground();
+
+    /**
+     * Return the foreground color of the task panel.
+     * @return the foreground color of the task panel
+     */
+    Color getPanelForegroundColor();
+
+    /**
+     * Return the border color of the task panel.
+     * @return the border color of the task panel
+     */
     Color getPanelBorderColor();
 
+    /**
+     * Return true if the interval is visible from the viewport, otherwise false.
+     * @param start the start time of the interval
+     * @param end the end time of the interval
+     * @return true if the interval is visible from the viewport, otherwise false
+     */
     boolean isInViewPort(Instant start, Instant end);
 }

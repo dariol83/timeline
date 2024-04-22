@@ -43,7 +43,7 @@ public interface ITaskLine extends ILineElement {
     boolean computeRenderingStructure();
 
     /**
-     * Render the background of the task line
+     * Render the background of the task line.
      * @param gc the {@link GraphicsContext}
      * @param taskLineXStart the X offset where the background coverage has to start
      * @param taskLineYStart the Y offset where the background coverage has to start

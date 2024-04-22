@@ -46,7 +46,7 @@ public class TestApplicationCompositeTaskLine extends Application {
         tl.setViewPortStart(currentTime);
         tl.setViewPortDuration(3600 * 24 * 20);
 
-        tl.setTaskPanelWidth(150);
+        tl.setTaskPanelWidth(180);
         // Add task lines
         {
             currentTime = currentTime.minus(2, ChronoUnit.DAYS);

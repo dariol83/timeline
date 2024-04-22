@@ -29,21 +29,26 @@ import java.time.Instant;
  */
 public class TimeCursor {
 
-    private Timeline timeline;
+    /* *****************************************************************************************
+     * Properties
+     * *****************************************************************************************/
+
     private final SimpleObjectProperty<Instant> time = new SimpleObjectProperty<>();
     private final SimpleObjectProperty<Color> color = new SimpleObjectProperty<>(Color.BLACK);
+
+    /* *****************************************************************************************
+     * Internal variables
+     * *****************************************************************************************/
+
+    private Timeline timeline;
 
     public TimeCursor(Instant time) {
         setTime(time);
     }
 
-    public Timeline getTimeline() {
-        return timeline;
-    }
-
-    public void setTimeline(Timeline timeline) {
-        this.timeline = timeline;
-    }
+    /* *****************************************************************************************
+     * Property Accessors
+     * *****************************************************************************************/
 
     public Instant getTime() {
         return time.get();
@@ -69,6 +74,10 @@ public class TimeCursor {
         this.color.set(color);
     }
 
+    /* *****************************************************************************************
+     * Rendering Methods
+     * *****************************************************************************************/
+
     public void render(GraphicsContext gc, IRenderingContext rc) {
         double startX = rc.toX(getTime());
         // Draw a small line on top
@@ -82,6 +91,18 @@ public class TimeCursor {
         gc.strokeLine(startX, rc.getHeaderRowHeight() + 2, startX, rc.getImageAreaHeight());
         gc.setLineDashes();
         gc.setLineWidth(1);
+    }
+
+    /* *****************************************************************************************
+     * Class-specific Methods
+     * *****************************************************************************************/
+
+    public Timeline getTimeline() {
+        return timeline;
+    }
+
+    public void setTimeline(Timeline timeline) {
+        this.timeline = timeline;
     }
 
     @Override

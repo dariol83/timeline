@@ -30,24 +30,29 @@ import java.time.Instant;
  */
 public class TimeInterval {
 
-    private Timeline timeline;
+    /* *****************************************************************************************
+     * Properties
+     * *****************************************************************************************/
+
     private final SimpleObjectProperty<Instant> startTime = new SimpleObjectProperty<>();
     private final SimpleObjectProperty<Instant> endTime = new SimpleObjectProperty<>();
     private final SimpleBooleanProperty foreground = new SimpleBooleanProperty(false);
     private final SimpleObjectProperty<Color> color = new SimpleObjectProperty<>(new Color(Color.LIMEGREEN.getRed(), Color.LIMEGREEN.getGreen(), Color.LIMEGREEN.getBlue(), 0.5));
+
+    /* *****************************************************************************************
+     * Internal variables
+     * *****************************************************************************************/
+
+    private Timeline timeline;
 
     public TimeInterval(Instant startTime, Instant endTime) {
         setStartTime(startTime);
         setEndTime(endTime);
     }
 
-    public Timeline getTimeline() {
-        return timeline;
-    }
-
-    public void setTimeline(Timeline timeline) {
-        this.timeline = timeline;
-    }
+    /* *****************************************************************************************
+     * Property Accessors
+     * *****************************************************************************************/
 
     public Instant getStartTime() {
         return startTime.get();
@@ -97,6 +102,29 @@ public class TimeInterval {
         this.color.set(color);
     }
 
+    /* *****************************************************************************************
+     * Rendering Methods
+     * *****************************************************************************************/
+
+    public void render(GraphicsContext gc, IRenderingContext rc) {
+        double startX = getStartTime() == null || getStartTime().isBefore(rc.getViewPortStart()) ? rc.getTaskPanelWidth() : rc.toX(getStartTime());
+        double endX = getEndTime() == null || getEndTime().isAfter(rc.getViewPortEnd()) ? rc.getImageAreaWidth() : rc.toX(getEndTime());
+        gc.setFill(getColor());
+        gc.fillRect(startX, rc.getHeaderRowHeight(), endX - startX, rc.getImageAreaHeight());
+    }
+
+    /* *****************************************************************************************
+     * Class-specific Methods
+     * *****************************************************************************************/
+
+    public Timeline getTimeline() {
+        return timeline;
+    }
+
+    public void setTimeline(Timeline timeline) {
+        this.timeline = timeline;
+    }
+
     @Override
     public String toString() {
         return "TimeInterval{" +
@@ -105,12 +133,5 @@ public class TimeInterval {
                 ", foreground=" + foreground +
                 ", color=" + color +
                 '}';
-    }
-
-    public void render(GraphicsContext gc, IRenderingContext rc) {
-        double startX = getStartTime() == null || getStartTime().isBefore(rc.getViewPortStart()) ? rc.getTaskPanelWidth() : rc.toX(getStartTime());
-        double endX = getEndTime() == null || getEndTime().isAfter(rc.getViewPortEnd()) ? rc.getImageAreaWidth() : rc.toX(getEndTime());
-        gc.setFill(getColor());
-        gc.fillRect(startX, rc.getHeaderRowHeight(), endX - startX, rc.getImageAreaHeight());
     }
 }

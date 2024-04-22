@@ -37,6 +37,7 @@ public class TaskItem extends LineElement {
     /* *****************************************************************************************
      * Properties
      * *****************************************************************************************/
+
     private final SimpleObjectProperty<Instant> startTime = new SimpleObjectProperty<>();
     private final SimpleLongProperty expectedDuration = new SimpleLongProperty();
     private final SimpleLongProperty actualDuration = new SimpleLongProperty();
@@ -47,6 +48,7 @@ public class TaskItem extends LineElement {
     /* *****************************************************************************************
      * Internal variables
      * *****************************************************************************************/
+
     private BoundingBox lastRenderedBounds;
     private Object userData;
 
@@ -74,16 +76,9 @@ public class TaskItem extends LineElement {
         this.actualDuration.set(actualDuration);
     }
 
-    /**
-     * Return the properties that should trigger an update notification in case of
-     * change. Subclasses should override, if properties are added.
-     * @return the list of properties as array of {@link Observable}
-     */
-    public Observable[] getObservableProperties() {
-        return new Observable[] {
-                startTimeProperty(), nameProperty(), expectedDurationProperty(), actualDurationProperty(),
-                taskBackgroundProperty(), taskTextColorProperty(), taskProgressBackgroundProperty() };
-    }
+    /* *****************************************************************************************
+     * Property Accessors
+     * *****************************************************************************************/
 
     public Instant getStartTime() {
         return startTime.get();
@@ -157,23 +152,9 @@ public class TaskItem extends LineElement {
         this.taskProgressBackground.set(taskProgressBackground);
     }
 
-    /**
-     * Return the user data object attached to this task item. Task item can contain a user data object, i.e. an opaque
-     * object that users of this class can attach to a task item.
-     * @return the user data
-     */
-    public Object getUserData() {
-        return userData;
-    }
-
-    /**
-     * Set the user data object attached to this task item. Task item can contain a user data object, i.e. an opaque
-     * object that users of this class can attach to a task item.
-     * @param userData the user data object
-     */
-    public void setUserData(Object userData) {
-        this.userData = userData;
-    }
+    /* *****************************************************************************************
+     * Rendering Methods
+     * *****************************************************************************************/
 
     /**
      * Task rendering method. Subclasses could override this method, but it is recommended to override the specific
@@ -288,6 +269,39 @@ public class TaskItem extends LineElement {
             gc.setLineWidth(1);
             gc.setEffect(null);
         }
+    }
+
+    /* *****************************************************************************************
+     * Class-specific Methods
+     * *****************************************************************************************/
+
+    /**
+     * Return the user data object attached to this task item. Task item can contain a user data object, i.e. an opaque
+     * object that users of this class can attach to a task item.
+     * @return the user data
+     */
+    public Object getUserData() {
+        return userData;
+    }
+
+    /**
+     * Set the user data object attached to this task item. Task item can contain a user data object, i.e. an opaque
+     * object that users of this class can attach to a task item.
+     * @param userData the user data object
+     */
+    public void setUserData(Object userData) {
+        this.userData = userData;
+    }
+
+    /**
+     * Return the properties that should trigger an update notification in case of
+     * change. Subclasses should override, if properties are added.
+     * @return the list of properties as array of {@link Observable}
+     */
+    public Observable[] getObservableProperties() {
+        return new Observable[] {
+                startTimeProperty(), nameProperty(), expectedDurationProperty(), actualDurationProperty(),
+                taskBackgroundProperty(), taskTextColorProperty(), taskProgressBackgroundProperty() };
     }
 
     /**

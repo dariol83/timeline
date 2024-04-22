@@ -36,10 +36,17 @@ import java.util.stream.Collectors;
  */
 public abstract class CompositeTaskLine extends LineElement implements ITaskLine {
 
+    /* *****************************************************************************************
+     * Properties
+     * *****************************************************************************************/
     private final SimpleBooleanProperty collapsible = new SimpleBooleanProperty(false);
     private final SimpleBooleanProperty collapsed = new SimpleBooleanProperty(false);
     private final SimpleBooleanProperty mouseCollapsingEnabled = new SimpleBooleanProperty(true);
     private final ObservableList<ITaskLine> items = FXCollections.observableArrayList(ITaskLine::getObservableProperties);
+
+    /* *****************************************************************************************
+     * Internal variables
+     * *****************************************************************************************/
     private boolean collapsedState = false;
     private BoundingBox collapseButtonBoundingBox = null;
     private BoundingBox lastRenderedBounds;
@@ -62,132 +69,9 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
         this.items.addListener(this::listUpdated);
     }
 
-    private void listUpdated(ListChangeListener.Change<? extends ITaskLine> change) {
-        while(change.next()) {
-            if(change.wasAdded()) {
-                change.getAddedSubList().forEach(ti -> {
-                    ti.setParent(this);
-                    ti.setTimeline(getTimeline());
-                });
-            }
-            if(change.wasRemoved()) {
-                change.getRemoved().forEach(ti -> {
-                    ti.setParent(null);
-                    ti.setTimeline(null);
-                });
-            }
-        }
-    }
-
-    /**
-     * Subclasses can override/modify.
-     * @param gc the {@link GraphicsContext}
-     * @param taskLineYStart the Y start of the line in Canvas coordinates
-     * @param rc the {@link IRenderingContext}
-     */
-    protected void drawProjectedTasks(GraphicsContext gc, int taskLineYStart, IRenderingContext rc) {
-        // Consider only the tasks in the viewport visibility
-        List<TaskItem> tasksToMerge = getTaskItems().stream().filter(task -> rc.isInViewPort(task.getStartTime(), task.getStartTime().plusSeconds(Math.max(task.getExpectedDuration(), task.getActualDuration())))).collect(Collectors.toList());
-        gc.setFill(rc.getTaskProjectionBackgroundColor());
-        int startY = taskLineYStart + (int) rc.getTextPadding();
-        for(TaskItem ti : tasksToMerge) {
-            int startX = Math.max((int) rc.toX(ti.getStartTime()), (int) rc.getTaskPanelWidth());
-            int endX = (int) rc.toX(ti.getStartTime().plusSeconds(Math.max(ti.getExpectedDuration(), ti.getActualDuration())));
-            gc.fillRect(startX, startY, endX - startX, (int) (rc.getLineRowHeight() - 2 * rc.getTextPadding()));
-        }
-    }
-
-    /**
-     * To be called by child classes with the indication of the bounding box of the collapse button, if any.
-     * @param box the {@link BoundingBox} of the collapse button in Canvas coordinates, or null
-     */
-    protected void setCollapseButtonBoundingBox(BoundingBox box) {
-        this.collapseButtonBoundingBox = box;
-    }
-
-    public boolean isCollapsedState() {
-        return collapsedState;
-    }
-
-    @Override
-    public boolean computeRenderingStructure() {
-        boolean changed = false;
-        for(ITaskLine tl : this.items) {
-            changed |= tl.computeRenderingStructure();
-        }
-        boolean oldCollapsedState = collapsedState;
-        this.collapsedState = isCollapsible() && isCollapsed();
-        return (this.collapsedState != oldCollapsedState) || changed;
-    }
-
-    @Override
-    public void render(GraphicsContext gc, int taskLineXStart, int taskLineYStart, IRenderingContext rc) {
-        // Render
-        int renderedTotalHeight = doRender(gc, taskLineXStart, taskLineYStart, rc);
-        // Remember box
-        double groupBoxTotalWidth = rc.toX(rc.getViewPortEnd()) - taskLineXStart;
-        this.lastRenderedBounds = new BoundingBox(taskLineXStart, taskLineYStart, groupBoxTotalWidth, renderedTotalHeight);
-    }
-
-    protected abstract int doRender(GraphicsContext gc, int taskLineXStart, int taskLineYStart, IRenderingContext rc);
-
-    protected BoundingBox getLastRenderedBounds() {
-        return lastRenderedBounds;
-    }
-
-    @Override
-    public void noRender() {
-        this.items.forEach(ITaskLine::noRender);
-        this.lastRenderedBounds = null;
-    }
-
-    @Override
-    public boolean isRendered() {
-        return this.lastRenderedBounds != null;
-    }
-
-    @Override
-    public boolean contains(double x, double y) {
-        return this.lastRenderedBounds != null && this.lastRenderedBounds.contains(x, y);
-    }
-
-    @Override
-    public Observable[] getObservableProperties() {
-        return new Observable[] { nameProperty(), descriptionProperty(), getItems(), collapsibleProperty(),
-        collapsedProperty() };
-    }
-
-    public ObservableList<ITaskLine> getItems() {
-        return items;
-    }
-
-    @Override
-    public List<TaskItem> getTaskItems() {
-        return this.items.stream().flatMap(i -> i.getTaskItems().stream()).collect(Collectors.toList());
-    }
-
-    @Override
-    public void setTimeline(Timeline timeline) {
-        super.setTimeline(timeline);
-        this.items.forEach(i -> i.setTimeline(timeline));
-        if(getTimeline() != null) {
-            // If added to a new timeline, the rendering structure must be recomputed
-            computeRenderingStructure();
-        }
-    }
-
-    @Override
-    public void notifyEvent(Event e, double x, double y) {
-        if(this.collapseButtonBoundingBox != null && this.collapseButtonBoundingBox.contains(x, y)) {
-            if(e.getEventType() == MouseEvent.MOUSE_CLICKED && isMouseCollapsingEnabled()) {
-                // Flip the collapsed property
-                setCollapsed(!isCollapsed());
-            }
-        } else {
-            // Default implementation, do nothing and propagate down
-            this.items.forEach(i -> i.notifyEvent(e, x, y));
-        }
-    }
+    /* *****************************************************************************************
+     * Property Accessors
+     * *****************************************************************************************/
 
     public boolean isCollapsible() {
         return collapsible.get();
@@ -224,4 +108,145 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
     public void setMouseCollapsingEnabled(boolean mouseCollapsingEnabled) {
         this.mouseCollapsingEnabled.set(mouseCollapsingEnabled);
     }
+
+    public ObservableList<ITaskLine> getItems() {
+        return items;
+    }
+
+    /* *****************************************************************************************
+     * Rendering Methods
+     * *****************************************************************************************/
+
+    @Override
+    public void render(GraphicsContext gc, int taskLineXStart, int taskLineYStart, IRenderingContext rc) {
+        // Render
+        int renderedTotalHeight = doRender(gc, taskLineXStart, taskLineYStart, rc);
+        // Remember box
+        double groupBoxTotalWidth = rc.toX(rc.getViewPortEnd()) - taskLineXStart;
+        this.lastRenderedBounds = new BoundingBox(taskLineXStart, taskLineYStart, groupBoxTotalWidth, renderedTotalHeight);
+    }
+
+    protected abstract int doRender(GraphicsContext gc, int groupXStart, int groupYStart, IRenderingContext rc);
+
+    @Override
+    public void noRender() {
+        this.items.forEach(ITaskLine::noRender);
+        this.lastRenderedBounds = null;
+    }
+
+    /**
+     * Subclasses may override/modify, but consider deriving the corresponding implementation in the direct subclasses
+     * of this class.
+     * @param gc the {@link GraphicsContext}
+     * @param taskLineYStart the Y start of the line in Canvas coordinates
+     * @param rc the {@link IRenderingContext}
+     */
+    protected void drawProjectedTasks(GraphicsContext gc, int taskLineYStart, IRenderingContext rc) {
+        // Consider only the tasks in the viewport visibility
+        List<TaskItem> tasksToMerge = getTaskItems().stream().filter(task -> rc.isInViewPort(task.getStartTime(), task.getStartTime().plusSeconds(Math.max(task.getExpectedDuration(), task.getActualDuration())))).collect(Collectors.toList());
+        drawVisibleProjectedTasks(gc, tasksToMerge, taskLineYStart, rc);
+    }
+
+    protected void drawVisibleProjectedTasks(GraphicsContext gc, List<TaskItem> tasksToMerge, int taskLineYStart, IRenderingContext rc) {
+        gc.setFill(rc.getTaskProjectionBackgroundColor());
+        int startY = taskLineYStart + (int) rc.getTextPadding();
+        for(TaskItem ti : tasksToMerge) {
+            int startX = Math.max((int) rc.toX(ti.getStartTime()), (int) rc.getTaskPanelWidth());
+            int endX = (int) rc.toX(ti.getStartTime().plusSeconds(Math.max(ti.getExpectedDuration(), ti.getActualDuration())));
+            gc.fillRect(startX, startY, endX - startX, (int) (rc.getLineRowHeight() - 2 * rc.getTextPadding()));
+        }
+    }
+
+    /* *****************************************************************************************
+     * Class-specific Methods
+     * *****************************************************************************************/
+
+    private void listUpdated(ListChangeListener.Change<? extends ITaskLine> change) {
+        while(change.next()) {
+            if(change.wasAdded()) {
+                change.getAddedSubList().forEach(ti -> {
+                    ti.setParent(this);
+                    ti.setTimeline(getTimeline());
+                });
+            }
+            if(change.wasRemoved()) {
+                change.getRemoved().forEach(ti -> {
+                    ti.setParent(null);
+                    ti.setTimeline(null);
+                });
+            }
+        }
+    }
+
+    /**
+     * To be called by child classes with the indication of the bounding box of the collapse button, if any.
+     * @param box the {@link BoundingBox} of the collapse button in Canvas coordinates, or null
+     */
+    protected void setCollapseButtonBoundingBox(BoundingBox box) {
+        this.collapseButtonBoundingBox = box;
+    }
+
+    public boolean isCollapsedState() {
+        return collapsedState;
+    }
+
+    @Override
+    public boolean computeRenderingStructure() {
+        boolean changed = false;
+        for(ITaskLine tl : this.items) {
+            changed |= tl.computeRenderingStructure();
+        }
+        boolean oldCollapsedState = collapsedState;
+        this.collapsedState = isCollapsible() && isCollapsed();
+        return (this.collapsedState != oldCollapsedState) || changed;
+    }
+
+    protected BoundingBox getLastRenderedBounds() {
+        return lastRenderedBounds;
+    }
+
+    @Override
+    public boolean isRendered() {
+        return this.lastRenderedBounds != null;
+    }
+
+    @Override
+    public boolean contains(double x, double y) {
+        return this.lastRenderedBounds != null && this.lastRenderedBounds.contains(x, y);
+    }
+
+    @Override
+    public Observable[] getObservableProperties() {
+        return new Observable[] { nameProperty(), descriptionProperty(), getItems(), collapsibleProperty(),
+        collapsedProperty() };
+    }
+
+    @Override
+    public List<TaskItem> getTaskItems() {
+        return this.items.stream().flatMap(i -> i.getTaskItems().stream()).collect(Collectors.toList());
+    }
+
+    @Override
+    public void setTimeline(Timeline timeline) {
+        super.setTimeline(timeline);
+        this.items.forEach(i -> i.setTimeline(timeline));
+        if(getTimeline() != null) {
+            // If added to a new timeline, the rendering structure must be recomputed
+            computeRenderingStructure();
+        }
+    }
+
+    @Override
+    public void notifyEvent(Event e, double x, double y) {
+        if(this.collapseButtonBoundingBox != null && this.collapseButtonBoundingBox.contains(x, y)) {
+            if(e.getEventType() == MouseEvent.MOUSE_CLICKED && isMouseCollapsingEnabled()) {
+                // Flip the collapsed property
+                setCollapsed(!isCollapsed());
+            }
+        } else {
+            // Default implementation, do nothing and propagate down
+            this.items.forEach(i -> i.notifyEvent(e, x, y));
+        }
+    }
+
 }

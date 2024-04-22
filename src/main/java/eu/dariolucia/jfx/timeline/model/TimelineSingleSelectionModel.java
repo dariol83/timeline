@@ -14,10 +14,9 @@
  *   limitations under the License.
  */
 
-package eu.dariolucia.jfx.timeline.internal;
+package eu.dariolucia.jfx.timeline.model;
 
 import eu.dariolucia.jfx.timeline.Timeline;
-import eu.dariolucia.jfx.timeline.model.TaskItem;
 import javafx.scene.control.SingleSelectionModel;
 
 /**

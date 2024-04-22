@@ -41,11 +41,13 @@ public class TaskLine extends LineElement implements ITaskLine {
     /* *****************************************************************************************
      * Properties
      * *****************************************************************************************/
+
     private final ObservableList<TaskItem> items = FXCollections.observableArrayList(TaskItem::getObservableProperties);
 
     /* *****************************************************************************************
      * Internal variables
      * *****************************************************************************************/
+
     private BoundingBox lastRenderedBounds;
     protected final List<RenderingLine> renderingLines = new ArrayList<>();
 
@@ -67,65 +69,17 @@ public class TaskLine extends LineElement implements ITaskLine {
         this.items.addListener(this::listUpdated);
     }
 
-    private void listUpdated(ListChangeListener.Change<? extends TaskItem> change) {
-        while(change.next()) {
-            if(change.wasAdded()) {
-                change.getAddedSubList().forEach(ti -> {
-                    ti.setParent(this);
-                    ti.setTimeline(getTimeline());
-                });
-            }
-            if(change.wasRemoved()) {
-                change.getRemoved().forEach(ti -> {
-                    ti.setParent(null);
-                    ti.setTimeline(null);
-                });
-            }
-        }
+    /* *****************************************************************************************
+     * Property Accessors
+     * *****************************************************************************************/
+
+    public ObservableList<TaskItem> getItems() {
+        return items;
     }
 
-    @Override
-    public int getNbOfLines() {
-        return Math.max(1, this.renderingLines.size());
-    }
-
-    /**
-     * This method is called by the {@link Timeline} class - directly or indirectly - when an update is detected, and
-     * the timeline must know if a change in the rendering structure occurred. Subclasses can override, e.g. to implement
-     * different rendering approaches.
-     * @return true if a change in the rendering structure of the task line occurred (i.e. one rendering line added or removed),
-     * otherwise false
-     */
-    @Override
-    public boolean computeRenderingStructure() {
-        int oldSize = this.renderingLines.size();
-        // Create one rendering line by default
-        this.renderingLines.clear();
-        this.renderingLines.add(new RenderingLine());
-        // For each task...
-        for (TaskItem ti : this.items) {
-            boolean added = false;
-            // ...check if there is a rendering line that can accept this task
-            for (RenderingLine rl : this.renderingLines) {
-                // If no overlap, add task
-                if (!rl.overlap(ti)) {
-                    rl.getLine().add(ti);
-                    // Task allocated
-                    added = true;
-                    break;
-                }
-                // Check next line
-            }
-            // If not added...
-            if (!added) {
-                // ...create a line and add it to the new line
-                RenderingLine rl = new RenderingLine();
-                rl.getLine().add(ti);
-                this.renderingLines.add(rl);
-            }
-        }
-        return this.renderingLines.size() != oldSize;
-    }
+    /* *****************************************************************************************
+     * Rendering Methods
+     * *****************************************************************************************/
 
     @Override
     public void renderLineBackground(GraphicsContext gc, int taskLineXStart, int taskLineYStart, int renderedLines, IRenderingContext rc) {
@@ -220,6 +174,76 @@ public class TaskLine extends LineElement implements ITaskLine {
         gc.strokeRect(taskLineXStart, taskLineYStart, taskLinePanelBoxWidth, taskLineHeight);
     }
 
+    @Override
+    public void noRender() {
+        this.items.forEach(TaskItem::noRender);
+        updateLastRenderedBounds(null);
+    }
+
+    /* *****************************************************************************************
+     * Class-specific Methods
+     * *****************************************************************************************/
+
+    private void listUpdated(ListChangeListener.Change<? extends TaskItem> change) {
+        while(change.next()) {
+            if(change.wasAdded()) {
+                change.getAddedSubList().forEach(ti -> {
+                    ti.setParent(this);
+                    ti.setTimeline(getTimeline());
+                });
+            }
+            if(change.wasRemoved()) {
+                change.getRemoved().forEach(ti -> {
+                    ti.setParent(null);
+                    ti.setTimeline(null);
+                });
+            }
+        }
+    }
+
+    @Override
+    public int getNbOfLines() {
+        return Math.max(1, this.renderingLines.size());
+    }
+
+    /**
+     * This method is called by the {@link Timeline} class - directly or indirectly - when an update is detected, and
+     * the timeline must know if a change in the rendering structure occurred. Subclasses can override, e.g. to implement
+     * different rendering approaches.
+     * @return true if a change in the rendering structure of the task line occurred (i.e. one rendering line added or removed),
+     * otherwise false
+     */
+    @Override
+    public boolean computeRenderingStructure() {
+        int oldSize = this.renderingLines.size();
+        // Create one rendering line by default
+        this.renderingLines.clear();
+        this.renderingLines.add(new RenderingLine());
+        // For each task...
+        for (TaskItem ti : this.items) {
+            boolean added = false;
+            // ...check if there is a rendering line that can accept this task
+            for (RenderingLine rl : this.renderingLines) {
+                // If no overlap, add task
+                if (!rl.overlap(ti)) {
+                    rl.getLine().add(ti);
+                    // Task allocated
+                    added = true;
+                    break;
+                }
+                // Check next line
+            }
+            // If not added...
+            if (!added) {
+                // ...create a line and add it to the new line
+                RenderingLine rl = new RenderingLine();
+                rl.getLine().add(ti);
+                this.renderingLines.add(rl);
+            }
+        }
+        return this.renderingLines.size() != oldSize;
+    }
+
 
     protected void updateLastRenderedBounds(BoundingBox boundingBox) {
         this.lastRenderedBounds = boundingBox;
@@ -230,12 +254,6 @@ public class TaskLine extends LineElement implements ITaskLine {
     }
 
     @Override
-    public void noRender() {
-        this.items.forEach(TaskItem::noRender);
-        updateLastRenderedBounds(null);
-    }
-
-    @Override
     public boolean contains(double x, double y) {
         return this.lastRenderedBounds != null && this.lastRenderedBounds.contains(x, y);
     }
@@ -243,10 +261,6 @@ public class TaskLine extends LineElement implements ITaskLine {
     @Override
     public boolean isRendered() {
         return this.lastRenderedBounds != null;
-    }
-
-    public ObservableList<TaskItem> getItems() {
-        return items;
     }
 
     @Override
