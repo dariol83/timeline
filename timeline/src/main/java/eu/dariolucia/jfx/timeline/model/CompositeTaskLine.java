@@ -218,6 +218,10 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
         this.collapseButtonBoundingBox = box;
     }
 
+    /**
+     * Return true if the group is collapsed, otherwise false.
+     * @return true if the group is collapsed, otherwise false
+     */
     public boolean isCollapsedState() {
         return collapsedState;
     }
@@ -233,6 +237,10 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
         return (this.collapsedState != oldCollapsedState) || changed;
     }
 
+    /**
+     * Return the bounding box if the line was rendered in the latest rendering cycle, otherwise null
+     * @return the bounding box in canvas coordinates if rendered, otherwise null
+     */
     protected BoundingBox getLastRenderedBounds() {
         return lastRenderedBounds;
     }

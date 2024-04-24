@@ -332,7 +332,8 @@ public class TaskItem extends LineElement {
     }
 
     /**
-     * To be called by subclasses.
+     * Return the latest rendered bounding box of the task item, or null if not rendered. To be called by subclasses.
+     * @return the latest rendered bounding box in canvas coordinates, or null if not rendered
      */
     protected final BoundingBox getLastRenderedBounds() {
         return lastRenderedBounds;
@@ -360,6 +361,11 @@ public class TaskItem extends LineElement {
         updateLastRenderedBounds(null);
     }
 
+    /**
+     * Check if the provided {@link TaskItem} overlaps with this task item.
+     * @param item the item to check
+     * @return true if there is an overlap, otherwise false
+     */
     public boolean overlapWith(TaskItem item) {
         long thisStartTime = getStartTime().getEpochSecond();
         long thisEndTime = Math.max(getStartTime().getEpochSecond() + getActualDuration(), getStartTime().getEpochSecond() + getExpectedDuration());

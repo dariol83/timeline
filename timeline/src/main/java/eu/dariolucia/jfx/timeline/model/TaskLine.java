@@ -52,6 +52,9 @@ public class TaskLine extends LineElement implements ITaskLine {
      * *****************************************************************************************/
 
     private BoundingBox lastRenderedBounds;
+    /**
+     * The rendering lines as computed by the class.
+     */
     protected final List<RenderingLine> renderingLines = new ArrayList<>();
 
     /**
@@ -76,6 +79,10 @@ public class TaskLine extends LineElement implements ITaskLine {
      * Property Accessors
      * *****************************************************************************************/
 
+    /**
+     * Return the list of {@link TaskItem} belonging to the task line.
+     * @return the list of {@link TaskItem} belonging to the task line
+     */
     public ObservableList<TaskItem> getItems() {
         return items;
     }
@@ -247,11 +254,18 @@ public class TaskLine extends LineElement implements ITaskLine {
         return this.renderingLines.size() != oldSize;
     }
 
-
+    /**
+     * To be used by subclasses. Set the latest bounding box as computed by the rendering process.
+     * @param boundingBox the bounding box to set in canvas coordinates
+     */
     protected void updateLastRenderedBounds(BoundingBox boundingBox) {
         this.lastRenderedBounds = boundingBox;
     }
 
+    /**
+     * Return the bounding box if the line was rendered in the latest rendering cycle, otherwise null
+     * @return the bounding box in canvas coordinates if rendered, otherwise null
+     */
     protected BoundingBox getLastRenderedBounds() {
         return lastRenderedBounds;
     }

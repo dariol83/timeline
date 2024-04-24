@@ -26,6 +26,10 @@ public class TimelineSingleSelectionModel extends SingleSelectionModel<TaskItem>
 
     private final Timeline timeline;
 
+    /**
+     * Class constructor.
+     * @param timeline the linked timeline
+     */
     public TimelineSingleSelectionModel(Timeline timeline) {
         this.timeline = timeline;
     }

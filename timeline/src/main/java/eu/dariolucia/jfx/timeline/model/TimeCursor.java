@@ -48,6 +48,10 @@ public class TimeCursor {
 
     private Timeline timeline;
 
+    /**
+     * Class constructor
+     * @param time the time of the cursor
+     */
     public TimeCursor(Instant time) {
         setTime(time);
     }
@@ -84,6 +88,11 @@ public class TimeCursor {
      * Rendering Methods
      * *****************************************************************************************/
 
+    /**
+     * Render the cursor.
+     * @param gc the {@link GraphicsContext}
+     * @param rc the {@link IRenderingContext}
+     */
     public void render(GraphicsContext gc, IRenderingContext rc) {
         double startX = rc.toX(getTime());
         // Draw a small line on top
@@ -103,10 +112,18 @@ public class TimeCursor {
      * Class-specific Methods
      * *****************************************************************************************/
 
+    /**
+     * Return the timeline containing this cursor, or null.
+     * @return the timeline containing this cursor, or null
+     */
     public Timeline getTimeline() {
         return timeline;
     }
 
+    /**
+     * Set the timeline containing this cursor, or null.
+     * @param timeline the timeline containing this cursor, or null
+     */
     public void setTimeline(Timeline timeline) {
         this.timeline = timeline;
     }

@@ -57,6 +57,11 @@ public class TimeInterval {
 
     private Timeline timeline;
 
+    /**
+     * Class constructor.
+     * @param startTime the start time, can be null
+     * @param endTime the end time, can be null
+     */
     public TimeInterval(Instant startTime, Instant endTime) {
         setStartTime(startTime);
         setEndTime(endTime);
@@ -118,6 +123,11 @@ public class TimeInterval {
      * Rendering Methods
      * *****************************************************************************************/
 
+    /**
+     * Render the time interval.
+     * @param gc the {@link GraphicsContext}
+     * @param rc the {@link IRenderingContext}
+     */
     public void render(GraphicsContext gc, IRenderingContext rc) {
         double startX = getStartTime() == null || getStartTime().isBefore(rc.getViewPortStart()) ? rc.getTaskPanelWidth() : rc.toX(getStartTime());
         double endX = getEndTime() == null || getEndTime().isAfter(rc.getViewPortEnd()) ? rc.getImageAreaWidth() : rc.toX(getEndTime());
@@ -129,10 +139,18 @@ public class TimeInterval {
      * Class-specific Methods
      * *****************************************************************************************/
 
+    /**
+     * Return the timeline containing this cursor, or null.
+     * @return the timeline containing this cursor, or null
+     */
     public Timeline getTimeline() {
         return timeline;
     }
 
+    /**
+     * Set the timeline containing this cursor, or null.
+     * @param timeline the timeline containing this cursor, or null
+     */
     public void setTimeline(Timeline timeline) {
         this.timeline = timeline;
     }

@@ -93,6 +93,14 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
         return taskLineHeight;
     }
 
+    /**
+     * Draw the name of the group in collapsed state.
+     * @param gc the {@link GraphicsContext}
+     * @param groupXStart the X start of the group in canvas coordinates
+     * @param groupYStart the Y start of the group in canvas coordinates
+     * @param textOffset the offset to be added to the group start, on top of the text padding
+     * @param rc the {@link IRenderingContext}
+     */
     protected void drawCollapsedGroupName(GraphicsContext gc, int groupXStart, int groupYStart, int textOffset, IRenderingContext rc) {
         gc.setStroke(rc.getPanelForegroundColor());
         gc.strokeText(getName(), groupXStart + textOffset + rc.getTextPadding(),
@@ -100,18 +108,43 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
                 rc.getTaskPanelWidth() - 2 * rc.getTextPadding() - groupXStart);
     }
 
+    /**
+     * Draw the toggle button of the group in collapsed state.
+     * @param gc the {@link GraphicsContext}
+     * @param groupXStart the X start of the group in canvas coordinates
+     * @param groupYStart the Y start of the group in canvas coordinates
+     * @param squareSize the size of the button
+     * @param rc the {@link IRenderingContext}
+     */
     protected void drawCollapsedToggleButton(GraphicsContext gc, int groupXStart, int groupYStart, int squareSize, IRenderingContext rc) {
         gc.setFill(rc.getPanelBorderColor());
         gc.fillRect(groupXStart, groupYStart, squareSize, squareSize);
     }
 
-    protected void drawCollapsedGroupPanelBox(GraphicsContext gc, int groupXStart, int groupYStart, int groupBoxWidth, int groupHeight, IRenderingContext rc) {
+    /**
+     * Draw the box in the task panel of the group in collapsed state.
+     * @param gc the {@link GraphicsContext}
+     * @param groupXStart the X start of the group in canvas coordinates
+     * @param groupYStart the Y start of the group in canvas coordinates
+     * @param groupBoxWidth the width of the group box
+     * @param groupBoxHeight the height of the group box
+     * @param rc the {@link IRenderingContext}
+     */
+    protected void drawCollapsedGroupPanelBox(GraphicsContext gc, int groupXStart, int groupYStart, int groupBoxWidth, int groupBoxHeight, IRenderingContext rc) {
         gc.setStroke(rc.getPanelBorderColor());
         gc.setFill(rc.getPanelBackground());
-        gc.fillRect(groupXStart, groupYStart, groupBoxWidth, groupHeight);
-        gc.strokeRect(groupXStart, groupYStart, groupBoxWidth, groupHeight);
+        gc.fillRect(groupXStart, groupYStart, groupBoxWidth, groupBoxHeight);
+        gc.strokeRect(groupXStart, groupYStart, groupBoxWidth, groupBoxHeight);
     }
 
+    /**
+     * Draw the group in expanded state.
+     * @param gc the {@link GraphicsContext}
+     * @param groupXStart the X start of the group in canvas coordinates
+     * @param groupYStart the Y start of the group in canvas coordinates
+     * @param rc the {@link IRenderingContext}
+     * @return the height of the group as rendered, in pixels
+     */
     protected int renderExpandedGroup(GraphicsContext gc, int groupXStart, int groupYStart, IRenderingContext rc) {
         int groupBoxWidth = rc.getLineRowHeight();
         // Render the sub lines
@@ -141,6 +174,15 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
         return groupBoxHeight;
     }
 
+    /**
+     * Draw the name of the group in the task panel in expanded state.
+     * @param gc the {@link GraphicsContext}
+     * @param groupXStart the X start of the group in canvas coordinates
+     * @param groupYStart the Y start of the group in canvas coordinates
+     * @param groupBoxWidth the width of the group box
+     * @param groupBoxHeight the height of the group box
+     * @param rc the {@link IRenderingContext}
+     */
     protected void drawExpandedGroupName(GraphicsContext gc, int groupXStart, int groupYStart, int groupBoxWidth, int groupBoxHeight, IRenderingContext rc) {
         gc.setStroke(rc.getPanelForegroundColor());
         gc.save();
@@ -153,11 +195,28 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
         gc.restore();
     }
 
+    /**
+     * Draw the toggle button of the group in expanded state.
+     * @param gc the {@link GraphicsContext}
+     * @param groupXStart the X start of the group in canvas coordinates
+     * @param groupYStart the Y start of the group in canvas coordinates
+     * @param squareSize the size of the button
+     * @param rc the {@link IRenderingContext}
+     */
     protected void drawExpandedToggleButton(GraphicsContext gc, int groupXStart, int groupYStart, int squareSize, IRenderingContext rc) {
         gc.setFill(rc.getPanelBorderColor());
         gc.strokeRect(groupXStart, groupYStart, squareSize, squareSize);
     }
 
+    /**
+     * Draw the box in the task panel of the group in expanded state.
+     * @param gc the {@link GraphicsContext}
+     * @param groupXStart the X start of the group in canvas coordinates
+     * @param groupYStart the Y start of the group in canvas coordinates
+     * @param groupBoxWidth the width of the group box
+     * @param groupBoxHeight the height of the group box
+     * @param rc the {@link IRenderingContext}
+     */
     protected void drawExpandedGroupPanelBox(GraphicsContext gc, int groupXStart, int groupYStart, int groupBoxWidth, int groupBoxHeight, IRenderingContext rc) {
         gc.setFill(rc.getPanelBackground());
         gc.setStroke(rc.getPanelBorderColor());
@@ -180,6 +239,14 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
         }
     }
 
+    /**
+     * Draw the background of the group line.
+     * @param gc the {@link GraphicsContext}
+     * @param groupXStart the X start of the group in canvas coordinates
+     * @param groupYStart the Y start of the group in canvas coordinates
+     * @param renderedLines the number of rendered lines before this line
+     * @param rc the {@link IRenderingContext}
+     */
     protected void drawCollapsedLineBackground(GraphicsContext gc, int groupXStart, int groupYStart, int renderedLines, IRenderingContext rc) {
         Color bgColor = renderedLines % 2 == 0 ? rc.getBackgroundColor() : ColorUtil.computeOddColor(rc.getBackgroundColor());
         gc.setFill(rc.isHighlightLine() ? ColorUtil.percentageUpdate(rc.getBackgroundColor(), -0.15) : bgColor);
