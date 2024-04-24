@@ -39,9 +39,22 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
     /* *****************************************************************************************
      * Properties
      * *****************************************************************************************/
+
+    /**
+     * If true, the task line can be collapsed and the collapsed/expanded marker is rendered.
+     */
     private final SimpleBooleanProperty collapsible = new SimpleBooleanProperty(false);
+    /**
+     * If true, the task line is rendered collapsed, if the group is collapsible.
+     */
     private final SimpleBooleanProperty collapsed = new SimpleBooleanProperty(false);
+    /**
+     * If true, group collapsing can be toggled with the mouse click.
+     */
     private final SimpleBooleanProperty mouseCollapsingEnabled = new SimpleBooleanProperty(true);
+    /**
+     * List of {@link ITaskLine} contained lines.
+     */
     private final ObservableList<ITaskLine> items = FXCollections.observableArrayList(ITaskLine::getObservableProperties);
 
     /* *****************************************************************************************
@@ -109,6 +122,10 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
         this.mouseCollapsingEnabled.set(mouseCollapsingEnabled);
     }
 
+    /**
+     * Return the contained {@link ITaskLine} items.
+     * @return the contained {@link ITaskLine} items
+     */
     public ObservableList<ITaskLine> getItems() {
         return items;
     }
@@ -126,6 +143,14 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
         this.lastRenderedBounds = new BoundingBox(taskLineXStart, taskLineYStart, groupBoxTotalWidth, renderedTotalHeight);
     }
 
+    /**
+     * Render the group task line. Sub-classes must implement.
+     * @param gc the {@link GraphicsContext}
+     * @param groupXStart the X start of the group in canvas coordinates
+     * @param groupYStart the Y start of the group in canvas coordinates
+     * @param rc the {@link IRenderingContext}
+     * @return the total height of the rendered task line, in pixels
+     */
     protected abstract int doRender(GraphicsContext gc, int groupXStart, int groupYStart, IRenderingContext rc);
 
     @Override
@@ -147,6 +172,13 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
         drawVisibleProjectedTasks(gc, tasksToMerge, taskLineYStart, rc);
     }
 
+    /**
+     * Draw the projections of the specified {@link TaskItem}s on the task line header line.
+     * @param gc the {@link GraphicsContext}
+     * @param tasksToMerge the {@link TaskItem} to be merged on the task line header line
+     * @param taskLineYStart the Y start of the line in Canvas coordinates
+     * @param rc the {@link IRenderingContext}
+     */
     protected void drawVisibleProjectedTasks(GraphicsContext gc, List<TaskItem> tasksToMerge, int taskLineYStart, IRenderingContext rc) {
         gc.setFill(rc.getTaskProjectionBackgroundColor());
         int startY = taskLineYStart + (int) rc.getTextPadding();

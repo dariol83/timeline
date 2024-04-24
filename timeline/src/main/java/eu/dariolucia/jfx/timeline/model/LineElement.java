@@ -22,8 +22,23 @@ import javafx.beans.property.SimpleStringProperty;
 /** Common abstract class for elements handled in a {@link Timeline}. */
 public abstract class LineElement implements ILineElement {
 
+    /* *****************************************************************************************
+     * Properties
+     * *****************************************************************************************/
+
+    /**
+     * Name of the element.
+     */
     private final SimpleStringProperty name = new SimpleStringProperty();
+    /**
+     * Description of the element.
+     */
     private final SimpleStringProperty description = new SimpleStringProperty();
+
+    /* *****************************************************************************************
+     * Internal variables
+     * *****************************************************************************************/
+
     private ITaskLine parent;
     private Timeline timeline;
 

@@ -17,6 +17,7 @@
 package eu.dariolucia.jfx.timeline.model;
 
 import eu.dariolucia.jfx.timeline.Timeline;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -24,17 +25,31 @@ import javafx.scene.paint.Color;
 import java.time.Instant;
 
 /**
- * A class used to place cursors on the timeline.
+ * A class used to place time intervals (also open-ended) on the timeline.
  * This class can be subclassed and the render() method can be overwritten.
  */
-public class TimeCursor {
+public class TimeInterval {
 
     /* *****************************************************************************************
      * Properties
      * *****************************************************************************************/
 
-    private final SimpleObjectProperty<Instant> time = new SimpleObjectProperty<>();
-    private final SimpleObjectProperty<Color> color = new SimpleObjectProperty<>(Color.BLACK);
+    /**
+     * Start time of the time interval. If null, it is open-end.
+     */
+    private final SimpleObjectProperty<Instant> startTime = new SimpleObjectProperty<>();
+    /**
+     * End time of the time interval. If null, it is open-end.
+     */
+    private final SimpleObjectProperty<Instant> endTime = new SimpleObjectProperty<>();
+    /**
+     * If true, the time interval is drawn above {@link TaskItem}s.
+     */
+    private final SimpleBooleanProperty foreground = new SimpleBooleanProperty(false);
+    /**
+     * The color of the time interval.
+     */
+    private final SimpleObjectProperty<Color> color = new SimpleObjectProperty<>(new Color(Color.LIMEGREEN.getRed(), Color.LIMEGREEN.getGreen(), Color.LIMEGREEN.getBlue(), 0.5));
 
     /* *****************************************************************************************
      * Internal variables
@@ -42,24 +57,49 @@ public class TimeCursor {
 
     private Timeline timeline;
 
-    public TimeCursor(Instant time) {
-        setTime(time);
+    public TimeInterval(Instant startTime, Instant endTime) {
+        setStartTime(startTime);
+        setEndTime(endTime);
     }
 
     /* *****************************************************************************************
      * Property Accessors
      * *****************************************************************************************/
 
-    public Instant getTime() {
-        return time.get();
+    public Instant getStartTime() {
+        return startTime.get();
     }
 
-    public SimpleObjectProperty<Instant> timeProperty() {
-        return time;
+    public SimpleObjectProperty<Instant> startTimeProperty() {
+        return startTime;
     }
 
-    public void setTime(Instant time) {
-        this.time.set(time);
+    public void setStartTime(Instant startTime) {
+        this.startTime.set(startTime);
+    }
+
+    public Instant getEndTime() {
+        return endTime.get();
+    }
+
+    public SimpleObjectProperty<Instant> endTimeProperty() {
+        return endTime;
+    }
+
+    public void setEndTime(Instant endTime) {
+        this.endTime.set(endTime);
+    }
+
+    public boolean isForeground() {
+        return foreground.get();
+    }
+
+    public SimpleBooleanProperty foregroundProperty() {
+        return foreground;
+    }
+
+    public void setForeground(boolean foreground) {
+        this.foreground.set(foreground);
     }
 
     public Color getColor() {
@@ -79,18 +119,10 @@ public class TimeCursor {
      * *****************************************************************************************/
 
     public void render(GraphicsContext gc, IRenderingContext rc) {
-        double startX = rc.toX(getTime());
-        // Draw a small line on top
-        gc.setStroke(getColor());
-        gc.setLineWidth(1);
-        gc.setLineDashes();
-        gc.strokeLine(startX - 4, rc.getHeaderRowHeight() + 1, startX + 4, rc.getHeaderRowHeight() + 1);
-        // Draw a line for the entire height of the image area
-        gc.setLineWidth(2);
-        gc.setLineDashes(4, 4);
-        gc.strokeLine(startX, rc.getHeaderRowHeight() + 2, startX, rc.getImageAreaHeight());
-        gc.setLineDashes();
-        gc.setLineWidth(1);
+        double startX = getStartTime() == null || getStartTime().isBefore(rc.getViewPortStart()) ? rc.getTaskPanelWidth() : rc.toX(getStartTime());
+        double endX = getEndTime() == null || getEndTime().isAfter(rc.getViewPortEnd()) ? rc.getImageAreaWidth() : rc.toX(getEndTime());
+        gc.setFill(getColor());
+        gc.fillRect(startX, rc.getHeaderRowHeight(), endX - startX, rc.getImageAreaHeight());
     }
 
     /* *****************************************************************************************
@@ -107,9 +139,11 @@ public class TimeCursor {
 
     @Override
     public String toString() {
-        return "TimeCursor{" +
-                "time=" + getTime() +
-                ", color=" + getColor() +
+        return "TimeInterval{" +
+                "startTime=" + startTime +
+                ", endTime=" + endTime +
+                ", foreground=" + foreground +
+                ", color=" + color +
                 '}';
     }
 }

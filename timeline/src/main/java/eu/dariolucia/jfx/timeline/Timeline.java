@@ -78,41 +78,138 @@ public class Timeline extends GridPane implements IRenderingContext {
     /* *****************************************************************************************
      * Properties
      * *****************************************************************************************/
+
+    /**
+     * Minimum time of the timeline, mapped to the horizontal scrollbar value min value (0).
+     */
     private final SimpleObjectProperty<Instant> minTime = new SimpleObjectProperty<>(Instant.now());
+    /**
+     * Maximum time of the timeline, used to compute the horizontal scrollbar max value (max value - min value, in seconds).
+     */
     private final SimpleObjectProperty<Instant> maxTime = new SimpleObjectProperty<>(Instant.now().plusSeconds(3600));
+    /**
+     * Duration of the viewport, in seconds.
+     */
     private final SimpleLongProperty viewPortDuration = new SimpleLongProperty(600);
+    /**
+     * Start time of the viewport.
+     */
     private final SimpleObjectProperty<Instant> viewPortStart = new SimpleObjectProperty<>(minTime.get());
+    /**
+     * Read-only property. End time of the viewport, computed as viewPortStart + viewPortDuration.
+     */
     private final SimpleObjectProperty<Instant> viewPortEnd = new SimpleObjectProperty<>();
+    /**
+     * Width of the task panel (left), in pixels.
+     */
     private final SimpleDoubleProperty taskPanelWidth = new SimpleDoubleProperty(TASK_PANEL_WIDTH_DEFAULT);
+    /**
+     * Distance of the text from the border of the enclosing graphical item, in pixels.
+     */
     private final SimpleDoubleProperty textPadding = new SimpleDoubleProperty(TEXT_PADDING_DEFAULT);
+    /**
+     * Timeline background color.
+     */
     private final SimpleObjectProperty<Color> backgroundColor = new SimpleObjectProperty<>(Color.WHITE);
+    /**
+     * Timeline header (top) background (color, pattern, gradient).
+     */
     private final SimpleObjectProperty<Paint> headerBackground = new SimpleObjectProperty<>(Color.LIGHTGRAY);
+    /**
+     * Timeline header (top) foreground color.
+     */
     private final SimpleObjectProperty<Color> headerForegroundColor = new SimpleObjectProperty<>(Color.BLACK);
+    /**
+     * Timeline header (top) border color.
+     */
     private final SimpleObjectProperty<Color> headerBorderColor = new SimpleObjectProperty<>(Color.BLACK);
+    /**
+     * Timeline task panel (left) background (color, pattern, gradient).
+     */
     private final SimpleObjectProperty<Paint> panelBackground = new SimpleObjectProperty<>(Color.LIGHTGRAY);
+    /**
+     * Timeline task panel (left) foreground color.
+     */
     private final SimpleObjectProperty<Color> panelForegroundColor = new SimpleObjectProperty<>(Color.BLACK);
+    /**
+     * Timeline task panel (left) border color.
+     */
     private final SimpleObjectProperty<Color> panelBorderColor = new SimpleObjectProperty<>(Color.BLACK);
+    /**
+     * Border color of the selected task item.
+     */
     private final SimpleObjectProperty<Color> selectBorderColor = new SimpleObjectProperty<>(Color.BLACK);
+    /**
+     * Effect to be applied to the selected task item.
+     */
     private final SimpleObjectProperty<Effect> selectBorderEffect = new SimpleObjectProperty<>(null);
-    private final SimpleObjectProperty<Color> taskBorderColor = new SimpleObjectProperty<>(Color.BLACK);
+    /**
+     * Width of the border of the selected task item, in pixels.
+     */
     private final SimpleDoubleProperty selectBorderWidth = new SimpleDoubleProperty(3.0);
+    /**
+     * Border color of the task items.
+     */
+    private final SimpleObjectProperty<Color> taskBorderColor = new SimpleObjectProperty<>(Color.BLACK);
+    /**
+     * Font to be used for string rendering in the timeline widget.
+     */
     private final SimpleObjectProperty<Font> textFont = new SimpleObjectProperty<>(null);
+    /**
+     * Visibility of the horizontal scrollbar.
+     */
     private final SimpleBooleanProperty horizontalScrollbarVisible = new SimpleBooleanProperty();
+    /**
+     * Visibility of the vertical scrollbar.
+     */
     private final SimpleBooleanProperty verticalScrollbarVisible = new SimpleBooleanProperty();
+    /**
+     * List of {@link ITaskLine} in the timeline.
+     */
     private final ObservableList<ITaskLine> items = FXCollections.observableArrayList(ITaskLine::getObservableProperties);
+    /**
+     * List of {@link TimeCursor} in the timeline.
+     */
     private final ObservableList<TimeCursor> timeCursors = FXCollections.observableArrayList(timeCursor -> new Observable[] {
             timeCursor.colorProperty(), timeCursor.timeProperty() });
+    /**
+     * List of {@link TimeInterval} in the timeline.
+     */
     private final ObservableList<TimeInterval> timeIntervals = FXCollections.observableArrayList(timeInterval -> new Observable[] {
             timeInterval.colorProperty(), timeInterval.startTimeProperty(), timeInterval.endTimeProperty(), timeInterval.foregroundProperty() });
+    /**
+     * If true, mouse is allowed to selected/deselect a {@link TaskItem} by clicking on it.
+     */
     private final SimpleBooleanProperty enableMouseSelection = new SimpleBooleanProperty(true);
+    /**
+     * If true, mouse is allowed to scroll lines vertically using the mouse wheel.
+     */
     private final SimpleBooleanProperty enableMouseScroll = new SimpleBooleanProperty(true);
+    /**
+     * If true, mouse is allowed to zoom the timeline using Ctrl + the mouse wheel.
+     */
     private final SimpleBooleanProperty enableZoomMouseScroll = new SimpleBooleanProperty(true);
+    /**
+     * If true, vertical lines based on the header time indicators are drawn.
+     */
     private final SimpleBooleanProperty enableVerticalLines = new SimpleBooleanProperty(true);
+    /**
+     * If true, task lines are rendered with alternate background.
+     */
     private final SimpleBooleanProperty enableAlternateColorLines = new SimpleBooleanProperty(true);
+    /**
+     * If true, task line headers for {@link HierarchicalGroupTaskLine} and collapsed {@link FlatGroupTaskLine} are rendered
+     * with a highlighted color (derived from the background color).
+     */
     private final SimpleBooleanProperty highlightLine = new SimpleBooleanProperty(true);
+    /**
+     * Color of the task item projection on the task line headers.
+     */
     private final SimpleObjectProperty<Color> taskProjectionBackgroundColor = new SimpleObjectProperty<>(Color.BURLYWOOD);
+    /**
+     * Hint to select when task item projection on task line headers shall be rendered.
+     */
     private final SimpleObjectProperty<TaskItemProjection> taskProjectionHint = new SimpleObjectProperty<>(TaskItemProjection.COLLAPSE);
-
 
     /* *****************************************************************************************
      * Internal variables

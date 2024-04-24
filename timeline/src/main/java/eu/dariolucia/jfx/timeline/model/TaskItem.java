@@ -38,11 +38,30 @@ public class TaskItem extends LineElement {
      * Properties
      * *****************************************************************************************/
 
+    /**
+     * Start time of the task item.
+     */
     private final SimpleObjectProperty<Instant> startTime = new SimpleObjectProperty<>();
+    /**
+     * Expected duration of the task item. It is used to compute the length of the task item rendered box.
+     */
     private final SimpleLongProperty expectedDuration = new SimpleLongProperty();
+    /**
+     * Actual duration of the task item. If set and positive (>0) an internal line will be drawn inside (and also outside,
+     * if it exceeds the expected duration) of the task item rendered box.
+     */
     private final SimpleLongProperty actualDuration = new SimpleLongProperty();
+    /**
+     * Background of the task item (color, gradient, pattern).
+     */
     private final SimpleObjectProperty<Paint> taskBackground = new SimpleObjectProperty<>(Color.PAPAYAWHIP);
+    /**
+     * Background of the task actual duration line (color, gradient, pattern).
+     */
     private final SimpleObjectProperty<Paint> taskProgressBackground = new SimpleObjectProperty<>(Color.PAPAYAWHIP.darker());
+    /**
+     * Text color of the task item name.
+     */
     private final SimpleObjectProperty<Color> taskTextColor = new SimpleObjectProperty<>(Color.BLACK);
 
     /* *****************************************************************************************

@@ -42,6 +42,9 @@ public class TaskLine extends LineElement implements ITaskLine {
      * Properties
      * *****************************************************************************************/
 
+    /**
+     * List of {@link TaskItem} belonging to the task line.
+     */
     private final ObservableList<TaskItem> items = FXCollections.observableArrayList(TaskItem::getObservableProperties);
 
     /* *****************************************************************************************

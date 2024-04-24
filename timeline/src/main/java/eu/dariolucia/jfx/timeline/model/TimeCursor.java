@@ -17,7 +17,6 @@
 package eu.dariolucia.jfx.timeline.model;
 
 import eu.dariolucia.jfx.timeline.Timeline;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -25,19 +24,23 @@ import javafx.scene.paint.Color;
 import java.time.Instant;
 
 /**
- * A class used to place time intervals (also open-ended) on the timeline.
+ * A class used to place cursors on the timeline.
  * This class can be subclassed and the render() method can be overwritten.
  */
-public class TimeInterval {
+public class TimeCursor {
 
     /* *****************************************************************************************
      * Properties
      * *****************************************************************************************/
 
-    private final SimpleObjectProperty<Instant> startTime = new SimpleObjectProperty<>();
-    private final SimpleObjectProperty<Instant> endTime = new SimpleObjectProperty<>();
-    private final SimpleBooleanProperty foreground = new SimpleBooleanProperty(false);
-    private final SimpleObjectProperty<Color> color = new SimpleObjectProperty<>(new Color(Color.LIMEGREEN.getRed(), Color.LIMEGREEN.getGreen(), Color.LIMEGREEN.getBlue(), 0.5));
+    /**
+     * Time of the cursor.
+     */
+    private final SimpleObjectProperty<Instant> time = new SimpleObjectProperty<>();
+    /**
+     * Color of the cursor.
+     */
+    private final SimpleObjectProperty<Color> color = new SimpleObjectProperty<>(Color.BLACK);
 
     /* *****************************************************************************************
      * Internal variables
@@ -45,49 +48,24 @@ public class TimeInterval {
 
     private Timeline timeline;
 
-    public TimeInterval(Instant startTime, Instant endTime) {
-        setStartTime(startTime);
-        setEndTime(endTime);
+    public TimeCursor(Instant time) {
+        setTime(time);
     }
 
     /* *****************************************************************************************
      * Property Accessors
      * *****************************************************************************************/
 
-    public Instant getStartTime() {
-        return startTime.get();
+    public Instant getTime() {
+        return time.get();
     }
 
-    public SimpleObjectProperty<Instant> startTimeProperty() {
-        return startTime;
+    public SimpleObjectProperty<Instant> timeProperty() {
+        return time;
     }
 
-    public void setStartTime(Instant startTime) {
-        this.startTime.set(startTime);
-    }
-
-    public Instant getEndTime() {
-        return endTime.get();
-    }
-
-    public SimpleObjectProperty<Instant> endTimeProperty() {
-        return endTime;
-    }
-
-    public void setEndTime(Instant endTime) {
-        this.endTime.set(endTime);
-    }
-
-    public boolean isForeground() {
-        return foreground.get();
-    }
-
-    public SimpleBooleanProperty foregroundProperty() {
-        return foreground;
-    }
-
-    public void setForeground(boolean foreground) {
-        this.foreground.set(foreground);
+    public void setTime(Instant time) {
+        this.time.set(time);
     }
 
     public Color getColor() {
@@ -107,10 +85,18 @@ public class TimeInterval {
      * *****************************************************************************************/
 
     public void render(GraphicsContext gc, IRenderingContext rc) {
-        double startX = getStartTime() == null || getStartTime().isBefore(rc.getViewPortStart()) ? rc.getTaskPanelWidth() : rc.toX(getStartTime());
-        double endX = getEndTime() == null || getEndTime().isAfter(rc.getViewPortEnd()) ? rc.getImageAreaWidth() : rc.toX(getEndTime());
-        gc.setFill(getColor());
-        gc.fillRect(startX, rc.getHeaderRowHeight(), endX - startX, rc.getImageAreaHeight());
+        double startX = rc.toX(getTime());
+        // Draw a small line on top
+        gc.setStroke(getColor());
+        gc.setLineWidth(1);
+        gc.setLineDashes();
+        gc.strokeLine(startX - 4, rc.getHeaderRowHeight() + 1, startX + 4, rc.getHeaderRowHeight() + 1);
+        // Draw a line for the entire height of the image area
+        gc.setLineWidth(2);
+        gc.setLineDashes(4, 4);
+        gc.strokeLine(startX, rc.getHeaderRowHeight() + 2, startX, rc.getImageAreaHeight());
+        gc.setLineDashes();
+        gc.setLineWidth(1);
     }
 
     /* *****************************************************************************************
@@ -127,11 +113,9 @@ public class TimeInterval {
 
     @Override
     public String toString() {
-        return "TimeInterval{" +
-                "startTime=" + startTime +
-                ", endTime=" + endTime +
-                ", foreground=" + foreground +
-                ", color=" + color +
+        return "TimeCursor{" +
+                "time=" + getTime() +
+                ", color=" + getColor() +
                 '}';
     }
 }

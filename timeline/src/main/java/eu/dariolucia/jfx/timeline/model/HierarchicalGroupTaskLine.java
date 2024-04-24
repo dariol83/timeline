@@ -32,6 +32,13 @@ import java.util.List;
  */
 public class HierarchicalGroupTaskLine extends CompositeTaskLine {
 
+    /* *****************************************************************************************
+     * Properties
+     * *****************************************************************************************/
+
+    /**
+     * Width of the indentation space, in pixels.
+     */
     private final SimpleIntegerProperty indentSpace = new SimpleIntegerProperty(20);
 
     /**
