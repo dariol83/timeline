@@ -339,14 +339,29 @@ public class TaskItem extends LineElement {
         return lastRenderedBounds;
     }
 
+    /**
+     * Return true if the x,y values in canvas coordinates are contained in the bounds of the task item.
+     * @param x the x in canvas coordinates
+     * @param y the y in canvas coordinates
+     * @return true if the x,y values are contained in the bounds of the task item, otherwise false
+     */
     public final boolean contains(double x, double y) {
         return this.lastRenderedBounds != null && this.lastRenderedBounds.contains(x, y);
     }
 
+    /**
+     * Return true if the task item was rendered in the last rendering iteration, otherwise false.
+     * @return true if the task item was rendered in the last rendering iteration, otherwise false
+     */
     public final boolean isRendered() {
         return this.lastRenderedBounds != null;
     }
 
+    /**
+     * Return true if the task item includes the specified time, otherwise false.
+     * @param time the time to check
+     * @return true if the task item includes the specified time, otherwise false
+     */
     public final boolean contains(Instant time) {
         long timeSeconds = time.getEpochSecond();
         long startTimeSecond = getStartTime().getEpochSecond();

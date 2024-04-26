@@ -1481,7 +1481,11 @@ public class Timeline extends GridPane implements IRenderingContext {
         this.currentYViewportItems = new int[] { startLine, endLine };
     }
 
-    private void drawEmptySidePanel(GraphicsContext gc) {
+    /**
+     * Draw the background of the task panel (left)
+     * @param gc the {@link GraphicsContext}
+     */
+    protected void drawEmptySidePanel(GraphicsContext gc) {
         gc.setFill(getPanelBackground());
         gc.setStroke(getPanelBorderColor());
         gc.fillRect(0, this.headerRowHeight, getTaskPanelWidth(), getImageAreaHeight() - this.headerRowHeight);
@@ -1539,6 +1543,11 @@ public class Timeline extends GridPane implements IRenderingContext {
         }
     }
 
+    /**
+     * Draw the vertical header line corresponding to the provided start time.
+     * @param gc the {@link GraphicsContext}
+     * @param startTime the time of the header line
+     */
     protected void drawHeaderLine(GraphicsContext gc, Instant startTime) {
         int xStart = (int) toX(startTime);
         if(xStart < getTaskPanelWidth()) {
@@ -1551,6 +1560,13 @@ public class Timeline extends GridPane implements IRenderingContext {
         gc.setLineDashes();
     }
 
+    /**
+     * Draw a single header element (column) in the header top line.
+     * @param gc the {@link GraphicsContext}
+     * @param startTime the start time of the header element
+     * @param endTime the end time of the header element
+     * @param headerElement the resolution of the header element
+     */
     protected void drawHeaderBox(GraphicsContext gc, Instant startTime, Instant endTime, ChronoUnit headerElement) {
         int xStart = (int) toX(startTime);
         int xEnd = (int) toX(endTime);

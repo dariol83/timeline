@@ -122,6 +122,15 @@ public class HierarchicalGroupTaskLine extends CompositeTaskLine {
         return groupBoxHeight;
     }
 
+    /**
+     * Draw the box of the group in the task panel.
+     * @param gc the {@link GraphicsContext}
+     * @param groupXStart the X start of the group in canvas coordinates
+     * @param groupYStart the Y start of the group in canvas coordinates
+     * @param groupBoxWidth the width of the box in the task panel
+     * @param groupBoxHeight the height of the entire taskline
+     * @param rc the {@link IRenderingContext}
+     */
     protected void drawGroupPanelBox(GraphicsContext gc, int groupXStart, int groupYStart, int groupBoxWidth, int groupBoxHeight, IRenderingContext rc) {
         gc.setFill(rc.getPanelBackground());
         gc.setStroke(rc.getPanelBorderColor());
@@ -129,6 +138,14 @@ public class HierarchicalGroupTaskLine extends CompositeTaskLine {
         gc.strokeRect(groupXStart, groupYStart, groupBoxWidth, groupBoxHeight);
     }
 
+    /**
+     * Draw the name of the group.
+     * @param gc the {@link GraphicsContext}
+     * @param groupXStart the X start of the group in canvas coordinates
+     * @param groupYStart the Y start of the group in canvas coordinates
+     * @param textOffset the offset to be added to the group start, on top of the text padding
+     * @param rc the {@link IRenderingContext}
+     */
     protected void drawGroupName(GraphicsContext gc, int groupXStart, int groupYStart, int textOffset, IRenderingContext rc) {
         gc.setStroke(rc.getPanelForegroundColor());
         gc.strokeText(getName(), groupXStart + textOffset + rc.getTextPadding(),
@@ -136,11 +153,27 @@ public class HierarchicalGroupTaskLine extends CompositeTaskLine {
                 rc.getTaskPanelWidth() - 2 * rc.getTextPadding() - groupXStart);
     }
 
+    /**
+     * Draw the toggle button of the group in expanded state.
+     * @param gc the {@link GraphicsContext}
+     * @param groupXStart the X start of the group in canvas coordinates
+     * @param groupYStart the Y start of the group in canvas coordinates
+     * @param squareSize the size of the button
+     * @param rc the {@link IRenderingContext}
+     */
     protected void drawExpandedToggleButton(GraphicsContext gc, int groupXStart, int groupYStart, int squareSize, IRenderingContext rc) {
         gc.setStroke(rc.getPanelBorderColor());
         gc.strokeRect(groupXStart, groupYStart, squareSize, squareSize);
     }
 
+    /**
+     * Draw the toggle button of the group in collapsed state.
+     * @param gc the {@link GraphicsContext}
+     * @param groupXStart the X start of the group in canvas coordinates
+     * @param groupYStart the Y start of the group in canvas coordinates
+     * @param squareSize the size of the button
+     * @param rc the {@link IRenderingContext}
+     */
     protected void drawCollapsedToggleButton(GraphicsContext gc, int groupXStart, int groupYStart, int squareSize, IRenderingContext rc) {
         gc.setFill(rc.getPanelBorderColor());
         gc.fillRect(groupXStart, groupYStart, squareSize, squareSize);
@@ -160,6 +193,14 @@ public class HierarchicalGroupTaskLine extends CompositeTaskLine {
         }
     }
 
+    /**
+     * Draw the background of the group line.
+     * @param gc the {@link GraphicsContext}
+     * @param groupXStart the X start of the group in canvas coordinates
+     * @param groupYStart the Y start of the group in canvas coordinates
+     * @param renderedLines the number of rendered lines before this line
+     * @param rc the {@link IRenderingContext}
+     */
     protected void drawLineBackground(GraphicsContext gc, int groupXStart, int groupYStart, int renderedLines, IRenderingContext rc) {
         Color bgColor = renderedLines % 2 == 0 ? rc.getBackgroundColor() : ColorUtil.computeOddColor(rc.getBackgroundColor());
         gc.setFill(rc.isHighlightLine() ? ColorUtil.percentageUpdate(rc.getBackgroundColor(), -0.15) : bgColor);

@@ -122,7 +122,7 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
     }
 
     /**
-     * Draw the box in the task panel of the group in collapsed state.
+     * Draw the box of the group in the task panel in collapsed state.
      * @param gc the {@link GraphicsContext}
      * @param groupXStart the X start of the group in canvas coordinates
      * @param groupYStart the Y start of the group in canvas coordinates
@@ -209,7 +209,7 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
     }
 
     /**
-     * Draw the box in the task panel of the group in expanded state.
+     * Draw the box of the group in the task panel in expanded state.
      * @param gc the {@link GraphicsContext}
      * @param groupXStart the X start of the group in canvas coordinates
      * @param groupYStart the Y start of the group in canvas coordinates

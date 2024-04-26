@@ -313,14 +313,33 @@ public class TaskLine extends LineElement implements ITaskLine {
         // Nothing
     }
 
+    /**
+     * Class used to keep track of the rendering lines, used in case of task item overlap.
+     */
     protected static class RenderingLine {
 
         private final List<TaskItem> line = new ArrayList<>();
 
+        /**
+         * Class constructor.
+         */
+        public RenderingLine() {
+            // Nothing to do
+        }
+
+        /**
+         * Return the task items part of this rendering line.
+         * @return the task items part of this rendering line
+         */
         public List<TaskItem> getLine() {
             return this.line;
         }
 
+        /**
+         * Check if the provided task item overlaps with any task item already part of this line.
+         * @param item the item to check
+         * @return true if the provided task item overlaps with any task item already part of this line, otherwise false
+         */
         public boolean overlap(TaskItem item) {
             for(TaskItem ti : this.line) {
                 if(ti.overlapWith(item)) {
