@@ -560,14 +560,26 @@ public class Timeline extends GridPane implements IRenderingContext {
         this.viewPortStart.set(viewPortStart);
     }
 
+    /**
+     * Return the top level {@link ITaskLine} in the timeline.
+     * @return the top level {@link ITaskLine} in the timeline
+     */
     public ObservableList<ITaskLine> getItems() {
         return items;
     }
 
+    /**
+     * Return the {@link TimeCursor} objects in the timeline.
+     * @return the {@link TimeCursor} objects in the timeline
+     */
     public ObservableList<TimeCursor> getTimeCursors() {
         return timeCursors;
     }
 
+    /**
+     * Return the {@link TimeInterval} objects in the timeline.
+     * @return the {@link TimeInterval} objects in the timeline
+     */
     public ObservableList<TimeInterval> getTimeIntervals() {
         return timeIntervals;
     }
@@ -595,6 +607,10 @@ public class Timeline extends GridPane implements IRenderingContext {
         this.taskPanelWidth.set(taskPanelWidth);
     }
 
+    /**
+     * Navigate the registered task lines and return the flat list of {@link TaskItem} objects.
+     * @return the {@link TaskItem} objects of this timeline
+     */
     public List<TaskItem> getTaskItemList() {
         if(this.flatTaskItem == null) {
             this.flatTaskItem = this.items.stream().flatMap(l -> l.getTaskItems().stream()).collect(Collectors.toList());
@@ -602,6 +618,10 @@ public class Timeline extends GridPane implements IRenderingContext {
         return this.flatTaskItem;
     }
 
+    /**
+     * Return the selection model.
+     * @return the selection model
+     */
     public SelectionModel<TaskItem> getSelectionModel() {
         return selectionModel;
     }
@@ -906,10 +926,19 @@ public class Timeline extends GridPane implements IRenderingContext {
      * Utility access method
      * *****************************************************************************************/
 
+    /**
+     * Return the {@link TaskItem} at the specified position.
+     * @param i the i-th {@link TaskItem} to retrieve
+     * @return the {@link TaskItem} at i-th position
+     */
     public TaskItem getTaskItemAt(int i) {
         return getTaskItemList().get(i);
     }
 
+    /**
+     * Return the number of {@link TaskItem} in this timeline.
+     * @return the number of {@link TaskItem} in this timeline
+     */
     public long getTaskItemCount() {
         return getTaskItemList().size();
     }
