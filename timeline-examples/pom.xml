@@ -58,7 +58,7 @@
         <java.version>11</java.version>
         <!-- External libraries versions -->
         <openjfx.version>19.0.2.1</openjfx.version>
-		<timeline.version>0.7.0-SNAPSHOT</timeline.version>
+		<timeline.version>0.7.0</timeline.version>
         <!-- Maven plugin versions -->
         <maven.jacoco.version>0.8.8</maven.jacoco.version>
         <maven.jar.version>2.4</maven.jar.version>
