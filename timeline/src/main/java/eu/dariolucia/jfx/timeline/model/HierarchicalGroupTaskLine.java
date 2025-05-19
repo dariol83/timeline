@@ -105,7 +105,7 @@ public class HierarchicalGroupTaskLine extends CompositeTaskLine {
             setCollapseButtonBoundingBox(null);
         }
         // Render name
-        drawGroupName(gc, groupXStart, groupYStart, textOffset, rc);
+        drawGroupName(gc, groupXStart, groupYStart - 2, textOffset, rc);
         // Render the sub lines
         if(!isCollapsedState()) {
             int i = 1;

@@ -206,7 +206,7 @@ public class TaskItem extends LineElement {
                 drawTaskItemProgress(gc, startX, startY, actualEndX - startX, taskHeight, isSelected, rc);
             }
             // Render text
-            drawTaskItemName(gc, startX, startY, endX - startX, taskHeight, isSelected, rc);
+            drawTaskItemName(gc, startX, startY, endX - startX - 2, taskHeight - 2, isSelected, rc);
             // Remember rendering box in pixel coordinates
             updateLastRenderedBounds(new BoundingBox(startX, startY, Math.max(endX, actualEndX) - startX, taskHeight));
         }

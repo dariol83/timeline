@@ -82,7 +82,7 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
             setCollapseButtonBoundingBox(null);
         }
         // Render name
-        drawCollapsedGroupName(gc, groupXStart, groupYStart, textOffset, rc);
+        drawCollapsedGroupName(gc, groupXStart, groupYStart - 2, textOffset, rc);
         // Render task bottom line
         gc.setStroke(rc.getPanelBorderColor());
         gc.strokeLine(rc.getTaskPanelWidth(), groupYStart + rc.getLineRowHeight(), rc.getImageAreaWidth(), groupYStart + rc.getLineRowHeight());
@@ -168,7 +168,7 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
             setCollapseButtonBoundingBox(null);
         }
         // Render text
-        drawExpandedGroupName(gc, groupXStart, groupYStart, groupBoxWidth, groupBoxHeight, rc);
+        drawExpandedGroupName(gc, groupXStart, groupYStart, groupBoxWidth - 2, groupBoxHeight + 2, rc);
         // If not collapsed, the task projection cannot be rendered in any case
         // Return the box height
         return groupBoxHeight;

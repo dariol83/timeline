@@ -128,7 +128,7 @@ public class TaskLine extends LineElement implements ITaskLine {
         // Render the task line box in the task panel
         drawTaskLinePanelBox(gc, taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight, rc);
         // Render text
-        drawTaskLineName(gc, taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight, rc);
+        drawTaskLineName(gc, taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart - 2, taskLineHeight - 2, rc);
         // Remember boundaries
         updateLastRenderedBounds(new BoundingBox(taskLineXStart, taskLineYStart,
                 rc.getImageAreaWidth() - taskLineXStart, taskLineHeight));
