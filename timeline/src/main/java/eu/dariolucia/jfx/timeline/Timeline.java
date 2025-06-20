@@ -1330,8 +1330,8 @@ public class Timeline extends GridPane implements IRenderingContext {
             case SECONDS: return String.format("%02d:%02d:%02d", time.getHour(), time.getMinute(), time.getSecond());
             case MINUTES: return String.format("%02d:%02d:00", time.getHour(), time.getMinute());
             case HOURS: return String.format("%02d:00:00", time.getHour());
-            case DAYS: return String.format("%04d-%02d-%02d", time.getYear(), time.get(ChronoField.MONTH_OF_YEAR) + 1, time.getDayOfMonth());
-            case MONTHS: return String.format("%04d-%02d", time.getYear(), time.get(ChronoField.MONTH_OF_YEAR) + 1);
+            case DAYS: return String.format("%04d-%02d-%02d", time.getYear(), time.get(ChronoField.MONTH_OF_YEAR), time.getDayOfMonth());
+            case MONTHS: return String.format("%04d-%02d", time.getYear(), time.get(ChronoField.MONTH_OF_YEAR));
             default: return String.format("%04d", time.getYear());
         }
     }
