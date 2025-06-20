@@ -21,7 +21,7 @@
 
     <groupId>eu.dariolucia.jfx</groupId>
     <artifactId>eu.dariolucia.jfx.timeline</artifactId>
-    <version>0.7.0</version>
+    <version>0.7.1</version>
     <packaging>jar</packaging>
 
     <name>JavaFX Timeline Chart</name>
