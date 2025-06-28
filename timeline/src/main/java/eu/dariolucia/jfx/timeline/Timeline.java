@@ -24,6 +24,7 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
@@ -203,6 +204,10 @@ public class Timeline extends GridPane implements IRenderingContext {
      */
     private final SimpleBooleanProperty highlightLine = new SimpleBooleanProperty(true);
     /**
+     * If true, the horizontal scrollbar fit in viewport.
+     */
+    private final SimpleBooleanProperty horizontalScrollbarFitInViewPort = new SimpleBooleanProperty();
+    /**
      * Color of the task item projection on the task line headers.
      */
     private final SimpleObjectProperty<Color> taskProjectionBackgroundColor = new SimpleObjectProperty<>(Color.BURLYWOOD);
@@ -253,7 +258,6 @@ public class Timeline extends GridPane implements IRenderingContext {
         this.verticalScroll.setOrientation(Orientation.VERTICAL);
         // Create a fill label
         this.labelCornerFiller = new Label("");
-
         // Set horizontal scrollbar limits (fixed)
         this.horizontalScroll.setMin(0);
         this.horizontalScroll.setMax(100);
@@ -272,7 +276,10 @@ public class Timeline extends GridPane implements IRenderingContext {
         // Add listener when start time is updated (viewport update -> update scrollbar)
         viewPortStartProperty().addListener((e,o,n) -> recomputeViewport());
         // Add listener when task panel width is updated
-        taskPanelWidthProperty().addListener((e,o,n) -> recomputeViewport());
+        taskPanelWidthProperty().addListener((e,o,n) -> {
+            updateHorizontalScrollbarFitInViewPort();
+            recomputeViewport();
+        });
         // Add listener when colors are updated
         backgroundColorProperty().addListener((e,o,n) -> internalRefresh());
         headerBackgroundProperty().addListener((e, o, n) -> internalRefresh());
@@ -295,6 +302,7 @@ public class Timeline extends GridPane implements IRenderingContext {
         // Add listener when scrollbar visible is updated
         horizontalScrollbarVisibleProperty().addListener((e,o,n) -> horizontalScrollbarStatusChanged());
         verticalScrollbarVisibleProperty().addListener((e,o,n) -> verticalScrollbarStatusChanged());
+        horizontalScrollbarFitInViewPortProperty().addListener((e, o, n) -> updateHorizontalScrollbarFitInViewPort());
 
         // Add listener to changes to the observable list structure (add, remove)
         this.items.addListener(this::itemsUpdated);
@@ -883,6 +891,18 @@ public class Timeline extends GridPane implements IRenderingContext {
         this.highlightLine.set(highlightLine);
     }
 
+    public boolean isHorizontalScrollbarFitInViewPort() {
+        return horizontalScrollbarFitInViewPort.get();
+    }
+
+    public SimpleBooleanProperty horizontalScrollbarFitInViewPortProperty() {
+        return horizontalScrollbarFitInViewPort;
+    }
+
+    public void setHorizontalScrollbarFitInViewPort(boolean horizontalScrollbarFitInViewPort) {
+        this.horizontalScrollbarFitInViewPort.set(horizontalScrollbarFitInViewPort);
+    }
+
     @Override
     public TaskItemProjection getTaskProjectionHint() {
         return taskProjectionHint.get();
@@ -987,6 +1007,14 @@ public class Timeline extends GridPane implements IRenderingContext {
     private void removeHScrollbar() {
         getChildren().remove(this.horizontalScroll);
         getChildren().remove(this.labelCornerFiller);
+    }
+
+    private void updateHorizontalScrollbarFitInViewPort() {
+        if (isHorizontalScrollbarFitInViewPort()) {
+            GridPane.setMargin(this.horizontalScroll, new Insets(0, 0, 0, getTaskPanelWidth()));
+        } else {
+            GridPane.setMargin(this.horizontalScroll, new Insets(0, 0, 0, 0));
+        }
     }
 
     private void verticalScrollbarStatusChanged() {
