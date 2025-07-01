@@ -1365,25 +1365,12 @@ public class Timeline extends GridPane implements IRenderingContext {
     }
 
     private Instant getAdjustedStartTime(Instant viewPortStart, ChronoUnit headerElement) {
+        ZonedDateTime zdt = viewPortStart.atZone(ZoneId.of("UTC"));
         switch (headerElement) {
-            case YEARS: {
-                // Truncate to day
-                Instant toReturn = viewPortStart.truncatedTo(ChronoUnit.DAYS);
-                // Count the days to the beginning of the month
-                LocalDateTime ldt = LocalDateTime.ofInstant(toReturn, ZoneId.of("UTC"));
-                int days = ldt.getDayOfYear();
-                // Subtract these
-                return ldt.minus(days, ChronoUnit.DAYS).toInstant(ZoneOffset.UTC);
-            }
-            case MONTHS: {
-                // Truncate to day
-                Instant toReturn = viewPortStart.truncatedTo(ChronoUnit.DAYS);
-                // Count the days to the beginning of the month
-                LocalDateTime ldt = LocalDateTime.ofInstant(toReturn, ZoneId.of("UTC"));
-                int days = ldt.getDayOfMonth();
-                // Subtract these
-                return ldt.minus(days, ChronoUnit.DAYS).toInstant(ZoneOffset.UTC);
-            }
+            case YEARS:
+                return zdt.withDayOfYear(1).truncatedTo(ChronoUnit.DAYS).toInstant();
+            case MONTHS:
+                return zdt.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS).toInstant();
             default:
                 return viewPortStart.truncatedTo(headerElement);
         }
