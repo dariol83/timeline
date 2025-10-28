@@ -15,7 +15,7 @@ This module contains an implementation of a timeline/Gantt chart for JavaFX. The
 - Projection of aggregated task item durations when groups are collapsed or always on; 
 - Handling of time overlaps among task items belowing to the same task line, dynamically rendered on separate lines;
 - Time cursors and time intervals (in foreground and background);
-- Time points with basic shapes and custom images (contributions from  [Shersula](https://github.com/Shersula))
+- Time points with basic shapes and custom images (contributions from  [Shersula](https://github.com/Shersula));
 - Scrolling and zooming via mouse scroll;
 - Single selection model for task items;
 - Dynamic column sizing;
