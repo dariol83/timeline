@@ -20,6 +20,7 @@ import javafx.beans.Observable;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
@@ -99,6 +100,7 @@ public class TaskItem extends LineElement {
         this.startTime.set(startTime);
         this.expectedDuration.set(expectedDuration);
         this.actualDuration.set(actualDuration);
+        timePoints.addListener(this::timePointListUpdated);
     }
 
     /* *****************************************************************************************
@@ -416,6 +418,23 @@ public class TaskItem extends LineElement {
                 (thisEndTime > itemStartTime && thisEndTime <= itemEndTime) ||
                 (thisStartTime <= itemStartTime && thisEndTime >= itemEndTime) ||
                 (itemStartTime <= thisStartTime && itemEndTime >= thisEndTime);
+    }
+
+    private void timePointListUpdated(ListChangeListener.Change<? extends TimePoint> change) {
+        while(change.next()) {
+            if(change.wasAdded()) {
+                change.getAddedSubList().forEach(tp -> {
+                    tp.setParent(this);
+                    tp.setTimeline(getTimeline());
+                });
+            }
+            if(change.wasRemoved()) {
+                change.getRemoved().forEach(tp -> {
+                    tp.setParent(null);
+                    tp.setTimeline(null);
+                });
+            }
+        }
     }
 
     @Override

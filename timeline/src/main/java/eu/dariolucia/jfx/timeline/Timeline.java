@@ -372,7 +372,7 @@ public class Timeline extends GridPane implements IRenderingContext {
      */
     public void scrollTo(ITaskLine taskLine) {
         while(taskLine.getParent() != null) {
-            taskLine = taskLine.getParent();
+            taskLine = (ITaskLine) taskLine.getParent();
         }
         // Compute the value for the vertical scroll
         double value = 0;

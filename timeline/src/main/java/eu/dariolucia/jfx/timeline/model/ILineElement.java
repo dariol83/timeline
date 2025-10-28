@@ -40,14 +40,14 @@ public interface ILineElement {
      * This method is not supposed to be called by external class users.
      * @param parent the parent task line
      */
-    void setParent(ITaskLine parent);
+    void setParent(ILineElement parent);
 
     /**
      * Get the parent task line of this line element. This is null if the line element is a top level task line.
      * This method is not supposed to be called by external class users.
      * @return the parent task line, or null if this is a top level line element
      */
-    ITaskLine getParent();
+    ILineElement getParent();
 
     /**
      * Set the owning timeline of this line element. This is null if the line element is not in a {@link Timeline}.

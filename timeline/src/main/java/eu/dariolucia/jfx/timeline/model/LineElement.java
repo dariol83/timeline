@@ -39,7 +39,7 @@ public abstract class LineElement implements ILineElement {
      * Internal variables
      * *****************************************************************************************/
 
-    private ITaskLine parent;
+    private ILineElement parent;
     private Timeline timeline;
 
     /**
@@ -87,7 +87,7 @@ public abstract class LineElement implements ILineElement {
     }
 
     @Override
-    public ITaskLine getParent() {
+    public ILineElement getParent() {
         return parent;
     }
 
@@ -102,7 +102,7 @@ public abstract class LineElement implements ILineElement {
     }
 
     @Override
-    public void setParent(ITaskLine parent) {
+    public void setParent(ILineElement parent) {
         this.parent = parent;
     }
 
