@@ -19,6 +19,9 @@ package eu.dariolucia.jfx.timeline.model;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -63,6 +66,10 @@ public class TaskItem extends LineElement {
      * Text color of the task item name.
      */
     private final SimpleObjectProperty<Color> taskTextColor = new SimpleObjectProperty<>(Color.BLACK);
+    /**
+     * List of TimePoints on a task item
+     */
+    private final ObservableList<TimePoint> timePoints = FXCollections.observableArrayList();
 
     /* *****************************************************************************************
      * Internal variables
@@ -93,6 +100,7 @@ public class TaskItem extends LineElement {
         this.startTime.set(startTime);
         this.expectedDuration.set(expectedDuration);
         this.actualDuration.set(actualDuration);
+        timePoints.addListener(this::timePointListUpdated);
     }
 
     /* *****************************************************************************************
@@ -171,6 +179,10 @@ public class TaskItem extends LineElement {
         this.taskProgressBackground.set(taskProgressBackground);
     }
 
+    public ObservableList<TimePoint> getTimePoints() {
+        return timePoints;
+    }
+
     /* *****************************************************************************************
      * Rendering Methods
      * *****************************************************************************************/
@@ -207,9 +219,25 @@ public class TaskItem extends LineElement {
             }
             // Render text
             drawTaskItemName(gc, startX, startY, endX - startX, taskHeight, isSelected, rc);
+            //Render time points
+            drawTaskItemTimePoints(gc, rc, startX, startY, endX - startX, taskHeight);
             // Remember rendering box in pixel coordinates
             updateLastRenderedBounds(new BoundingBox(startX, startY, Math.max(endX, actualEndX) - startX, taskHeight));
         }
+    }
+
+    /**
+     * Draw time points on a task item. Subclasses can override.
+     * @param gc the {@link GraphicsContext}
+     * @param rc the {@link IRenderingContext}
+     * @param taskItemStartX the start X of the task item in Canvas coordinates
+     * @param taskItemStartY the start Y of the task item in Canvas coordinates
+     * @param taskItemWidth the width of the task item
+     * @param taskItemHeight the height of the task item
+     */
+    protected void drawTaskItemTimePoints(GraphicsContext gc, IRenderingContext rc, int taskItemStartX, int taskItemStartY, int taskItemWidth, int taskItemHeight)
+    {
+        for(TimePoint p : timePoints) p.render(gc, rc, taskItemStartX, taskItemStartY, taskItemWidth, taskItemHeight);
     }
 
     /**
@@ -390,6 +418,23 @@ public class TaskItem extends LineElement {
                 (thisEndTime > itemStartTime && thisEndTime <= itemEndTime) ||
                 (thisStartTime <= itemStartTime && thisEndTime >= itemEndTime) ||
                 (itemStartTime <= thisStartTime && itemEndTime >= thisEndTime);
+    }
+
+    private void timePointListUpdated(ListChangeListener.Change<? extends TimePoint> change) {
+        while(change.next()) {
+            if(change.wasAdded()) {
+                change.getAddedSubList().forEach(tp -> {
+                    tp.setParent(this);
+                    tp.setTimeline(getTimeline());
+                });
+            }
+            if(change.wasRemoved()) {
+                change.getRemoved().forEach(tp -> {
+                    tp.setParent(null);
+                    tp.setTimeline(null);
+                });
+            }
+        }
     }
 
     @Override
