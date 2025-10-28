@@ -33,6 +33,10 @@ public class TimePoint extends LineElement {
      * Text color of the point.
      */
     private final SimpleObjectProperty<Color> textColor = new SimpleObjectProperty<>(Color.BLACK);
+    /**
+     * It is used to store an image with a changed color, saves rendering time.
+     */
+    private WritableImage cachedWritableImage = null;
 
     /* *****************************************************************************************
      * Internal variables
@@ -48,6 +52,10 @@ public class TimePoint extends LineElement {
         super(name);
         setTime(time);
         setType(Type);
+
+        img.addListener((observable, oldValue, newValue) -> {
+            cachedWritableImage = null;
+        });
     }
 
     /* *****************************************************************************************
@@ -168,18 +176,21 @@ public class TimePoint extends LineElement {
             }
             case IMG:
             {
-                WritableImage writableImage = new WritableImage((int) getImage().getWidth(), (int) getImage().getHeight());
-
-                for (int y = 0; y < writableImage.getHeight(); y++)
+                if(cachedWritableImage == null)
                 {
-                    for (int x = 0; x < writableImage.getWidth(); x++)
+                    cachedWritableImage = new WritableImage((int) getImage().getWidth(), (int) getImage().getHeight());
+
+                    for (int y = 0; y < cachedWritableImage.getHeight(); y++)
                     {
-                        Color SourceColor = getImage().getPixelReader().getColor(x, y);
-                        if(SourceColor.isOpaque()) writableImage.getPixelWriter().setColor(x, y, getColor());
+                        for (int x = 0; x < cachedWritableImage.getWidth(); x++)
+                        {
+                            Color SourceColor = getImage().getPixelReader().getColor(x, y);
+                            if(SourceColor.isOpaque()) cachedWritableImage.getPixelWriter().setColor(x, y, getColor());
+                        }
                     }
                 }
 
-                gc.drawImage(writableImage, X, StartY, size, size);
+                gc.drawImage(cachedWritableImage, X, StartY, size, size);
             }
         }
 
