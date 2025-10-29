@@ -69,7 +69,7 @@ public class TaskItem extends LineElement {
     /**
      * List of TimePoints on a task item
      */
-    private final ObservableList<TimePoint> timePoints = FXCollections.observableArrayList();
+    private final ObservableList<TimePoint> timePoints = FXCollections.observableArrayList(TimePoint::getObservableProperties);
 
     /* *****************************************************************************************
      * Internal variables

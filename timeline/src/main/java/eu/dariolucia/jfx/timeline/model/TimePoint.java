@@ -1,5 +1,6 @@
 package eu.dariolucia.jfx.timeline.model;
 
+import javafx.beans.Observable;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
@@ -203,5 +204,20 @@ public class TimePoint extends LineElement {
 
             gc.setTextAlign(TextAlignment.LEFT);
         }
+    }
+
+    /* *****************************************************************************************
+     * Class-specific Methods
+     * *****************************************************************************************/
+
+    /**
+     * Return the properties that should trigger an update notification in case of
+     * change. Subclasses should override, if properties are added.
+     * @return the list of properties as array of {@link Observable}
+     */
+    public Observable[] getObservableProperties() {
+        return new Observable[] {
+                imageProperty(), nameProperty(), typeProperty(),
+                timeProperty(), colorProperty(), textColorProperty() };
     }
 }
