@@ -80,8 +80,7 @@ public class HierarchicalGroupTaskLine extends CompositeTaskLine {
 
     @Override
     protected int doRender(GraphicsContext gc, int groupXStart, int groupYStart, IRenderingContext rc) {
-        int nbLines = getNbOfLines();
-        int groupBoxHeight = nbLines * rc.getLineRowHeight();
+        int groupBoxHeight = getHeight(rc);
         int groupBoxWidth = (int) rc.getTaskPanelWidth() - groupXStart;
         // Draw the group box
         drawGroupPanelBox(gc, groupXStart, groupYStart, groupBoxWidth, groupBoxHeight, rc);
@@ -219,13 +218,9 @@ public class HierarchicalGroupTaskLine extends CompositeTaskLine {
     }
 
     @Override
-    public int getNbOfLines() {
-        int nbLines = 1;
-        if(!isCollapsedState()) {
-            for(ITaskLine tl : getItems()) {
-                nbLines += tl.getNbOfLines();
-            }
-        }
-        return nbLines;
+    public int getNbOfLines()
+    {
+        //If task group is not collapsed, then one row is added to store the group name.
+        return super.getNbOfLines() + (!isCollapsedState() ? 1:0);
     }
 }

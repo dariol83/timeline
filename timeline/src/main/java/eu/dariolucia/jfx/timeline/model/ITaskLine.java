@@ -28,6 +28,16 @@ import java.util.List;
 public interface ITaskLine extends ILineElement {
 
     /**
+     * Return the height of task line in pixels
+     * @param rc {@link IRenderingContext}
+     * @return Return the height of task line in pixels
+     */
+    default int getHeight(IRenderingContext rc)
+    {
+        return rc.getLineRowHeight() * getNbOfLines();
+    }
+
+    /**
      * Return the number of lines rendered by this task line. This number changes depending on the type and number of
      * nested task lines and whether there are time overlaps between {@link TaskItem} of the same {@link TaskLine}.
      * @return the number of lines rendered by this object

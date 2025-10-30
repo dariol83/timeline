@@ -289,4 +289,20 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
         }
     }
 
+    /* *****************************************************************************************
+     * Class-specific Methods
+     * *****************************************************************************************/
+
+    @Override
+    public int getNbOfLines()
+    {
+        if(!isCollapsedState())
+        {
+            int nbLines = 0;
+            for (ITaskLine tl : getItems()) nbLines += tl.getNbOfLines();
+            return nbLines;
+        }
+        else return 1;// Collapsed: 1 line
+    }
+
 }

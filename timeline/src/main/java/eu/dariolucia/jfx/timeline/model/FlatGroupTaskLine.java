@@ -153,7 +153,7 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
             line.render(gc, groupXStart + groupBoxWidth, groupYStart + i * rc.getLineRowHeight(), rc);
             i += line.getNbOfLines();
         }
-        int groupBoxHeight = getNbOfLines() * rc.getLineRowHeight();
+        int groupBoxHeight = getHeight(rc);
         // Draw the group box
         drawExpandedGroupPanelBox(gc, groupXStart, groupYStart, groupBoxWidth, groupBoxHeight, rc);
         // If collapsible, render the symbol
@@ -253,21 +253,4 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
         gc.fillRect(groupXStart, groupYStart, rc.getImageAreaWidth() - groupXStart, rc.getLineRowHeight());
     }
 
-    /* *****************************************************************************************
-     * Class-specific Methods
-     * *****************************************************************************************/
-
-    @Override
-    public int getNbOfLines() {
-        if(!isCollapsedState()) {
-            int nbLines = 0;
-            for (ITaskLine tl : getItems()) {
-                nbLines += tl.getNbOfLines();
-            }
-            return nbLines;
-        } else {
-            // Collapsed: 1 line
-            return 1;
-        }
-    }
 }

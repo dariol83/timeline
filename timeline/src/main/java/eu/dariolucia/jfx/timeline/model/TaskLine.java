@@ -116,7 +116,7 @@ public class TaskLine extends LineElement implements ITaskLine {
 
     @Override
     public void render(GraphicsContext gc, int taskLineXStart, int taskLineYStart, IRenderingContext rc) {
-        int taskLineHeight = rc.getLineRowHeight() * getNbOfLines();
+        int taskLineHeight = getHeight(rc);
         // Render the tasks in each rendered line
         int newTaskLineYStart = taskLineYStart;
         int i = 0;
