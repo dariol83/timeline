@@ -36,16 +36,16 @@ public interface ILineElement {
     String getDescription();
 
     /**
-     * Set the parent task line of this line element. This is null if the line element is a top level task line.
+     * Set the parent of this line element. This is null if the line element is a top level element.
      * This method is not supposed to be called by external class users.
-     * @param parent the parent task line
+     * @param parent the parent line element
      */
     void setParent(ILineElement parent);
 
     /**
-     * Get the parent task line of this line element. This is null if the line element is a top level task line.
+     * Get the parent of this line element. This is null if the line element is a top level element.
      * This method is not supposed to be called by external class users.
-     * @return the parent task line, or null if this is a top level line element
+     * @return the parent line element, or null if this is a top level line element
      */
     ILineElement getParent();
 
