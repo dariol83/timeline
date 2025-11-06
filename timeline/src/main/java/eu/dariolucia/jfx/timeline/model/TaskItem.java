@@ -17,6 +17,7 @@
 package eu.dariolucia.jfx.timeline.model;
 
 import javafx.beans.Observable;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -67,9 +68,17 @@ public class TaskItem extends LineElement {
      */
     private final SimpleObjectProperty<Color> taskTextColor = new SimpleObjectProperty<>(Color.BLACK);
     /**
-     * List of TimePoints on a task item
+     * If true, all the intervals in this task item will be trimmed to the size of the task item.
+     */
+    private final SimpleBooleanProperty trimIntervals = new SimpleBooleanProperty(true);
+    /**
+     * List of {@link TimePoint} on a task item
      */
     private final ObservableList<TimePoint> timePoints = FXCollections.observableArrayList(TimePoint::getObservableProperties);
+    /**
+     * List of {@link TimeInterval} on a task item
+     */
+    private final ObservableList<TimeInterval> intervals = FXCollections.observableArrayList(TimeInterval::getObservableProperties);
 
     /* *****************************************************************************************
      * Internal variables
@@ -100,7 +109,8 @@ public class TaskItem extends LineElement {
         this.startTime.set(startTime);
         this.expectedDuration.set(expectedDuration);
         this.actualDuration.set(actualDuration);
-        timePoints.addListener(this::timePointListUpdated);
+        this.timePoints.addListener(this::timePointListUpdated);
+        this.intervals.addListener(this::intervalsListUpdated);
     }
 
     /* *****************************************************************************************
@@ -179,8 +189,25 @@ public class TaskItem extends LineElement {
         this.taskProgressBackground.set(taskProgressBackground);
     }
 
+    public void setTrimIntervals(boolean trimIntervals)
+    {
+        this.trimIntervals.set(trimIntervals);
+    }
+
+    public boolean isTrimIntervals() {
+        return trimIntervals.get();
+    }
+
+    public SimpleBooleanProperty trimIntervalsProperty() {
+        return trimIntervals;
+    }
+
     public ObservableList<TimePoint> getTimePoints() {
         return timePoints;
+    }
+
+    public ObservableList<TimeInterval> getIntervals() {
+        return intervals;
     }
 
     /* *****************************************************************************************
@@ -207,8 +234,10 @@ public class TaskItem extends LineElement {
             int endX = (int) rc.toX(endTimeExp);
             // Is selected
             boolean isSelected = rc.getSelectedTaskItems().contains(this);
-            // Render now expected
             int taskHeight = (int) Math.round(rc.getLineRowHeight() - 2 * rc.getTextPadding());
+            // Draw time intervals in background
+            drawTaskItemInterval(gc, startY, taskHeight, rc, false);
+            // Render now expected
             drawTaskItemBox(gc, startX, startY, endX - startX, taskHeight, isSelected, rc);
             // Render now actual
             int actualEndX = -1;
@@ -219,6 +248,8 @@ public class TaskItem extends LineElement {
             }
             // Render text
             drawTaskItemName(gc, startX, startY, endX - startX, taskHeight, isSelected, rc);
+            // Draw time intervals in foreground
+            drawTaskItemInterval(gc, startY, taskHeight, rc, true);
             //Render time points
             drawTaskItemTimePoints(gc, rc, startX, startY, endX - startX, taskHeight);
             // Remember rendering box in pixel coordinates
@@ -238,6 +269,20 @@ public class TaskItem extends LineElement {
     protected void drawTaskItemTimePoints(GraphicsContext gc, IRenderingContext rc, int taskItemStartX, int taskItemStartY, int taskItemWidth, int taskItemHeight)
     {
         for(TimePoint p : timePoints) p.render(gc, rc, taskItemStartX, taskItemStartY, taskItemWidth, taskItemHeight);
+    }
+    /**
+     * Draw the time interval on a task item. Subclasses can override.
+     * @param gc the {@link GraphicsContext}
+     * @param taskItemStartY the Y offset where the interval has to start
+     * @param taskItemHeight the height of the task item that the interval should fill
+     * @param rc the {@link IRenderingContext}
+     * @param foreground draw interval on foreground
+     */
+    public void drawTaskItemInterval(GraphicsContext gc, int taskItemStartY, int taskItemHeight, IRenderingContext rc, boolean foreground) {
+        for(TimeInterval i : intervals)
+        {
+            if(i.isForeground() == foreground) i.render(gc, rc, taskItemStartY, taskItemHeight);
+        }
     }
 
     /**
@@ -348,7 +393,7 @@ public class TaskItem extends LineElement {
     public Observable[] getObservableProperties() {
         return new Observable[] {
                 startTimeProperty(), nameProperty(), expectedDurationProperty(), actualDurationProperty(),
-                taskBackgroundProperty(), taskTextColorProperty(), taskProgressBackgroundProperty() };
+                taskBackgroundProperty(), taskTextColorProperty(), taskProgressBackgroundProperty(), trimIntervalsProperty() };
     }
 
     /**
@@ -432,6 +477,26 @@ public class TaskItem extends LineElement {
                 change.getRemoved().forEach(tp -> {
                     tp.setParent(null);
                     tp.setTimeline(null);
+                });
+            }
+        }
+    }
+
+    private void intervalsListUpdated(ListChangeListener.Change<? extends TimeInterval> change) {
+        while (change.next()) {
+            if(change.wasAdded()) {
+                change.getAddedSubList().forEach(ti -> {
+                    ti.setParent(this);
+                    ti.setTimeline(getTimeline());
+
+                    //Trim the interval according to the size of the task item if the trimInterval property is true
+                    if(isTrimIntervals())
+                    {
+                        Instant EndTime = getStartTime().plusSeconds(getExpectedDuration());
+
+                        if(ti.getStartTime().isBefore(getStartTime())) ti.setStartTime(getStartTime());
+                        if(ti.getEndTime().isAfter(EndTime)) ti.setEndTime(EndTime);
+                    }
                 });
             }
         }

@@ -113,6 +113,11 @@ public abstract class Interval extends LineElement {
      * Class-specific Methods
      * *****************************************************************************************/
 
+    /**
+     * Return the properties that should trigger an update notification in case of
+     * change. Subclasses should override, if properties are added.
+     * @return the list of properties as array of {@link Observable}
+     */
     public Observable[] getObservableProperties()
     {
         return new Observable[] { colorProperty(), startTimeProperty(), endTimeProperty(), foregroundProperty() };

@@ -62,6 +62,14 @@ public interface ITaskLine extends ILineElement {
      */
     void renderLineBackground(GraphicsContext gc, int taskLineXStart, int taskLineYStart, int renderedLines, IRenderingContext rc);
 
+    /**
+     * Render the time interval of the task line
+     * @param gc the {@link GraphicsContext}
+     * @param taskLineYStart the Y offset where the interval has to start
+     * @param taskLineHeight the height of the task line that the interval should fill
+     * @param rc the {@link IRenderingContext}
+     * @param foreground draw interval on foreground
+     */
     void renderLineInterval(GraphicsContext gc, int taskLineYStart, int taskLineHeight, IRenderingContext rc, boolean foreground);
 
     /**

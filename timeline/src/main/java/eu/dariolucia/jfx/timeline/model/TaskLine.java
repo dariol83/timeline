@@ -46,7 +46,9 @@ public class TaskLine extends LineElement implements ITaskLine {
      * List of {@link TaskItem} belonging to the task line.
      */
     private final ObservableList<TaskItem> items = FXCollections.observableArrayList(TaskItem::getObservableProperties);
-
+    /**
+     * List of {@link TimeInterval} belonging to the task line.
+     */
     private final ObservableList<TimeInterval> intervals = FXCollections.observableArrayList(TimeInterval::getObservableProperties);
 
     /* *****************************************************************************************
@@ -90,6 +92,10 @@ public class TaskLine extends LineElement implements ITaskLine {
         return items;
     }
 
+    /**
+     * Return the list of {@link TimeInterval} belonging to the task line.
+     * @return the list of {@link TimeInterval} belonging to the task line.
+     */
     public ObservableList<TimeInterval> getIntervals() {
         return intervals;
     }
