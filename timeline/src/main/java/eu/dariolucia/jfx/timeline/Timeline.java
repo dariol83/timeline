@@ -176,8 +176,7 @@ public class Timeline extends GridPane implements IRenderingContext {
     /**
      * List of {@link TimeInterval} in the timeline.
      */
-    private final ObservableList<TimeInterval> timeIntervals = FXCollections.observableArrayList(timeInterval -> new Observable[] {
-            timeInterval.colorProperty(), timeInterval.startTimeProperty(), timeInterval.endTimeProperty(), timeInterval.foregroundProperty() });
+    private final ObservableList<TimeInterval> timeIntervals = FXCollections.observableArrayList(TimeInterval::getObservableProperties);
     /**
      * If true, mouse is allowed to selected/deselect a {@link TaskItem} by clicking on it.
      */

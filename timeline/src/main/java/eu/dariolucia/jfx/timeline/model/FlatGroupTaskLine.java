@@ -48,23 +48,23 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
      * *****************************************************************************************/
 
     @Override
-    protected int doRender(GraphicsContext gc, int groupXStart, int groupYStart, IRenderingContext rc) {
+    protected void doRender(GraphicsContext gc, int groupXStart, int groupYStart, IRenderingContext rc) {
         if(isCollapsedState()) {
-            return renderCollapsedGroup(gc, groupXStart, groupYStart, rc);
+            renderCollapsedGroup(gc, groupXStart, groupYStart, rc);
         } else {
-            return renderExpandedGroup(gc, groupXStart, groupYStart, rc);
+            renderExpandedGroup(gc, groupXStart, groupYStart, rc);
         }
     }
 
     /**
      * Render the flat group in a collapsed state.
-     * @param gc the {@link GraphicsContext}
+     *
+     * @param gc          the {@link GraphicsContext}
      * @param groupXStart the start X of the group in Canvas coordinates
      * @param groupYStart the start Y of the group in Canvas coordinates
-     * @param rc the {@link IRenderingContext}
-     * @return the complete height of the group
+     * @param rc          the {@link IRenderingContext}
      */
-    protected int renderCollapsedGroup(GraphicsContext gc, int groupXStart, int groupYStart, IRenderingContext rc) {
+    protected void renderCollapsedGroup(GraphicsContext gc, int groupXStart, int groupYStart, IRenderingContext rc) {
         // Render the line in the task panel
         int taskLineHeight = rc.getLineRowHeight();
         drawCollapsedGroupPanelBox(gc, groupXStart, groupYStart, (int) Math.round(rc.getTaskPanelWidth() - groupXStart), taskLineHeight, rc);
@@ -90,7 +90,6 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
         if(rc.getTaskProjectionHint() == TaskItemProjection.ALWAYS || rc.getTaskProjectionHint() == TaskItemProjection.COLLAPSE) {
             drawProjectedTasks(gc, groupYStart, rc);
         }
-        return taskLineHeight;
     }
 
     /**
@@ -139,13 +138,13 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
 
     /**
      * Draw the group in expanded state.
-     * @param gc the {@link GraphicsContext}
+     *
+     * @param gc          the {@link GraphicsContext}
      * @param groupXStart the X start of the group in canvas coordinates
      * @param groupYStart the Y start of the group in canvas coordinates
-     * @param rc the {@link IRenderingContext}
-     * @return the height of the group as rendered, in pixels
+     * @param rc          the {@link IRenderingContext}
      */
-    protected int renderExpandedGroup(GraphicsContext gc, int groupXStart, int groupYStart, IRenderingContext rc) {
+    protected void renderExpandedGroup(GraphicsContext gc, int groupXStart, int groupYStart, IRenderingContext rc) {
         int groupBoxWidth = rc.getLineRowHeight();
         // Render the sub lines
         int i = 0;
@@ -171,7 +170,6 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
         drawExpandedGroupName(gc, groupXStart, groupYStart, groupBoxWidth, groupBoxHeight, rc);
         // If not collapsed, the task projection cannot be rendered in any case
         // Return the box height
-        return groupBoxHeight;
     }
 
     /**

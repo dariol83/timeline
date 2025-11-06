@@ -79,7 +79,7 @@ public class HierarchicalGroupTaskLine extends CompositeTaskLine {
      * *****************************************************************************************/
 
     @Override
-    protected int doRender(GraphicsContext gc, int groupXStart, int groupYStart, IRenderingContext rc) {
+    protected void doRender(GraphicsContext gc, int groupXStart, int groupYStart, IRenderingContext rc) {
         int groupBoxHeight = getHeight(rc);
         int groupBoxWidth = (int) rc.getTaskPanelWidth() - groupXStart;
         // Draw the group box
@@ -117,8 +117,6 @@ public class HierarchicalGroupTaskLine extends CompositeTaskLine {
         if(rc.getTaskProjectionHint() == TaskItemProjection.ALWAYS || (rc.getTaskProjectionHint() == TaskItemProjection.COLLAPSE && isCollapsedState())) {
             drawProjectedTasks(gc, groupYStart, rc);
         }
-        // Remember box
-        return groupBoxHeight;
     }
 
     /**

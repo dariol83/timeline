@@ -62,6 +62,8 @@ public interface ITaskLine extends ILineElement {
      */
     void renderLineBackground(GraphicsContext gc, int taskLineXStart, int taskLineYStart, int renderedLines, IRenderingContext rc);
 
+    void renderLineInterval(GraphicsContext gc, int taskLineYStart, int taskLineHeight, IRenderingContext rc, boolean foreground);
+
     /**
      * This method requests the rendering of this task line, in line with the information provided as method's arguments.
      * This method is not supposed to be called by external class users.
