@@ -56,6 +56,10 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
      * List of {@link ITaskLine} contained lines.
      */
     private final ObservableList<ITaskLine> items = FXCollections.observableArrayList(ITaskLine::getObservableProperties);
+    /**
+     * List of {@link TimeInterval} belonging to the composite task line.
+     */
+    private final ObservableList<TimeInterval> intervals = FXCollections.observableArrayList(TimeInterval::getObservableProperties);
 
     /* *****************************************************************************************
      * Internal variables
@@ -80,6 +84,7 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
     protected CompositeTaskLine(String name, String description) {
         super(name, description);
         this.items.addListener(this::listUpdated);
+        this.intervals.addListener(this::listUpdated);
     }
 
     /* *****************************************************************************************
@@ -129,6 +134,13 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
     public ObservableList<ITaskLine> getItems() {
         return items;
     }
+    /**
+     * Return the list of {@link TimeInterval} belonging to the composite task line.
+     * @return the list of {@link TimeInterval} belonging to the composite task line.
+     */
+    public ObservableList<TimeInterval> getIntervals() {
+        return intervals;
+    }
 
     /* *****************************************************************************************
      * Rendering Methods
@@ -137,10 +149,23 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
     @Override
     public void render(GraphicsContext gc, int taskLineXStart, int taskLineYStart, IRenderingContext rc) {
         // Render
-        int renderedTotalHeight = doRender(gc, taskLineXStart, taskLineYStart, rc);
+        int renderedTotalHeight = getHeight(rc);
+        // Draw time intervals in background
+        renderLineInterval(gc, taskLineYStart, renderedTotalHeight, rc, false);
+        doRender(gc, taskLineXStart, taskLineYStart, rc);
+        // Draw time intervals in foreground
+        renderLineInterval(gc, taskLineYStart, renderedTotalHeight, rc, true);
         // Remember box
         double groupBoxTotalWidth = rc.toX(rc.getViewPortEnd()) - taskLineXStart;
         this.lastRenderedBounds = new BoundingBox(taskLineXStart, taskLineYStart, groupBoxTotalWidth, renderedTotalHeight);
+    }
+
+    @Override
+    public void renderLineInterval(GraphicsContext gc, int taskLineYStart, int taskLineHeight, IRenderingContext rc, boolean foreground) {
+        for(TimeInterval i : intervals)
+        {
+            if(i.isForeground() == foreground) i.render(gc, rc, taskLineYStart, taskLineHeight);
+        }
     }
 
     /**
@@ -149,9 +174,8 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
      * @param groupXStart the X start of the group in canvas coordinates
      * @param groupYStart the Y start of the group in canvas coordinates
      * @param rc the {@link IRenderingContext}
-     * @return the total height of the rendered task line, in pixels
      */
-    protected abstract int doRender(GraphicsContext gc, int groupXStart, int groupYStart, IRenderingContext rc);
+    protected abstract void doRender(GraphicsContext gc, int groupXStart, int groupYStart, IRenderingContext rc);
 
     @Override
     public void noRender() {
@@ -193,7 +217,7 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
      * Class-specific Methods
      * *****************************************************************************************/
 
-    private void listUpdated(ListChangeListener.Change<? extends ITaskLine> change) {
+    private void listUpdated(ListChangeListener.Change<? extends ILineElement> change) {
         while(change.next()) {
             if(change.wasAdded()) {
                 change.getAddedSubList().forEach(ti -> {
@@ -287,6 +311,22 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
             // Default implementation, do nothing and propagate down
             this.items.forEach(i -> i.notifyEvent(e, x, y));
         }
+    }
+
+    /* *****************************************************************************************
+     * Class-specific Methods
+     * *****************************************************************************************/
+
+    @Override
+    public int getNbOfLines()
+    {
+        if(!isCollapsedState())
+        {
+            int nbLines = 0;
+            for (ITaskLine tl : getItems()) nbLines += tl.getNbOfLines();
+            return nbLines;
+        }
+        else return 1;// Collapsed: 1 line
     }
 
 }

@@ -46,6 +46,10 @@ public class TaskLine extends LineElement implements ITaskLine {
      * List of {@link TaskItem} belonging to the task line.
      */
     private final ObservableList<TaskItem> items = FXCollections.observableArrayList(TaskItem::getObservableProperties);
+    /**
+     * List of {@link TimeInterval} belonging to the task line.
+     */
+    private final ObservableList<TimeInterval> intervals = FXCollections.observableArrayList(TimeInterval::getObservableProperties);
 
     /* *****************************************************************************************
      * Internal variables
@@ -73,6 +77,7 @@ public class TaskLine extends LineElement implements ITaskLine {
     public TaskLine(String name, String description) {
         super(name, description);
         this.items.addListener(this::listUpdated);
+        this.intervals.addListener(this::listUpdated);
     }
 
     /* *****************************************************************************************
@@ -85,6 +90,14 @@ public class TaskLine extends LineElement implements ITaskLine {
      */
     public ObservableList<TaskItem> getItems() {
         return items;
+    }
+
+    /**
+     * Return the list of {@link TimeInterval} belonging to the task line.
+     * @return the list of {@link TimeInterval} belonging to the task line.
+     */
+    public ObservableList<TimeInterval> getIntervals() {
+        return intervals;
     }
 
     /* *****************************************************************************************
@@ -115,8 +128,18 @@ public class TaskLine extends LineElement implements ITaskLine {
     }
 
     @Override
+    public void renderLineInterval(GraphicsContext gc, int taskLineYStart, int taskLineHeight, IRenderingContext rc, boolean foreground) {
+        for(TimeInterval i : intervals)
+        {
+            if(i.isForeground() == foreground) i.render(gc, rc, taskLineYStart, taskLineHeight);
+        }
+    }
+
+    @Override
     public void render(GraphicsContext gc, int taskLineXStart, int taskLineYStart, IRenderingContext rc) {
-        int taskLineHeight = rc.getLineRowHeight() * getNbOfLines();
+        int taskLineHeight = getHeight(rc);
+        // Draw time intervals in background
+        renderLineInterval(gc, taskLineYStart, taskLineHeight, rc, false);
         // Render the tasks in each rendered line
         int newTaskLineYStart = taskLineYStart;
         int i = 0;
@@ -125,6 +148,8 @@ public class TaskLine extends LineElement implements ITaskLine {
             newTaskLineYStart += rc.getLineRowHeight();
             ++i;
         }
+        // Draw time intervals in foreground
+        renderLineInterval(gc, taskLineYStart, taskLineHeight, rc, true);
         // Render the task line box in the task panel
         drawTaskLinePanelBox(gc, taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight, rc);
         // Render text
@@ -194,7 +219,7 @@ public class TaskLine extends LineElement implements ITaskLine {
      * Class-specific Methods
      * *****************************************************************************************/
 
-    private void listUpdated(ListChangeListener.Change<? extends TaskItem> change) {
+    private void listUpdated(ListChangeListener.Change<? extends ILineElement> change) {
         while(change.next()) {
             if(change.wasAdded()) {
                 change.getAddedSubList().forEach(ti -> {

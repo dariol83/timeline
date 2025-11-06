@@ -28,6 +28,16 @@ import java.util.List;
 public interface ITaskLine extends ILineElement {
 
     /**
+     * Return the height of task line in pixels
+     * @param rc {@link IRenderingContext}
+     * @return Return the height of task line in pixels
+     */
+    default int getHeight(IRenderingContext rc)
+    {
+        return rc.getLineRowHeight() * getNbOfLines();
+    }
+
+    /**
      * Return the number of lines rendered by this task line. This number changes depending on the type and number of
      * nested task lines and whether there are time overlaps between {@link TaskItem} of the same {@link TaskLine}.
      * @return the number of lines rendered by this object
@@ -51,6 +61,16 @@ public interface ITaskLine extends ILineElement {
      * @param rc the {@link IRenderingContext}
      */
     void renderLineBackground(GraphicsContext gc, int taskLineXStart, int taskLineYStart, int renderedLines, IRenderingContext rc);
+
+    /**
+     * Render the time interval of the task line
+     * @param gc the {@link GraphicsContext}
+     * @param taskLineYStart the Y offset where the interval has to start
+     * @param taskLineHeight the height of the task line that the interval should fill
+     * @param rc the {@link IRenderingContext}
+     * @param foreground draw interval on foreground
+     */
+    void renderLineInterval(GraphicsContext gc, int taskLineYStart, int taskLineHeight, IRenderingContext rc, boolean foreground);
 
     /**
      * This method requests the rendering of this task line, in line with the information provided as method's arguments.

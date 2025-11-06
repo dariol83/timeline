@@ -16,11 +16,8 @@
 
 package eu.dariolucia.jfx.timeline.model;
 
-import eu.dariolucia.jfx.timeline.Timeline;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.Observable;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
 
 import java.time.Instant;
 
@@ -28,34 +25,11 @@ import java.time.Instant;
  * A class used to place time intervals (also open-ended) on the timeline.
  * This class can be subclassed and the render() method can be overwritten.
  */
-public class TimeInterval {
-
-    /* *****************************************************************************************
-     * Properties
-     * *****************************************************************************************/
-
-    /**
-     * Start time of the time interval. If null, it is open-end.
-     */
-    private final SimpleObjectProperty<Instant> startTime = new SimpleObjectProperty<>();
-    /**
-     * End time of the time interval. If null, it is open-end.
-     */
-    private final SimpleObjectProperty<Instant> endTime = new SimpleObjectProperty<>();
-    /**
-     * If true, the time interval is drawn above {@link TaskItem}s.
-     */
-    private final SimpleBooleanProperty foreground = new SimpleBooleanProperty(false);
-    /**
-     * The color of the time interval.
-     */
-    private final SimpleObjectProperty<Color> color = new SimpleObjectProperty<>(new Color(Color.LIMEGREEN.getRed(), Color.LIMEGREEN.getGreen(), Color.LIMEGREEN.getBlue(), 0.5));
+public class TimeInterval extends Interval {
 
     /* *****************************************************************************************
      * Internal variables
      * *****************************************************************************************/
-
-    private Timeline timeline;
 
     /**
      * Class constructor.
@@ -63,60 +37,7 @@ public class TimeInterval {
      * @param endTime the end time, can be null
      */
     public TimeInterval(Instant startTime, Instant endTime) {
-        setStartTime(startTime);
-        setEndTime(endTime);
-    }
-
-    /* *****************************************************************************************
-     * Property Accessors
-     * *****************************************************************************************/
-
-    public Instant getStartTime() {
-        return startTime.get();
-    }
-
-    public SimpleObjectProperty<Instant> startTimeProperty() {
-        return startTime;
-    }
-
-    public void setStartTime(Instant startTime) {
-        this.startTime.set(startTime);
-    }
-
-    public Instant getEndTime() {
-        return endTime.get();
-    }
-
-    public SimpleObjectProperty<Instant> endTimeProperty() {
-        return endTime;
-    }
-
-    public void setEndTime(Instant endTime) {
-        this.endTime.set(endTime);
-    }
-
-    public boolean isForeground() {
-        return foreground.get();
-    }
-
-    public SimpleBooleanProperty foregroundProperty() {
-        return foreground;
-    }
-
-    public void setForeground(boolean foreground) {
-        this.foreground.set(foreground);
-    }
-
-    public Color getColor() {
-        return color.get();
-    }
-
-    public SimpleObjectProperty<Color> colorProperty() {
-        return color;
-    }
-
-    public void setColor(Color color) {
-        this.color.set(color);
+        super(startTime, endTime);
     }
 
     /* *****************************************************************************************
@@ -124,44 +45,34 @@ public class TimeInterval {
      * *****************************************************************************************/
 
     /**
-     * Render the time interval.
+     * Render the time interval. Subclasses can override.
      * @param gc the {@link GraphicsContext}
      * @param rc the {@link IRenderingContext}
      */
+    @Override
     public void render(GraphicsContext gc, IRenderingContext rc) {
+        render(gc, rc, rc.getHeaderRowHeight(), rc.getImageAreaHeight());
+    }
+
+    public void render(GraphicsContext gc, IRenderingContext rc, int startY, int Height) {
         double startX = getStartTime() == null || getStartTime().isBefore(rc.getViewPortStart()) ? rc.getTaskPanelWidth() : rc.toX(getStartTime());
         double endX = getEndTime() == null || getEndTime().isAfter(rc.getViewPortEnd()) ? rc.getImageAreaWidth() : rc.toX(getEndTime());
+
         gc.setFill(getColor());
-        gc.fillRect(startX, rc.getHeaderRowHeight(), endX - startX, rc.getImageAreaHeight());
+        gc.fillRect(startX, startY, endX - startX, Height);
     }
 
     /* *****************************************************************************************
      * Class-specific Methods
      * *****************************************************************************************/
 
-    /**
-     * Return the timeline containing this cursor, or null.
-     * @return the timeline containing this cursor, or null
-     */
-    public Timeline getTimeline() {
-        return timeline;
-    }
-
-    /**
-     * Set the timeline containing this cursor, or null.
-     * @param timeline the timeline containing this cursor, or null
-     */
-    public void setTimeline(Timeline timeline) {
-        this.timeline = timeline;
-    }
-
     @Override
     public String toString() {
         return "TimeInterval{" +
-                "startTime=" + startTime +
-                ", endTime=" + endTime +
-                ", foreground=" + foreground +
-                ", color=" + color +
+                "startTime=" + getStartTime() +
+                ", endTime=" + getEndTime() +
+                ", foreground=" + isForeground() +
+                ", color=" + getColor() +
                 '}';
     }
 }
