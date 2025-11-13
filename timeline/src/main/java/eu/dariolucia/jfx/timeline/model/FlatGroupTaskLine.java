@@ -154,7 +154,7 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
         }
         int groupBoxHeight = getHeight(rc);
         // Draw the group box
-        drawExpandedGroupPanelBox(gc, groupXStart, groupYStart, groupBoxWidth, groupBoxHeight, rc);
+        drawTaskLineBox(gc, groupXStart, groupYStart, groupBoxWidth, groupBoxHeight, rc);
         // If collapsible, render the symbol
         if(isCollapsible()) {
             int squareSize = rc.getTextHeight();
@@ -204,22 +204,6 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
     protected void drawExpandedToggleButton(GraphicsContext gc, int groupXStart, int groupYStart, int squareSize, IRenderingContext rc) {
         gc.setFill(rc.getPanelBorderColor());
         gc.strokeRect(groupXStart, groupYStart, squareSize, squareSize);
-    }
-
-    /**
-     * Draw the box of the group in the task panel in expanded state.
-     * @param gc the {@link GraphicsContext}
-     * @param groupXStart the X start of the group in canvas coordinates
-     * @param groupYStart the Y start of the group in canvas coordinates
-     * @param groupBoxWidth the width of the group box
-     * @param groupBoxHeight the height of the group box
-     * @param rc the {@link IRenderingContext}
-     */
-    protected void drawExpandedGroupPanelBox(GraphicsContext gc, int groupXStart, int groupYStart, int groupBoxWidth, int groupBoxHeight, IRenderingContext rc) {
-        gc.setFill(rc.getPanelBackground());
-        gc.setStroke(rc.getPanelBorderColor());
-        gc.fillRect(groupXStart, groupYStart, groupBoxWidth, groupBoxHeight);
-        gc.strokeRect(groupXStart, groupYStart, groupBoxWidth, groupBoxHeight);
     }
 
     @Override

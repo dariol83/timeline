@@ -151,7 +151,7 @@ public class TaskLine extends LineElement implements ITaskLine {
         // Draw time intervals in foreground
         renderLineInterval(gc, taskLineYStart, taskLineHeight, rc, true);
         // Render the task line box in the task panel
-        drawTaskLinePanelBox(gc, taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight, rc);
+        drawTaskLineBox(gc, taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight, rc);
         // Render text
         drawTaskLineName(gc, taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight, rc);
         // Remember boundaries
@@ -191,22 +191,6 @@ public class TaskLine extends LineElement implements ITaskLine {
     protected void drawTaskLineName(GraphicsContext gc, int taskLineXStart, int taskLineYStart, double taskLinePanelBoxWidth, int taskLineHeight, IRenderingContext rc) {
         gc.setStroke(rc.getPanelForegroundColor());
         gc.strokeText(getName(), taskLineXStart + rc.getTextPadding(), taskLineYStart + (int) Math.round(taskLineHeight/2.0 + rc.getTextHeight()/2.0), taskLinePanelBoxWidth - 2 * rc.getTextPadding());
-    }
-
-    /**
-     * Draw the box of the task line in the task panel. Subclasses can override.
-     * @param gc the {@link GraphicsContext}
-     * @param taskLineXStart the start X in Canvas coordinates of the task line
-     * @param taskLineYStart the start Y in Canvas coordinates of the task line
-     * @param taskLinePanelBoxWidth the width of the task line box in the task panel
-     * @param taskLineHeight the full height of the task line, i.e. including all rendering lines heights
-     * @param rc the {@link IRenderingContext}
-     */
-    protected void drawTaskLinePanelBox(GraphicsContext gc, int taskLineXStart, int taskLineYStart, double taskLinePanelBoxWidth, int taskLineHeight, IRenderingContext rc) {
-        gc.setStroke(rc.getPanelBorderColor());
-        gc.setFill(rc.getPanelBackground());
-        gc.fillRect(taskLineXStart, taskLineYStart, taskLinePanelBoxWidth, taskLineHeight);
-        gc.strokeRect(taskLineXStart, taskLineYStart, taskLinePanelBoxWidth, taskLineHeight);
     }
 
     @Override

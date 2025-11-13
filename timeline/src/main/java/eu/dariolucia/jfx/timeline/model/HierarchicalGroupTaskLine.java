@@ -83,7 +83,7 @@ public class HierarchicalGroupTaskLine extends CompositeTaskLine {
         int groupBoxHeight = getHeight(rc);
         int groupBoxWidth = (int) rc.getTaskPanelWidth() - groupXStart;
         // Draw the group box
-        drawGroupPanelBox(gc, groupXStart, groupYStart, groupBoxWidth, groupBoxHeight, rc);
+        drawTaskLineBox(gc, groupXStart, groupYStart, groupBoxWidth, groupBoxHeight, rc);
         // Render the bottom line
         gc.strokeLine(rc.getTaskPanelWidth(), groupYStart + rc.getLineRowHeight(), rc.getImageAreaWidth(), groupYStart + rc.getLineRowHeight());
         // If collapsible, render the symbol
@@ -117,22 +117,6 @@ public class HierarchicalGroupTaskLine extends CompositeTaskLine {
         if(rc.getTaskProjectionHint() == TaskItemProjection.ALWAYS || (rc.getTaskProjectionHint() == TaskItemProjection.COLLAPSE && isCollapsedState())) {
             drawProjectedTasks(gc, groupYStart, rc);
         }
-    }
-
-    /**
-     * Draw the box of the group in the task panel.
-     * @param gc the {@link GraphicsContext}
-     * @param groupXStart the X start of the group in canvas coordinates
-     * @param groupYStart the Y start of the group in canvas coordinates
-     * @param groupBoxWidth the width of the box in the task panel
-     * @param groupBoxHeight the height of the entire taskline
-     * @param rc the {@link IRenderingContext}
-     */
-    protected void drawGroupPanelBox(GraphicsContext gc, int groupXStart, int groupYStart, int groupBoxWidth, int groupBoxHeight, IRenderingContext rc) {
-        gc.setFill(rc.getPanelBackground());
-        gc.setStroke(rc.getPanelBorderColor());
-        gc.fillRect(groupXStart, groupYStart, groupBoxWidth, groupBoxHeight);
-        gc.strokeRect(groupXStart, groupYStart, groupBoxWidth, groupBoxHeight);
     }
 
     /**
