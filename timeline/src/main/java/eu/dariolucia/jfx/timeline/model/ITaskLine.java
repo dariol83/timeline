@@ -106,6 +106,16 @@ public interface ITaskLine extends ILineElement {
         gc.strokeRect(taskLineXStart, taskLineYStart, taskLineAdditionalBoxWidth, taskLineHeight);
     }
 
+    /**
+     * Draw the name of the task line in the additional panel. Subclasses can override.
+     * Composite task also uses this
+     * @param gc the {@link GraphicsContext}
+     * @param taskLineXStart the start X in Canvas coordinates of the task line
+     * @param taskLineYStart the start Y in Canvas coordinates of the task line
+     * @param taskLineAdditionalBoxWidth the width of the task line box in the additional panel
+     * @param taskLineHeight the full height of the task line, i.e. including all rendering lines heights
+     * @param rc the {@link IRenderingContext}
+     */
     default void drawAdditionalTaskLineName(GraphicsContext gc, int taskLineXStart, int taskLineYStart, double taskLineAdditionalBoxWidth, int taskLineHeight, IRenderingContext rc)
     {
         gc.setStroke(rc.getPanelForegroundColor());
