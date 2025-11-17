@@ -124,7 +124,7 @@ public class TaskLine extends LineElement implements ITaskLine {
      */
     protected void drawTaskLineSingleLineBackground(GraphicsContext gc, int taskLineXStart, int taskLineYStart, boolean isEvenLine, IRenderingContext rc) {
         gc.setFill(isEvenLine ? rc.getBackgroundColor() : ColorUtil.computeOddColor(rc.getBackgroundColor()));
-        gc.fillRect(taskLineXStart, taskLineYStart, rc.getImageAreaWidth() - taskLineXStart, rc.getLineRowHeight());
+        gc.fillRect(taskLineXStart, taskLineYStart, rc.getViewPortWidth(), rc.getLineRowHeight());
     }
 
     @Override
@@ -154,9 +154,13 @@ public class TaskLine extends LineElement implements ITaskLine {
         drawTaskLineBox(gc, taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight, rc);
         // Render text
         drawTaskLineName(gc, taskLineXStart, taskLineYStart, rc.getTaskPanelWidth() - taskLineXStart, taskLineHeight, rc);
+        // Render the task line box in the additional panel
+        drawAdditionalTaskLineBox(gc, (int)rc.getViewPortEndX(), taskLineYStart, rc.getAdditionalPanelWidth(), taskLineHeight, rc);
+        //Render description text
+        drawAdditionalTaskLineName(gc, (int)rc.getViewPortEndX(), taskLineYStart, rc.getAdditionalPanelWidth(), taskLineHeight, rc);
         // Remember boundaries
         updateLastRenderedBounds(new BoundingBox(taskLineXStart, taskLineYStart,
-                rc.getImageAreaWidth() - taskLineXStart, taskLineHeight));
+                rc.getViewPortEndX() - taskLineXStart, taskLineHeight));
     }
 
     /**
@@ -175,22 +179,12 @@ public class TaskLine extends LineElement implements ITaskLine {
         // Render bottom line
         if(lastLine) {
             gc.setStroke(rc.getPanelBorderColor());
-            gc.strokeLine(rc.getTaskPanelWidth(), taskLineYStart + rc.getLineRowHeight(), rc.getImageAreaWidth(), taskLineYStart + rc.getLineRowHeight());
+            gc.strokeLine(rc.getViewPortStartX(), taskLineYStart + rc.getLineRowHeight(), rc.getViewPortEndX(), taskLineYStart + rc.getLineRowHeight());
         }
     }
 
-    /**
-     * Draw the name of the task line in the task panel box. Subclasses can override.
-     * @param gc the {@link GraphicsContext}
-     * @param taskLineXStart the start X in Canvas coordinates of the task line
-     * @param taskLineYStart the start Y in Canvas coordinates of the task line
-     * @param taskLinePanelBoxWidth the width of the task line box in the task panel
-     * @param taskLineHeight the full height of the task line, i.e. including all rendering lines heights
-     * @param rc the {@link IRenderingContext}
-     */
-    protected void drawTaskLineName(GraphicsContext gc, int taskLineXStart, int taskLineYStart, double taskLinePanelBoxWidth, int taskLineHeight, IRenderingContext rc) {
-        gc.setStroke(rc.getPanelForegroundColor());
-        gc.strokeText(getName(), taskLineXStart + rc.getTextPadding(), taskLineYStart + (int) Math.round(taskLineHeight/2.0 + rc.getTextHeight()/2.0), taskLinePanelBoxWidth - 2 * rc.getTextPadding());
+    public void drawTaskLineName(GraphicsContext gc, int taskLineXStart, int taskLineYStart, double taskLinePanelBoxWidth, int taskLineHeight, IRenderingContext rc) {
+        drawTaskLineName(gc, taskLineXStart, taskLineYStart, taskLinePanelBoxWidth, taskLineHeight, 0, rc);
     }
 
     @Override

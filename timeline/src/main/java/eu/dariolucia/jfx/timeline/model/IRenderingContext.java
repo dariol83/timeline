@@ -93,6 +93,12 @@ public interface IRenderingContext {
     double getTaskPanelWidth();
 
     /**
+     * Return the size in pixel of the additional panel (right).
+     * @return the size in pixel of the additional panel
+     */
+    double getAdditionalPanelWidth();
+
+    /**
      * Return the height in pixel of a text line with the configured font (hardcoded string "Ig" used for the measure)
      * @return the height in pixel of a text line
      */
@@ -146,6 +152,27 @@ public interface IRenderingContext {
      * @return the width of the canvas in pixel
      */
     int getImageAreaWidth();
+
+    /**
+     * Return the width of the viewport in pixel.
+     * @return the width of the viewport in pixel.
+     */
+    default double getViewPortWidth()
+    {
+        return Math.abs(getViewPortEndX() - getViewPortStartX());
+    }
+
+    /**
+     * Return the start X coordinate of the viewport.
+     * @return the start X coordinate of the viewport.
+     */
+    double getViewPortStartX();
+
+    /**
+     * Return the end X coordinate of the viewport.
+     * @return the end X coordinate of the viewport.
+     */
+    double getViewPortEndX();
 
     /**
      * Return the height of the header row in pixel.

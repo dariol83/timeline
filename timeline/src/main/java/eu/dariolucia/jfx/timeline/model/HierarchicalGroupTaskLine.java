@@ -84,8 +84,10 @@ public class HierarchicalGroupTaskLine extends CompositeTaskLine {
         int groupBoxWidth = (int) rc.getTaskPanelWidth() - groupXStart;
         // Draw the group box
         drawTaskLineBox(gc, groupXStart, groupYStart, groupBoxWidth, groupBoxHeight, rc);
+        // Rendering the additional group box for the group header
+        drawAdditionalTaskLineBox(gc, (int)rc.getViewPortEndX(), groupYStart, rc.getAdditionalPanelWidth(), rc.getLineRowHeight(), rc);
         // Render the bottom line
-        gc.strokeLine(rc.getTaskPanelWidth(), groupYStart + rc.getLineRowHeight(), rc.getImageAreaWidth(), groupYStart + rc.getLineRowHeight());
+        gc.strokeLine(rc.getViewPortStartX(), groupYStart + rc.getLineRowHeight(), rc.getViewPortEndX(), groupYStart + rc.getLineRowHeight());
         // If collapsible, render the symbol
         int textOffset = 0;
         if(isCollapsible()) {
@@ -104,7 +106,9 @@ public class HierarchicalGroupTaskLine extends CompositeTaskLine {
             setCollapseButtonBoundingBox(null);
         }
         // Render name
-        drawGroupName(gc, groupXStart, groupYStart, textOffset, rc);
+        drawTaskLineName(gc, groupXStart, groupYStart, rc.getTaskPanelWidth(), rc.getLineRowHeight(), textOffset, rc);
+        // Render additional name
+        drawAdditionalTaskLineName(gc, (int)rc.getViewPortEndX(), groupYStart, rc.getAdditionalPanelWidth(), rc.getLineRowHeight(), rc);
         // Render the sub lines
         if(!isCollapsedState()) {
             int i = 1;
@@ -117,21 +121,6 @@ public class HierarchicalGroupTaskLine extends CompositeTaskLine {
         if(rc.getTaskProjectionHint() == TaskItemProjection.ALWAYS || (rc.getTaskProjectionHint() == TaskItemProjection.COLLAPSE && isCollapsedState())) {
             drawProjectedTasks(gc, groupYStart, rc);
         }
-    }
-
-    /**
-     * Draw the name of the group.
-     * @param gc the {@link GraphicsContext}
-     * @param groupXStart the X start of the group in canvas coordinates
-     * @param groupYStart the Y start of the group in canvas coordinates
-     * @param textOffset the offset to be added to the group start, on top of the text padding
-     * @param rc the {@link IRenderingContext}
-     */
-    protected void drawGroupName(GraphicsContext gc, int groupXStart, int groupYStart, int textOffset, IRenderingContext rc) {
-        gc.setStroke(rc.getPanelForegroundColor());
-        gc.strokeText(getName(), groupXStart + textOffset + rc.getTextPadding(),
-                (int) Math.round(groupYStart + rc.getLineRowHeight()/2.0 + rc.getTextHeight()/2.0),
-                rc.getTaskPanelWidth() - 2 * rc.getTextPadding() - groupXStart);
     }
 
     /**
@@ -185,7 +174,7 @@ public class HierarchicalGroupTaskLine extends CompositeTaskLine {
     protected void drawLineBackground(GraphicsContext gc, int groupXStart, int groupYStart, int renderedLines, IRenderingContext rc) {
         Color bgColor = renderedLines % 2 == 0 ? rc.getBackgroundColor() : ColorUtil.computeOddColor(rc.getBackgroundColor());
         gc.setFill(rc.isHighlightLine() ? ColorUtil.percentageUpdate(rc.getBackgroundColor(), -0.15) : bgColor);
-        gc.fillRect(groupXStart, groupYStart, rc.getImageAreaWidth() - groupXStart, rc.getLineRowHeight());
+        gc.fillRect(groupXStart, groupYStart, rc.getViewPortEndX() - groupXStart, rc.getLineRowHeight());
     }
 
     /* *****************************************************************************************
