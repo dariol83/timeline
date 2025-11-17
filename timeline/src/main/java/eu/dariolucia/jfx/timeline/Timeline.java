@@ -21,6 +21,7 @@ import eu.dariolucia.jfx.timeline.model.*;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.property.*;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -66,6 +67,7 @@ public class Timeline extends GridPane implements IRenderingContext {
      * *****************************************************************************************/
     private static final double TEXT_PADDING_DEFAULT = 5;
     private static final double TASK_PANEL_WIDTH_DEFAULT = 100;
+    private static final double ADDITIONAL_PANEL_WIDTH_DEFAULT = 0;
 
     /* *****************************************************************************************
      * JavaFX elements
@@ -104,6 +106,10 @@ public class Timeline extends GridPane implements IRenderingContext {
      * Width of the task panel (left), in pixels.
      */
     private final SimpleDoubleProperty taskPanelWidth = new SimpleDoubleProperty(TASK_PANEL_WIDTH_DEFAULT);
+    /**
+     * Width of the additional panel (right), in pixels.
+     */
+    private final SimpleDoubleProperty additionalPanelWidth = new SimpleDoubleProperty(ADDITIONAL_PANEL_WIDTH_DEFAULT);
     /**
      * Distance of the text from the border of the enclosing graphical item, in pixels.
      */
@@ -275,10 +281,9 @@ public class Timeline extends GridPane implements IRenderingContext {
         // Add listener when start time is updated (viewport update -> update scrollbar)
         viewPortStartProperty().addListener((e,o,n) -> recomputeViewport());
         // Add listener when task panel width is updated
-        taskPanelWidthProperty().addListener((e,o,n) -> {
-            updateHorizontalScrollbarFitInViewPort();
-            recomputeViewport();
-        });
+        taskPanelWidthProperty().addListener(panelChangeWidth);
+        // Add listener when additional panel width is updated
+        additionalPanelWidthProperty().addListener(panelChangeWidth);
         // Add listener when colors are updated
         backgroundColorProperty().addListener((e,o,n) -> internalRefresh());
         headerBackgroundProperty().addListener((e, o, n) -> internalRefresh());
@@ -402,7 +407,7 @@ public class Timeline extends GridPane implements IRenderingContext {
         // x indicates the pixel in canvas coordinates: first of all, we need to remove the task panel size
         x -= getTaskPanelWidth();
         // Now compute the percentage
-        double percentage = x / (this.imageArea.getWidth() - getTaskPanelWidth());
+        double percentage = x / getViewPortWidth();
         // Find out the instant from the viewport start
         return getViewPortStart().plusSeconds(Math.round(percentage * getViewPortDuration()));
     }
@@ -420,7 +425,7 @@ public class Timeline extends GridPane implements IRenderingContext {
         // Now check where timeSecs linearly is
         double percentage = (timeSecs - startTimeSecs)/ (double) getViewPortDuration();
         // Now translate to pixels
-        return percentage * (this.imageArea.getWidth() - getTaskPanelWidth()) + getTaskPanelWidth();
+        return (percentage * getViewPortWidth()) + getTaskPanelWidth();
     }
 
     /**
@@ -551,6 +556,16 @@ public class Timeline extends GridPane implements IRenderingContext {
     }
 
     @Override
+    public double getViewPortStartX() {
+        return getTaskPanelWidth();
+    }
+
+    @Override
+    public double getViewPortEndX() {
+        return getImageAreaWidth() - getAdditionalPanelWidth();
+    }
+
+    @Override
     public int getHeaderRowHeight() {
         return this.headerRowHeight;
     }
@@ -597,6 +612,11 @@ public class Timeline extends GridPane implements IRenderingContext {
     }
 
     @Override
+    public double getAdditionalPanelWidth() {
+        return additionalPanelWidth.get();
+    }
+
+    @Override
     public int getTextHeight() {
         return this.textHeight;
     }
@@ -612,6 +632,14 @@ public class Timeline extends GridPane implements IRenderingContext {
 
     public void setTaskPanelWidth(double taskPanelWidth) {
         this.taskPanelWidth.set(taskPanelWidth);
+    }
+
+    public SimpleDoubleProperty additionalPanelWidthProperty() {
+        return additionalPanelWidth;
+    }
+
+    public void setAdditionalPanelWidth(double additionalPanelWidth) {
+        this.additionalPanelWidth.set(additionalPanelWidth);
     }
 
     /**
@@ -1010,7 +1038,7 @@ public class Timeline extends GridPane implements IRenderingContext {
 
     private void updateHorizontalScrollbarFitInViewPort() {
         if (isHorizontalScrollbarFitInViewPort()) {
-            GridPane.setMargin(this.horizontalScroll, new Insets(0, 0, 0, getTaskPanelWidth()));
+            GridPane.setMargin(this.horizontalScroll, new Insets(0, getAdditionalPanelWidth(), 0, getTaskPanelWidth()));
         } else {
             GridPane.setMargin(this.horizontalScroll, new Insets(0, 0, 0, 0));
         }
@@ -1190,7 +1218,7 @@ public class Timeline extends GridPane implements IRenderingContext {
         if(totalLines > 0) {
             // Compute the max size
             int fullSize = totalLines * this.lineRowHeight;
-            double totalSize = fullSize - this.imageArea.getHeight() + this.headerRowHeight;
+            double totalSize = fullSize - getImageAreaHeight() + this.headerRowHeight;
             if(totalSize < 0) {
                 // There is no need of a scrollbar in this case
                 this.verticalScroll.setMax(0);
@@ -1207,10 +1235,10 @@ public class Timeline extends GridPane implements IRenderingContext {
                 this.verticalScroll.setValue(currentValue);
                 this.verticalScroll.setUnitIncrement(this.lineRowHeight);
                 // Set block increment
-                this.verticalScroll.setBlockIncrement(this.imageArea.getHeight() - this.headerRowHeight);
+                this.verticalScroll.setBlockIncrement(getImageAreaHeight() - this.headerRowHeight);
                 // Set visible amount if area is ready
-                if (this.imageArea.getHeight() > 0) {
-                    this.verticalScroll.setVisibleAmount((totalSize / fullSize) * (this.imageArea.getHeight() - this.headerRowHeight));
+                if (getImageAreaHeight() > 0) {
+                    this.verticalScroll.setVisibleAmount((totalSize / fullSize) * (getImageAreaHeight() - this.headerRowHeight));
                 } else {
                     this.verticalScroll.setVisibleAmount(1);
                 }
@@ -1296,7 +1324,7 @@ public class Timeline extends GridPane implements IRenderingContext {
 
     private void recomputeArea() {
         // Based on the size of the area, compute the optimal way to draw the header information
-        this.headerElement = computeHeaderElement(this.imageArea.getGraphicsContext2D(), this.imageArea.getWidth(), getViewPortDuration());
+        this.headerElement = computeHeaderElement(this.imageArea.getGraphicsContext2D(), getImageAreaWidth(), getViewPortDuration());
         // Recompute text and row height
         measureFontHeight(this.imageArea.getGraphicsContext2D().getFont());
 
@@ -1405,12 +1433,14 @@ public class Timeline extends GridPane implements IRenderingContext {
         drawBackground(gc);
         // Draw calendar headers, no vertical lines
         drawHeaders(gc);
-        // Draw empty side panel
+        // Draw empty side panel (left)
         drawEmptySidePanel(gc);
+        // Draw empty additional panel (right)
+        drawEmptyAdditionalPanel(gc);
         // Prepare the clipping
         gc.save();
         gc.beginPath();
-        gc.rect(0, getHeaderRowHeight(), this.imageArea.getWidth(), this.imageArea.getHeight() - getHeaderRowHeight());
+        gc.rect(0, getHeaderRowHeight(), getImageAreaWidth(), getImageAreaHeight() - getHeaderRowHeight());
         gc.closePath();
         gc.clip();
         // Draw timeline background
@@ -1535,6 +1565,13 @@ public class Timeline extends GridPane implements IRenderingContext {
         gc.strokeRect(0, this.headerRowHeight, getTaskPanelWidth(), getImageAreaHeight() - this.headerRowHeight);
     }
 
+    protected void drawEmptyAdditionalPanel(GraphicsContext gc) {
+        gc.setFill(getPanelBackground());
+        gc.setStroke(getPanelBorderColor());
+        gc.fillRect(getViewPortEndX(), this.headerRowHeight, getAdditionalPanelWidth(), getImageAreaHeight() - this.headerRowHeight);
+        gc.strokeRect(getViewPortEndX(), this.headerRowHeight, getAdditionalPanelWidth(), getImageAreaHeight() - this.headerRowHeight);
+    }
+
     private void drawHeaders(GraphicsContext gc) {
         // The header is composed by one line, containing the time information depending on the resolution
         // Get the start time and round it to the previous step, depending on the headerElement value
@@ -1561,6 +1598,8 @@ public class Timeline extends GridPane implements IRenderingContext {
         gc.setStroke(getHeaderBorderColor());
         gc.fillRect(0, 0, getTaskPanelWidth(), this.headerRowHeight);
         gc.strokeRect(0, 0, getTaskPanelWidth(), this.headerRowHeight);
+        gc.fillRect(getViewPortEndX(), 0, getAdditionalPanelWidth(), this.headerRowHeight);
+        gc.strokeRect(getViewPortEndX(), 0, getAdditionalPanelWidth(), this.headerRowHeight);
     }
 
     private void drawHeaderVerticalLines(GraphicsContext gc) {
@@ -1593,7 +1632,7 @@ public class Timeline extends GridPane implements IRenderingContext {
      */
     protected void drawHeaderLine(GraphicsContext gc, Instant startTime) {
         int xStart = (int) toX(startTime);
-        if(xStart < getTaskPanelWidth()) {
+        if(xStart < getTaskPanelWidth() || xStart > getViewPortEndX()) {
             return;
         }
         int height = this.headerRowHeight;
@@ -1633,4 +1672,13 @@ public class Timeline extends GridPane implements IRenderingContext {
             gc.strokeText(toWrite, xStart + getTextPadding(), getTextHeight()/2.0 + height/2.0);
         }
     }
+
+    /* *****************************************************************************************
+     * Class-specific Methods
+     * *****************************************************************************************/
+
+    private ChangeListener<? super Number> panelChangeWidth = (e,o,n) -> {
+        updateHorizontalScrollbarFitInViewPort();
+        recomputeViewport();
+    };
 }

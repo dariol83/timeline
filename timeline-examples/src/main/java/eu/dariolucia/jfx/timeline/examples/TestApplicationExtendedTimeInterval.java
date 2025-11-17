@@ -34,6 +34,7 @@ public class TestApplicationExtendedTimeInterval extends Application {
         // Add task lines
         HierarchicalGroupTaskLine HGroup = new HierarchicalGroupTaskLine("HierarchicalGroup");
         HGroup.setCollapsible(true);
+
         // Add time interval on hierarchical task line in the foreground
         TimeInterval interval = new TimeInterval(currentTime.plus(3, ChronoUnit.DAYS), currentTime.plus(6, ChronoUnit.DAYS));
         interval.setColor(new Color(Color.PURPLE.getRed(), Color.PURPLE.getGreen(), Color.PURPLE.getBlue(), 0.4));
@@ -45,6 +46,7 @@ public class TestApplicationExtendedTimeInterval extends Application {
         taskLine.getItems().add(createTaskItem("Item1", currentTime.plus(12, ChronoUnit.HOURS), Duration.ofDays(2).toSeconds(), 3600 * 14));
         taskLine.getItems().add(createTaskItem("Item2", currentTime.plus(3, ChronoUnit.DAYS), Duration.ofDays(1).toSeconds(), 0));
         taskLine.getItems().add(createTaskItem("Item3", currentTime.plus(10, ChronoUnit.DAYS), Duration.ofDays(1).toSeconds(), 0));
+
         // Add time interval on task line in the foreground
         interval = new TimeInterval(currentTime.plus(1, ChronoUnit.DAYS), currentTime.plus(3, ChronoUnit.DAYS).plus(12, ChronoUnit.HOURS));
         interval.setColor(new Color(Color.RED.getRed(), Color.RED.getGreen(), Color.RED.getBlue(), 0.4));
@@ -57,6 +59,7 @@ public class TestApplicationExtendedTimeInterval extends Application {
 
         FlatGroupTaskLine FGroup = new FlatGroupTaskLine("FlatGroup");
         FGroup.setCollapsible(true);
+
         // Add time interval on flat task line in the background
         interval = new TimeInterval(currentTime.plus(1, ChronoUnit.DAYS), currentTime.plus(2, ChronoUnit.DAYS).plus(12, ChronoUnit.HOURS));
         interval.setColor(new Color(Color.GREEN.getRed(), Color.GREEN.getGreen(), Color.GREEN.getBlue(), 0.4));
@@ -70,6 +73,7 @@ public class TestApplicationExtendedTimeInterval extends Application {
         taskLine = new TaskLine("TaskLine2");
         TaskItem item = createTaskItem("Item1", currentTime.plus(4, ChronoUnit.DAYS), Duration.ofDays(4).toSeconds(), 3600 * 3);
         taskLine.getItems().add(item);
+
         // Add time interval on task item in the foreground (This interval will be NOT truncated to the size of the TaskItem)
         item.setTrimIntervals(false);
         interval = new TimeInterval(currentTime.plus(5, ChronoUnit.DAYS), currentTime.plus(9, ChronoUnit.DAYS));
@@ -79,6 +83,7 @@ public class TestApplicationExtendedTimeInterval extends Application {
         //
         item = createTaskItem("Item2", currentTime.plus(9, ChronoUnit.DAYS).plus(12, ChronoUnit.HOURS), Duration.ofDays(7).toSeconds(), 3600 * 5);
         taskLine.getItems().add(item);
+
         // Add time interval on task item in the foreground (This interval will be truncated to the size of the TaskItem)
         interval = new TimeInterval(currentTime, currentTime.plus(13, ChronoUnit.DAYS));
         interval.setColor(new Color(Color.BLUE.getRed(), Color.BLUE.getGreen(), Color.BLUE.getBlue(), 0.2));
@@ -88,8 +93,13 @@ public class TestApplicationExtendedTimeInterval extends Application {
 
         FGroup.getItems().add(taskLine);
         HGroup.getItems().add(FGroup);
-
         tl.getItems().add(HGroup);
+
+        // Add time interval on time line in the foreground
+        interval = new TimeInterval(currentTime.plus(14, ChronoUnit.DAYS), currentTime.plus(15, ChronoUnit.DAYS));
+        interval.setColor(new Color(Color.SPRINGGREEN.getRed(), Color.SPRINGGREEN.getGreen(), Color.SPRINGGREEN.getBlue(), 0.2));
+        interval.setForeground(true);
+        tl.getTimeIntervals().add(interval);
 
         // Add to application and render
         StackPane root = new StackPane();

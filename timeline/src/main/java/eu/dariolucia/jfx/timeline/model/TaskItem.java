@@ -225,18 +225,20 @@ public class TaskItem extends LineElement {
         Instant endTimeExp = getStartTime().plusSeconds(getExpectedDuration());
         Instant endTimeAct = getActualDuration() >= 0 ? getStartTime().plusSeconds(getActualDuration()) : null;
         Instant endTime = endTimeAct != null && endTimeAct.isAfter(endTimeExp) ? endTimeAct : endTimeExp;
+
+        int startY = taskLineYStart + (int) rc.getTextPadding();
+        int taskHeight = (int) Math.round(rc.getLineRowHeight() - 2 * rc.getTextPadding());
+
+        // Draw time intervals in background
+        drawTaskItemInterval(gc, startY, taskHeight, rc, false);
         // Render only if in viewport
         if(rc.isInViewPort(getStartTime(), endTime)) {
             // Convert to X coordinates
             int startX = (int) rc.toX(getStartTime());
-            int startY = taskLineYStart + (int) rc.getTextPadding();
             // Expected end coordinate
             int endX = (int) rc.toX(endTimeExp);
             // Is selected
             boolean isSelected = rc.getSelectedTaskItems().contains(this);
-            int taskHeight = (int) Math.round(rc.getLineRowHeight() - 2 * rc.getTextPadding());
-            // Draw time intervals in background
-            drawTaskItemInterval(gc, startY, taskHeight, rc, false);
             // Render now expected
             drawTaskItemBox(gc, startX, startY, endX - startX, taskHeight, isSelected, rc);
             // Render now actual
@@ -248,13 +250,13 @@ public class TaskItem extends LineElement {
             }
             // Render text
             drawTaskItemName(gc, startX, startY, endX - startX, taskHeight, isSelected, rc);
-            // Draw time intervals in foreground
-            drawTaskItemInterval(gc, startY, taskHeight, rc, true);
             //Render time points
             drawTaskItemTimePoints(gc, rc, startX, startY, endX - startX, taskHeight);
             // Remember rendering box in pixel coordinates
             updateLastRenderedBounds(new BoundingBox(startX, startY, Math.max(endX, actualEndX) - startX, taskHeight));
         }
+        // Draw time intervals in foreground
+        drawTaskItemInterval(gc, startY, taskHeight, rc, true);
     }
 
     /**

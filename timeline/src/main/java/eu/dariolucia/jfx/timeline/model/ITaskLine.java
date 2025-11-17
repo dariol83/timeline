@@ -53,6 +53,78 @@ public interface ITaskLine extends ILineElement {
     boolean computeRenderingStructure();
 
     /**
+     * Draw the box of the task line in the task panel. Subclasses can override.
+     * Composite task also uses this
+     * @param gc the {@link GraphicsContext}
+     * @param taskLineXStart the start X in Canvas coordinates of the task line
+     * @param taskLineYStart the start Y in Canvas coordinates of the task line
+     * @param taskLinePanelBoxWidth the width of the task line box in the task panel
+     * @param taskLineHeight the full height of the task line, i.e. including all rendering lines heights
+     * @param rc the {@link IRenderingContext}
+     */
+    default void drawTaskLineBox(GraphicsContext gc, int taskLineXStart, int taskLineYStart, double taskLinePanelBoxWidth, int taskLineHeight, IRenderingContext rc)
+    {
+        gc.setStroke(rc.getPanelBorderColor());
+        gc.setFill(rc.getPanelBackground());
+        gc.fillRect(0, taskLineYStart, taskLineXStart+taskLinePanelBoxWidth, taskLineHeight);
+        gc.strokeRect(taskLineXStart, taskLineYStart, taskLinePanelBoxWidth, taskLineHeight);
+    }
+
+    /**
+     * Draw the name of the task line in the task panel box. Subclasses can override.
+     * Composite task also uses this
+     * @param gc the {@link GraphicsContext}
+     * @param taskLineXStart the start X in Canvas coordinates of the task line
+     * @param taskLineYStart the start Y in Canvas coordinates of the task line
+     * @param taskLinePanelBoxWidth the width of the task line box in the task panel
+     * @param taskLineHeight the full height of the task line, i.e. including all rendering lines heights
+     * @param rc the {@link IRenderingContext}
+     * @param textOffset the offset to be added to the group/line start, on top of the text padding
+     */
+    default void drawTaskLineName(GraphicsContext gc, int taskLineXStart, int taskLineYStart, double taskLinePanelBoxWidth, int taskLineHeight, int textOffset, IRenderingContext rc)
+    {
+        gc.setStroke(rc.getPanelForegroundColor());
+        gc.strokeText(getName(), taskLineXStart + textOffset + rc.getTextPadding(),
+            taskLineYStart + (int) Math.round(taskLineHeight/2.0 + rc.getTextHeight()/2.0),
+            taskLinePanelBoxWidth - 2 * rc.getTextPadding() - taskLineXStart);
+    }
+
+    /**
+     * Draw the box of the task line in the additional panel. Subclasses can override.
+     * @param gc the {@link GraphicsContext}
+     * @param taskLineXStart the start X in Canvas coordinates of the task line
+     * @param taskLineYStart the start Y in Canvas coordinates of the task line
+     * @param taskLineAdditionalBoxWidth the width of the task line box in the additional panel
+     * @param taskLineHeight the full height of the task line, i.e. including all rendering lines heights
+     * @param rc the {@link IRenderingContext}
+     */
+    default void drawAdditionalTaskLineBox(GraphicsContext gc, int taskLineXStart, int taskLineYStart, double taskLineAdditionalBoxWidth, int taskLineHeight, IRenderingContext rc)
+    {
+        gc.setStroke(rc.getPanelBorderColor());
+        gc.setFill(rc.getPanelBackground());
+        gc.fillRect(taskLineXStart, taskLineYStart, taskLineAdditionalBoxWidth, taskLineHeight);
+        gc.strokeRect(taskLineXStart, taskLineYStart, taskLineAdditionalBoxWidth, taskLineHeight);
+    }
+
+    /**
+     * Draw the name of the task line in the additional panel. Subclasses can override.
+     * Composite task also uses this
+     * @param gc the {@link GraphicsContext}
+     * @param taskLineXStart the start X in Canvas coordinates of the task line
+     * @param taskLineYStart the start Y in Canvas coordinates of the task line
+     * @param taskLineAdditionalBoxWidth the width of the task line box in the additional panel
+     * @param taskLineHeight the full height of the task line, i.e. including all rendering lines heights
+     * @param rc the {@link IRenderingContext}
+     */
+    default void drawAdditionalTaskLineName(GraphicsContext gc, int taskLineXStart, int taskLineYStart, double taskLineAdditionalBoxWidth, int taskLineHeight, IRenderingContext rc)
+    {
+        gc.setStroke(rc.getPanelForegroundColor());
+        gc.strokeText(getDescription(), taskLineXStart + rc.getTextPadding(),
+                taskLineYStart + (int) Math.round(taskLineHeight/2.0 + rc.getTextHeight()/2.0),
+                taskLineAdditionalBoxWidth - 2 * rc.getTextPadding());
+    }
+
+    /**
      * Render the background of the task line.
      * @param gc the {@link GraphicsContext}
      * @param taskLineXStart the X offset where the background coverage has to start

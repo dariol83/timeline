@@ -67,7 +67,10 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
     protected void renderCollapsedGroup(GraphicsContext gc, int groupXStart, int groupYStart, IRenderingContext rc) {
         // Render the line in the task panel
         int taskLineHeight = rc.getLineRowHeight();
-        drawCollapsedGroupPanelBox(gc, groupXStart, groupYStart, (int) Math.round(rc.getTaskPanelWidth() - groupXStart), taskLineHeight, rc);
+        // Draw the group box
+        drawTaskLineBox(gc, groupXStart, groupYStart, rc.getTaskPanelWidth() - groupXStart, taskLineHeight, rc);
+        // Rendering the additional group box for the group header
+        drawAdditionalTaskLineBox(gc, (int)rc.getViewPortEndX(), groupYStart, rc.getAdditionalPanelWidth(), taskLineHeight, rc);
         // If collapsible, render the symbol
         int textOffset = 0;
         if(isCollapsible()) {
@@ -82,29 +85,16 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
             setCollapseButtonBoundingBox(null);
         }
         // Render name
-        drawCollapsedGroupName(gc, groupXStart, groupYStart, textOffset, rc);
+        drawTaskLineName(gc, groupXStart, groupYStart, rc.getTaskPanelWidth(), taskLineHeight, textOffset, rc);
+        // Render additional name
+        drawAdditionalTaskLineName(gc, (int)rc.getViewPortEndX(), groupYStart, rc.getAdditionalPanelWidth(), taskLineHeight, rc);
         // Render task bottom line
         gc.setStroke(rc.getPanelBorderColor());
-        gc.strokeLine(rc.getTaskPanelWidth(), groupYStart + rc.getLineRowHeight(), rc.getImageAreaWidth(), groupYStart + rc.getLineRowHeight());
+        gc.strokeLine(rc.getViewPortStartX(), groupYStart + taskLineHeight, rc.getViewPortEndX(), groupYStart + taskLineHeight);
         // Task projection
         if(rc.getTaskProjectionHint() == TaskItemProjection.ALWAYS || rc.getTaskProjectionHint() == TaskItemProjection.COLLAPSE) {
             drawProjectedTasks(gc, groupYStart, rc);
         }
-    }
-
-    /**
-     * Draw the name of the group in collapsed state.
-     * @param gc the {@link GraphicsContext}
-     * @param groupXStart the X start of the group in canvas coordinates
-     * @param groupYStart the Y start of the group in canvas coordinates
-     * @param textOffset the offset to be added to the group start, on top of the text padding
-     * @param rc the {@link IRenderingContext}
-     */
-    protected void drawCollapsedGroupName(GraphicsContext gc, int groupXStart, int groupYStart, int textOffset, IRenderingContext rc) {
-        gc.setStroke(rc.getPanelForegroundColor());
-        gc.strokeText(getName(), groupXStart + textOffset + rc.getTextPadding(),
-                (int) Math.round(groupYStart + rc.getLineRowHeight()/2.0 + rc.getTextHeight()/2.0),
-                rc.getTaskPanelWidth() - 2 * rc.getTextPadding() - groupXStart);
     }
 
     /**
@@ -118,22 +108,6 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
     protected void drawCollapsedToggleButton(GraphicsContext gc, int groupXStart, int groupYStart, int squareSize, IRenderingContext rc) {
         gc.setFill(rc.getPanelBorderColor());
         gc.fillRect(groupXStart, groupYStart, squareSize, squareSize);
-    }
-
-    /**
-     * Draw the box of the group in the task panel in collapsed state.
-     * @param gc the {@link GraphicsContext}
-     * @param groupXStart the X start of the group in canvas coordinates
-     * @param groupYStart the Y start of the group in canvas coordinates
-     * @param groupBoxWidth the width of the group box
-     * @param groupBoxHeight the height of the group box
-     * @param rc the {@link IRenderingContext}
-     */
-    protected void drawCollapsedGroupPanelBox(GraphicsContext gc, int groupXStart, int groupYStart, int groupBoxWidth, int groupBoxHeight, IRenderingContext rc) {
-        gc.setStroke(rc.getPanelBorderColor());
-        gc.setFill(rc.getPanelBackground());
-        gc.fillRect(groupXStart, groupYStart, groupBoxWidth, groupBoxHeight);
-        gc.strokeRect(groupXStart, groupYStart, groupBoxWidth, groupBoxHeight);
     }
 
     /**
@@ -154,7 +128,7 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
         }
         int groupBoxHeight = getHeight(rc);
         // Draw the group box
-        drawExpandedGroupPanelBox(gc, groupXStart, groupYStart, groupBoxWidth, groupBoxHeight, rc);
+        drawTaskLineBox(gc, groupXStart, groupYStart, groupBoxWidth, groupBoxHeight, rc);
         // If collapsible, render the symbol
         if(isCollapsible()) {
             int squareSize = rc.getTextHeight();
@@ -206,22 +180,6 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
         gc.strokeRect(groupXStart, groupYStart, squareSize, squareSize);
     }
 
-    /**
-     * Draw the box of the group in the task panel in expanded state.
-     * @param gc the {@link GraphicsContext}
-     * @param groupXStart the X start of the group in canvas coordinates
-     * @param groupYStart the Y start of the group in canvas coordinates
-     * @param groupBoxWidth the width of the group box
-     * @param groupBoxHeight the height of the group box
-     * @param rc the {@link IRenderingContext}
-     */
-    protected void drawExpandedGroupPanelBox(GraphicsContext gc, int groupXStart, int groupYStart, int groupBoxWidth, int groupBoxHeight, IRenderingContext rc) {
-        gc.setFill(rc.getPanelBackground());
-        gc.setStroke(rc.getPanelBorderColor());
-        gc.fillRect(groupXStart, groupYStart, groupBoxWidth, groupBoxHeight);
-        gc.strokeRect(groupXStart, groupYStart, groupBoxWidth, groupBoxHeight);
-    }
-
     @Override
     public void renderLineBackground(GraphicsContext gc, int groupXStart, int groupYStart, int renderedLines, IRenderingContext rc) {
         // Render the background of the sub-lines in expanded state
@@ -248,7 +206,7 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
     protected void drawCollapsedLineBackground(GraphicsContext gc, int groupXStart, int groupYStart, int renderedLines, IRenderingContext rc) {
         Color bgColor = renderedLines % 2 == 0 ? rc.getBackgroundColor() : ColorUtil.computeOddColor(rc.getBackgroundColor());
         gc.setFill(rc.isHighlightLine() ? ColorUtil.percentageUpdate(rc.getBackgroundColor(), -0.15) : bgColor);
-        gc.fillRect(groupXStart, groupYStart, rc.getImageAreaWidth() - groupXStart, rc.getLineRowHeight());
+        gc.fillRect(groupXStart, groupYStart, rc.getViewPortEndX() - groupXStart, rc.getLineRowHeight());
     }
 
 }

@@ -28,8 +28,9 @@ public class TimePoint extends LineElement {
     private final SimpleObjectProperty<Instant> time = new SimpleObjectProperty<>();
     /**
      * Color of the point.
+     * if null then stroke and fill color is Color.PEACHPUFF, but images will use their source color
      */
-    private final SimpleObjectProperty<Color> color = new SimpleObjectProperty<>(Color.PEACHPUFF);
+    private final SimpleObjectProperty<Color> color = new SimpleObjectProperty<>(null);
     /**
      * Text color of the point.
      */
@@ -37,7 +38,7 @@ public class TimePoint extends LineElement {
     /**
      * It is used to store an image with a changed color, saves rendering time.
      */
-    private WritableImage cachedWritableImage = null;
+    private Image cachedImage = null;
 
     /* *****************************************************************************************
      * Internal variables
@@ -54,8 +55,9 @@ public class TimePoint extends LineElement {
         setTime(time);
         setType(Type);
 
-        img.addListener((observable, oldValue, newValue) -> {
-            cachedWritableImage = null;
+        // Clear cached image when set new image
+        this.img.addListener((observable, oldValue, newValue) -> {
+            cachedImage = null;
         });
     }
 
@@ -149,10 +151,17 @@ public class TimePoint extends LineElement {
 
         StartY += taskItemHeight/2 - (int)size/2;
 
-        gc.setStroke(getColor());
-        gc.setFill(getColor());
+        if(getColor() == null)
+        {
+            gc.setStroke(Color.PEACHPUFF);
+            gc.setFill(Color.PEACHPUFF);
+        }
+        else
+        {
+            gc.setStroke(getColor());
+            gc.setFill(getColor());
+        }
         gc.setFont(gc.getFont());
-
         gc.setLineWidth(1);
 
         switch (getType())
@@ -177,21 +186,30 @@ public class TimePoint extends LineElement {
             }
             case IMG:
             {
-                if(cachedWritableImage == null)
+                //cachedImage used for optimised image recolor
+                if(cachedImage == null)
                 {
-                    cachedWritableImage = new WritableImage((int) getImage().getWidth(), (int) getImage().getHeight());
-
-                    for (int y = 0; y < cachedWritableImage.getHeight(); y++)
+                    //if color has been changed, then replace image color
+                    if(getColor() != null)
                     {
-                        for (int x = 0; x < cachedWritableImage.getWidth(); x++)
+                        WritableImage writableImage = new WritableImage((int) getImage().getWidth(), (int) getImage().getHeight());
+
+                        for (int y = 0; y < writableImage.getHeight(); y++)
                         {
-                            Color SourceColor = getImage().getPixelReader().getColor(x, y);
-                            if(SourceColor.isOpaque()) cachedWritableImage.getPixelWriter().setColor(x, y, getColor());
+                            for (int x = 0; x < writableImage.getWidth(); x++)
+                            {
+                                Color SourceColor = getImage().getPixelReader().getColor(x, y);
+                                writableImage.getPixelWriter().setColor(x, y, (SourceColor.isOpaque()) ? getColor() : SourceColor);
+                            }
                         }
+
+                        cachedImage = writableImage;
                     }
+                    //else use source image color
+                    else cachedImage = getImage();
                 }
 
-                gc.drawImage(cachedWritableImage, X, StartY, size, size);
+                gc.drawImage(cachedImage, X, StartY, size, size);
             }
         }
 

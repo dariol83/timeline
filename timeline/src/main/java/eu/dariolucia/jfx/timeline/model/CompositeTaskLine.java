@@ -207,8 +207,8 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
         gc.setFill(rc.getTaskProjectionBackgroundColor());
         int startY = taskLineYStart + (int) rc.getTextPadding();
         for(TaskItem ti : tasksToMerge) {
-            int startX = Math.max((int) rc.toX(ti.getStartTime()), (int) rc.getTaskPanelWidth());
-            int endX = (int) rc.toX(ti.getStartTime().plusSeconds(Math.max(ti.getExpectedDuration(), ti.getActualDuration())));
+            int startX = (int) Math.max(rc.toX(ti.getStartTime()), rc.getViewPortStartX());
+            int endX = (int) Math.min(rc.toX(ti.getStartTime().plusSeconds(Math.max(ti.getExpectedDuration(), ti.getActualDuration()))), rc.getViewPortEndX());
             gc.fillRect(startX, startY, endX - startX, (int) (rc.getLineRowHeight() - 2 * rc.getTextPadding()));
         }
     }
