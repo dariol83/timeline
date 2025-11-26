@@ -54,8 +54,6 @@ public class TaskLine extends LineElement implements ITaskLine {
     /* *****************************************************************************************
      * Internal variables
      * *****************************************************************************************/
-
-    private BoundingBox lastRenderedBounds;
     /**
      * The rendering lines as computed by the class.
      */
@@ -159,8 +157,7 @@ public class TaskLine extends LineElement implements ITaskLine {
         //Render description text
         drawAdditionalTaskLineName(gc, (int)rc.getViewPortEndX(), taskLineYStart, rc.getAdditionalPanelWidth(), taskLineHeight, rc);
         // Remember boundaries
-        updateLastRenderedBounds(new BoundingBox(taskLineXStart, taskLineYStart,
-                rc.getViewPortEndX() - taskLineXStart, taskLineHeight));
+        updateLastRenderedBounds(new BoundingBox(taskLineXStart, taskLineYStart, rc.getViewPortEndX() - taskLineXStart, taskLineHeight));
     }
 
     /**
@@ -255,32 +252,6 @@ public class TaskLine extends LineElement implements ITaskLine {
             }
         }
         return this.renderingLines.size() != oldSize;
-    }
-
-    /**
-     * To be used by subclasses. Set the latest bounding box as computed by the rendering process.
-     * @param boundingBox the bounding box to set in canvas coordinates
-     */
-    protected void updateLastRenderedBounds(BoundingBox boundingBox) {
-        this.lastRenderedBounds = boundingBox;
-    }
-
-    /**
-     * Return the bounding box if the line was rendered in the latest rendering cycle, otherwise null
-     * @return the bounding box in canvas coordinates if rendered, otherwise null
-     */
-    protected BoundingBox getLastRenderedBounds() {
-        return lastRenderedBounds;
-    }
-
-    @Override
-    public boolean contains(double x, double y) {
-        return this.lastRenderedBounds != null && this.lastRenderedBounds.contains(x, y);
-    }
-
-    @Override
-    public boolean isRendered() {
-        return this.lastRenderedBounds != null;
     }
 
     @Override

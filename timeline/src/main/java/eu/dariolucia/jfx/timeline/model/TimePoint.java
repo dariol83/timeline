@@ -2,6 +2,7 @@ package eu.dariolucia.jfx.timeline.model;
 
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
@@ -142,7 +143,11 @@ public class TimePoint extends LineElement {
      */
     protected void render(GraphicsContext gc, IRenderingContext rc, int StartX, int StartY, int taskItemWidth, int taskItemHeight) {
         double X = rc.toX(getTime());
-        if(X > StartX+taskItemWidth || X < StartX) return;
+        if(X > StartX+taskItemWidth || X < StartX)
+        {
+            noRender();
+            return;
+        }
 
         double MaxSize = taskItemHeight-(2*rc.getTextPadding());
 
@@ -222,6 +227,9 @@ public class TimePoint extends LineElement {
 
             gc.setTextAlign(TextAlignment.LEFT);
         }
+
+        // Remember rendering box in pixel coordinates
+        updateLastRenderedBounds(new BoundingBox(X, StartY, size, size));
     }
 
     /* *****************************************************************************************

@@ -16,7 +16,7 @@
 
 package eu.dariolucia.jfx.timeline.model;
 
-import javafx.beans.Observable;
+import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
 
 import java.time.Instant;
@@ -63,7 +63,11 @@ public class TimeInterval extends Interval {
 
             gc.setFill(getColor());
             gc.fillRect(startX, startY, endX - startX, Height);
+
+            // Remember rendering box in pixel coordinates
+            updateLastRenderedBounds(new BoundingBox(startX, startY, endX - startX, Height));
         }
+        else noRender();
     }
 
     /* *****************************************************************************************

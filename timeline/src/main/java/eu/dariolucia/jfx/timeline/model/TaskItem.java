@@ -83,8 +83,6 @@ public class TaskItem extends LineElement {
     /* *****************************************************************************************
      * Internal variables
      * *****************************************************************************************/
-
-    private BoundingBox lastRenderedBounds;
     private Object userData;
 
     /**
@@ -399,40 +397,6 @@ public class TaskItem extends LineElement {
     }
 
     /**
-     * To be called by subclasses.
-     * @param boundingBox the bounding box or null
-     */
-    protected final void updateLastRenderedBounds(BoundingBox boundingBox) {
-        this.lastRenderedBounds = boundingBox;
-    }
-
-    /**
-     * Return the latest rendered bounding box of the task item, or null if not rendered. To be called by subclasses.
-     * @return the latest rendered bounding box in canvas coordinates, or null if not rendered
-     */
-    protected final BoundingBox getLastRenderedBounds() {
-        return lastRenderedBounds;
-    }
-
-    /**
-     * Return true if the x,y values in canvas coordinates are contained in the bounds of the task item.
-     * @param x the x in canvas coordinates
-     * @param y the y in canvas coordinates
-     * @return true if the x,y values are contained in the bounds of the task item, otherwise false
-     */
-    public final boolean contains(double x, double y) {
-        return this.lastRenderedBounds != null && this.lastRenderedBounds.contains(x, y);
-    }
-
-    /**
-     * Return true if the task item was rendered in the last rendering iteration, otherwise false.
-     * @return true if the task item was rendered in the last rendering iteration, otherwise false
-     */
-    public final boolean isRendered() {
-        return this.lastRenderedBounds != null;
-    }
-
-    /**
      * Return true if the task item includes the specified time, otherwise false.
      * @param time the time to check
      * @return true if the task item includes the specified time, otherwise false
@@ -442,13 +406,6 @@ public class TaskItem extends LineElement {
         long startTimeSecond = getStartTime().getEpochSecond();
         long endTimeSecond = getStartTime().plusSeconds(Math.max(getActualDuration(), getExpectedDuration())).getEpochSecond();
         return timeSeconds >= startTimeSecond && timeSeconds <= endTimeSecond;
-    }
-
-    /**
-     * Subclasses can override, as long as the update of the boundaries in set to null.
-     */
-    public void noRender() {
-        updateLastRenderedBounds(null);
     }
 
     /**
