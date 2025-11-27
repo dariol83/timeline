@@ -256,7 +256,7 @@ public class TaskLine extends LineElement implements ITaskLine {
 
     @Override
     public Observable[] getObservableProperties() {
-        return new Observable[] { nameProperty(), descriptionProperty(), getItems() };
+        return new Observable[] { nameProperty(), descriptionProperty(), getItems(), getIntervals() };
     }
 
     @Override

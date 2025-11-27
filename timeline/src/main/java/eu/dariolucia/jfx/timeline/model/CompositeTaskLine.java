@@ -262,7 +262,7 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
 
     @Override
     public Observable[] getObservableProperties() {
-        return new Observable[] { nameProperty(), descriptionProperty(), getItems(), collapsibleProperty(),
+        return new Observable[] { nameProperty(), descriptionProperty(), getItems(), getIntervals(), collapsibleProperty(),
         collapsedProperty() };
     }
 

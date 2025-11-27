@@ -392,7 +392,7 @@ public class TaskItem extends LineElement {
      */
     public Observable[] getObservableProperties() {
         return new Observable[] {
-                startTimeProperty(), nameProperty(), expectedDurationProperty(), actualDurationProperty(),
+                startTimeProperty(), nameProperty(), expectedDurationProperty(), actualDurationProperty(), getTimePoints(), getIntervals(),
                 taskBackgroundProperty(), taskTextColorProperty(), taskProgressBackgroundProperty(), trimIntervalsProperty() };
     }
 
