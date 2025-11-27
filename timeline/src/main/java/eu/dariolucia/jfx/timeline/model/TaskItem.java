@@ -451,11 +451,18 @@ public class TaskItem extends LineElement {
                     //Trim the interval according to the size of the task item if the trimInterval property is true
                     if(isTrimIntervals())
                     {
-                        Instant EndTime = getStartTime().plusSeconds(getExpectedDuration());
+                        Instant EndTime = getStartTime().plusSeconds(Math.max(getActualDuration(), getExpectedDuration()));
 
-                        if(ti.getStartTime().isBefore(getStartTime())) ti.setStartTime(getStartTime());
-                        if(ti.getEndTime().isAfter(EndTime)) ti.setEndTime(EndTime);
+                        if(ti.getStartTime() == null || ti.getStartTime().isBefore(getStartTime())) ti.setStartTime(getStartTime());
+                        if(ti.getEndTime() == null || ti.getEndTime().isAfter(EndTime)) ti.setEndTime(EndTime);
                     }
+                });
+            }
+            if(change.wasRemoved())
+            {
+                change.getRemoved().forEach(ti -> {
+                    ti.setParent(null);
+                    ti.setTimeline(null);
                 });
             }
         }

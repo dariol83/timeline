@@ -51,6 +51,8 @@ public abstract class Interval extends LineElement {
      * *****************************************************************************************/
 
     public Instant getStartTime() {
+        if(startTime.get() == null) return Instant.MIN;
+
         return startTime.get();
     }
 
@@ -63,6 +65,8 @@ public abstract class Interval extends LineElement {
     }
 
     public Instant getEndTime() {
+        if(endTime.get() == null) return Instant.MAX;
+
         return endTime.get();
     }
 
