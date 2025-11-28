@@ -169,10 +169,17 @@ public class TaskLine extends LineElement implements ITaskLine {
      * @param rc the {@link IRenderingContext}
      */
     protected void drawTaskLineSingleLine(GraphicsContext gc, List<TaskItem> taskItemsInLine, int taskLineYStart, boolean lastLine, IRenderingContext rc) {
+        // Draw time intervals in background for all task items in line
+        taskItemsInLine.forEach(taskItem -> taskItem.drawTaskItemInterval(gc, taskLineYStart, rc, false));
+
         // Render task items
         for(TaskItem ti : taskItemsInLine) {
             ti.render(gc, taskLineYStart, rc);
         }
+
+        // Draw time intervals in foreground for all task items in line
+        taskItemsInLine.forEach(taskItem -> taskItem.drawTaskItemInterval(gc, taskLineYStart, rc, true));
+
         // Render bottom line
         if(lastLine) {
             gc.setStroke(rc.getPanelBorderColor());

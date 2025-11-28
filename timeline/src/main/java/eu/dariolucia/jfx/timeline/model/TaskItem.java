@@ -227,8 +227,6 @@ public class TaskItem extends LineElement {
         int startY = taskLineYStart + (int) rc.getTextPadding();
         int taskHeight = (int) Math.round(rc.getLineRowHeight() - 2 * rc.getTextPadding());
 
-        // Draw time intervals in background
-        drawTaskItemInterval(gc, startY, taskHeight, rc, false);
         // Render only if in viewport
         if(rc.isInViewPort(getStartTime(), endTime)) {
             // Convert to X coordinates
@@ -253,8 +251,6 @@ public class TaskItem extends LineElement {
             // Remember rendering box in pixel coordinates
             updateLastRenderedBounds(new BoundingBox(startX, startY, Math.max(endX, actualEndX) - startX, taskHeight));
         }
-        // Draw time intervals in foreground
-        drawTaskItemInterval(gc, startY, taskHeight, rc, true);
     }
 
     /**
@@ -273,15 +269,18 @@ public class TaskItem extends LineElement {
     /**
      * Draw the time interval on a task item. Subclasses can override.
      * @param gc the {@link GraphicsContext}
-     * @param taskItemStartY the Y offset where the interval has to start
-     * @param taskItemHeight the height of the task item that the interval should fill
+     * @param taskLineStartY the Y offset where the task line begins in which the task item is located
      * @param rc the {@link IRenderingContext}
      * @param foreground draw interval on foreground
      */
-    public void drawTaskItemInterval(GraphicsContext gc, int taskItemStartY, int taskItemHeight, IRenderingContext rc, boolean foreground) {
+    public void drawTaskItemInterval(GraphicsContext gc, int taskLineStartY, IRenderingContext rc, boolean foreground)
+    {
+        int YStart = taskLineStartY + (int)rc.getTextPadding();
+        int Height = (int) Math.round(rc.getLineRowHeight() - 2 * rc.getTextPadding());
+
         for(TimeInterval i : intervals)
         {
-            if(i.isForeground() == foreground) i.render(gc, rc, taskItemStartY, taskItemHeight);
+            if(i.isForeground() == foreground) i.render(gc, rc, YStart, Height);
         }
     }
 
