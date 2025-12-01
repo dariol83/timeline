@@ -83,13 +83,15 @@ public class TimeTooltip extends LineElement
 
     public void render(GraphicsContext gc, IRenderingContext rc, double startX, double startY) {
         String[] Lines = getName().split("\n");
-        startX += rc.getTextPadding()*2; //Indentation so that the tooltip is not under the cursor
+
+        double Width = rc.getTextWidth(gc, getName()) + rc.getTextPadding()*2;
+        double Height = rc.getTextHeight()*Lines.length + rc.getTextPadding()*2;
 
         gc.setFill(getTooltipBackground());
         gc.setStroke(getTooltipBorderColor());
 
-        double Width = rc.getTextWidth(gc, getName()) + rc.getTextPadding()*2;
-        double Height = rc.getTextHeight()*Lines.length + rc.getTextPadding()*2;
+        if(startX + rc.getTextPadding()*2 + Width <= rc.getViewPortEndX()) startX += rc.getTextPadding()*2; //Indentation so that the tooltip is not under the cursor
+        else startX -= Width; //If the tooltip extends beyond the right border of the viewport, we will display the tooltip to the left of the cursor.
 
         gc.fillRect(startX, startY, Width, Height);
         gc.strokeRect(startX, startY, Width, Height);
