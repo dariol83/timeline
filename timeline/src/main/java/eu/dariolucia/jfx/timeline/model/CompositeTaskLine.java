@@ -27,6 +27,7 @@ import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -84,6 +85,11 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
         super(name, description);
         this.items.addListener(this::listUpdated);
         this.intervals.addListener(this::listUpdated);
+
+        //Clearing the BoundingBox hierarchy
+        this.collapsed.addListener((observable, oldValue, newValue) -> {
+            if(newValue) noRender();
+        });
     }
 
     /* *****************************************************************************************
@@ -178,8 +184,9 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
 
     @Override
     public void noRender() {
-        this.items.forEach(ITaskLine::noRender);
-        updateLastRenderedBounds(null);
+        getIntervals().forEach(LineElement::noRender);
+        getItems().forEach(ITaskLine::noRender);
+        super.noRender();
     }
 
     /**
@@ -269,6 +276,15 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
     @Override
     public List<TaskItem> getTaskItems() {
         return this.items.stream().flatMap(i -> i.getTaskItems().stream()).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TimeInterval> getAllLineInterval() {
+        List<TimeInterval> intervalList = new ArrayList<>(this.intervals);
+
+        for(ITaskLine line : getItems()) intervalList.addAll(line.getAllLineInterval());
+
+        return intervalList;
     }
 
     @Override

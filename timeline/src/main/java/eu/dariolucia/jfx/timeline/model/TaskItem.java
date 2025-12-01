@@ -79,6 +79,10 @@ public class TaskItem extends LineElement {
      * List of {@link TimeInterval} on a task item
      */
     private final ObservableList<TimeInterval> intervals = FXCollections.observableArrayList(TimeInterval::getObservableProperties);
+    /**
+     * Tooltip for task item
+     */
+    private SimpleObjectProperty<TimeTooltip> tooltip = new SimpleObjectProperty<>(null);
 
     /* *****************************************************************************************
      * Internal variables
@@ -208,6 +212,18 @@ public class TaskItem extends LineElement {
         return intervals;
     }
 
+    public TimeTooltip getTooltip() {
+        return tooltip.get();
+    }
+
+    public void setTooltip(TimeTooltip tooltip) {
+        this.tooltip.set(tooltip);
+    }
+
+    public SimpleObjectProperty<TimeTooltip> tooltipProperty() {
+        return tooltip;
+    }
+
     /* *****************************************************************************************
      * Rendering Methods
      * *****************************************************************************************/
@@ -251,6 +267,13 @@ public class TaskItem extends LineElement {
             // Remember rendering box in pixel coordinates
             updateLastRenderedBounds(new BoundingBox(startX, startY, Math.max(endX, actualEndX) - startX, taskHeight));
         }
+    }
+
+    @Override
+    public void noRender() {
+        getTimePoints().forEach(LineElement::noRender);
+        getIntervals().forEach(LineElement::noRender);
+        super.noRender();
     }
 
     /**
@@ -392,7 +415,7 @@ public class TaskItem extends LineElement {
     public Observable[] getObservableProperties() {
         return new Observable[] {
                 startTimeProperty(), nameProperty(), expectedDurationProperty(), actualDurationProperty(), getTimePoints(), getIntervals(),
-                taskBackgroundProperty(), taskTextColorProperty(), taskProgressBackgroundProperty(), trimIntervalsProperty() };
+                taskBackgroundProperty(), taskTextColorProperty(), taskProgressBackgroundProperty(), trimIntervalsProperty(), tooltipProperty() };
     }
 
     /**

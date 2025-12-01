@@ -40,6 +40,10 @@ public class TimePoint extends LineElement {
      * It is used to store an image with a changed color, saves rendering time.
      */
     private Image cachedImage = null;
+    /**
+     * Tooltip for time point
+     */
+    private SimpleObjectProperty<TimeTooltip> tooltip = new SimpleObjectProperty<>(null);
 
     /* *****************************************************************************************
      * Internal variables
@@ -126,6 +130,18 @@ public class TimePoint extends LineElement {
 
     public void setTextColor(Color color) {
         this.textColor.set(color);
+    }
+
+    public TimeTooltip getTooltip() {
+        return tooltip.get();
+    }
+
+    public void setTooltip(TimeTooltip tooltip) {
+        this.tooltip.set(tooltip);
+    }
+
+    public SimpleObjectProperty<TimeTooltip> tooltipProperty() {
+        return tooltip;
     }
 
     /* *****************************************************************************************
@@ -243,7 +259,7 @@ public class TimePoint extends LineElement {
      */
     public Observable[] getObservableProperties() {
         return new Observable[] {
-                imageProperty(), nameProperty(), typeProperty(),
+                imageProperty(), nameProperty(), typeProperty(), tooltipProperty(),
                 timeProperty(), colorProperty(), textColorProperty() };
     }
 }

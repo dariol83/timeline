@@ -25,6 +25,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableListBase;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.SnapshotParameters;
@@ -33,6 +34,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.SelectionModel;
+import javafx.scene.control.Tooltip;
 import javafx.scene.effect.Effect;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
@@ -49,11 +51,9 @@ import javafx.scene.text.TextBoundsType;
 import java.time.*;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A timeline is a graphical JavaFX component that can be used to display tasks and groups of tasks, time cursors
@@ -220,7 +220,18 @@ public class Timeline extends GridPane implements IRenderingContext {
      * Hint to select when task item projection on task line headers shall be rendered.
      */
     private final SimpleObjectProperty<TaskItemProjection> taskProjectionHint = new SimpleObjectProperty<>(TaskItemProjection.COLLAPSE);
-
+    /**
+     * Tooltip for displaying
+     */
+    private TimeTooltip showedTooltip = null;
+    /**
+     * The X coordinate of the cursor
+     */
+    private double cursorX = 0.0;
+    /**
+     * The Y coordinate of the cursor
+     */
+    private double cursorY = 0.0;
     /* *****************************************************************************************
      * Internal variables
      * *****************************************************************************************/
@@ -321,6 +332,7 @@ public class Timeline extends GridPane implements IRenderingContext {
 
         // Add listener for task item selection
         this.imageArea.addEventHandler(MouseEvent.MOUSE_CLICKED, this::mouseClickedAction);
+        this.imageArea.addEventHandler(MouseEvent.MOUSE_MOVED, this::mouseMoveAction);
         this.imageArea.addEventHandler(ScrollEvent.ANY, this::mouseScrolledAction);
 
         // Perform initial drawing
@@ -1156,6 +1168,86 @@ public class Timeline extends GridPane implements IRenderingContext {
         }
     }
 
+    //[TaskLines]->[TaskItems]->[TimePoints]->Tooltip
+    private TimeTooltip getTooltipInTimePoints()
+    {
+        TimePoint point = getItems().stream()
+                .filter(taskLine -> taskLine.contains(cursorX, cursorY) && !taskLine.getTaskItems().isEmpty())
+                .flatMap(taskLine -> taskLine.getTaskItems().stream())
+                .filter(taskItem -> taskItem.contains(cursorX, cursorY) && !taskItem.getTimePoints().isEmpty())
+                .flatMap(taskItem -> taskItem.getTimePoints().stream())
+                .filter(timePoint -> timePoint.contains(this.cursorX, this.cursorY) && timePoint.getTooltip() != null)
+                .findFirst().orElse(null);
+
+        if(point != null) return point.getTooltip();
+
+        return null;
+    }
+
+    //[Timeline]->[TimeInterval]->Tooltip
+    //[TaskLines]->[TimeInterval]->Tooltip
+    //[TaskLines]->[TaskItems]->[TimeInterval]->Tooltip
+    private TimeTooltip getTooltipInTimeInterval()
+    {
+        //Global intervals on timeline
+        TimeInterval interval = getTimeIntervals().stream()
+                .filter(timeInterval -> timeInterval.contains(cursorX, cursorY) && timeInterval.getTooltip() != null)
+                .findFirst().orElse(null);
+
+        //intervals on task lines and task items
+        if(interval == null)
+        {
+            interval = getItems().stream()
+                    .filter(taskLine -> taskLine.contains(cursorX, cursorY) && !taskLine.getAllLineInterval().isEmpty())
+                    .flatMap(taskLine -> taskLine.getAllLineInterval().stream())
+                    .filter(timeInterval -> timeInterval.contains(cursorX, cursorY) && timeInterval.getTooltip() != null)
+                    .findFirst().orElse(null);
+        }
+
+        if(interval != null) return interval.getTooltip();
+
+        return null;
+    }
+
+    //[TaskLines]->[TaskItems]->Tooltip
+    private TimeTooltip getTooltipInTaskItem()
+    {
+        TaskItem item = getItems().stream()
+                .filter(taskLine -> taskLine.contains(cursorX, cursorY) && !taskLine.getTaskItems().isEmpty())
+                .flatMap(taskLine -> taskLine.getTaskItems().stream())
+                .filter(taskItem -> taskItem.contains(cursorX, cursorY) && taskItem.getTooltip() != null)
+                .findFirst().orElse(null);
+
+        if(item != null) return item.getTooltip();
+
+        return null;
+    }
+
+    private void mouseMoveAction(MouseEvent mouseEvent)
+    {
+        cursorX = mouseEvent.getX();
+        cursorY = mouseEvent.getY();
+
+        //refreshNeeded used for remove of last tooltip
+        boolean refreshNeeded = showedTooltip != null;
+        showedTooltip = null;
+
+        //[First priority level]
+        //Looking for priority tooltips for time point
+        //We display them even if they are under the time interval with another tooltip
+        showedTooltip = getTooltipInTimePoints();
+
+        //[Second priority level]
+        //If couldn't find the tooltip in task items, go ahead and search for the tooltip in all time intervals.
+        if(showedTooltip == null) showedTooltip = getTooltipInTimeInterval();
+
+        //[Third priority level]
+        //If the tooltip is still not found, proceed to search for the tooltip inside the task items.
+        if(showedTooltip == null) showedTooltip = getTooltipInTaskItem();
+
+        if(showedTooltip != null || refreshNeeded) internalRefresh();
+    }
+
     private void mouseClickedAction(MouseEvent mouseEvent) {
         // Get X,Y coordinates and check which task item is affected
         TaskItem selectedTaskItem = getTaskItemAt(mouseEvent.getX(), mouseEvent.getY());
@@ -1455,6 +1547,8 @@ public class Timeline extends GridPane implements IRenderingContext {
         drawTimeIntervals(gc, this, true);
         // Draw cursors
         drawCursors(gc, this);
+        // Draw Tooltip
+        if(this.showedTooltip != null) this.showedTooltip.render(gc, this, this.cursorX, this.cursorY);
         // Restore
         gc.restore();
     }

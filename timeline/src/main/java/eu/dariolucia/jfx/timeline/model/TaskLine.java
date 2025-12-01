@@ -193,8 +193,9 @@ public class TaskLine extends LineElement implements ITaskLine {
 
     @Override
     public void noRender() {
-        this.items.forEach(TaskItem::noRender);
-        updateLastRenderedBounds(null);
+        getIntervals().forEach(LineElement::noRender);
+        getItems().forEach(TaskItem::noRender);
+        super.noRender();
     }
 
     /* *****************************************************************************************
@@ -269,6 +270,15 @@ public class TaskLine extends LineElement implements ITaskLine {
     @Override
     public List<TaskItem> getTaskItems() {
         return Collections.unmodifiableList(this.items);
+    }
+
+    @Override
+    public List<TimeInterval> getAllLineInterval() {
+        List<TimeInterval> intervalList = new ArrayList<>(this.intervals);
+
+        for(TaskItem item : getItems()) intervalList.addAll(item.getIntervals());
+
+        return intervalList;
     }
 
     @Override
