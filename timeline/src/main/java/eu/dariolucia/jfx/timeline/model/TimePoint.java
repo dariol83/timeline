@@ -43,7 +43,7 @@ public class TimePoint extends LineElement {
     /**
      * Tooltip for time point
      */
-    private SimpleObjectProperty<TimeTooltip> tooltip = new SimpleObjectProperty<>(null);
+    private final SimpleObjectProperty<TimeTooltip> tooltip = new SimpleObjectProperty<>(null);
 
     /* *****************************************************************************************
      * Internal variables

@@ -82,7 +82,7 @@ public class TaskItem extends LineElement {
     /**
      * Tooltip for task item
      */
-    private SimpleObjectProperty<TimeTooltip> tooltip = new SimpleObjectProperty<>(null);
+    private final SimpleObjectProperty<TimeTooltip> tooltip = new SimpleObjectProperty<>(null);
 
     /* *****************************************************************************************
      * Internal variables
@@ -111,8 +111,9 @@ public class TaskItem extends LineElement {
         this.startTime.set(startTime);
         this.expectedDuration.set(expectedDuration);
         this.actualDuration.set(actualDuration);
-        this.timePoints.addListener(this::timePointListUpdated);
-        this.intervals.addListener(this::intervalsListUpdated);
+
+        this.timePoints.addListener(this::listUpdated);
+        this.intervals.addListener(this::listUpdated);
     }
 
     /* *****************************************************************************************
@@ -446,42 +447,15 @@ public class TaskItem extends LineElement {
                 (itemStartTime <= thisStartTime && itemEndTime >= thisEndTime);
     }
 
-    private void timePointListUpdated(ListChangeListener.Change<? extends TimePoint> change) {
+    private void listUpdated(ListChangeListener.Change<? extends ILineElement> change) {
         while(change.next()) {
-            if(change.wasAdded()) {
-                change.getAddedSubList().forEach(tp -> {
-                    tp.setParent(this);
-                    tp.setTimeline(getTimeline());
-                });
-            }
-            if(change.wasRemoved()) {
-                change.getRemoved().forEach(tp -> {
-                    tp.setParent(null);
-                    tp.setTimeline(null);
-                });
-            }
-        }
-    }
-
-    private void intervalsListUpdated(ListChangeListener.Change<? extends TimeInterval> change) {
-        while (change.next()) {
             if(change.wasAdded()) {
                 change.getAddedSubList().forEach(ti -> {
                     ti.setParent(this);
                     ti.setTimeline(getTimeline());
-
-                    //Trim the interval according to the size of the task item if the trimInterval property is true
-                    if(isTrimIntervals())
-                    {
-                        Instant EndTime = getStartTime().plusSeconds(Math.max(getActualDuration(), getExpectedDuration()));
-
-                        if(ti.getStartTime() == null || ti.getStartTime().isBefore(getStartTime())) ti.setStartTime(getStartTime());
-                        if(ti.getEndTime() == null || ti.getEndTime().isAfter(EndTime)) ti.setEndTime(EndTime);
-                    }
                 });
             }
-            if(change.wasRemoved())
-            {
+            if(change.wasRemoved()) {
                 change.getRemoved().forEach(ti -> {
                     ti.setParent(null);
                     ti.setTimeline(null);

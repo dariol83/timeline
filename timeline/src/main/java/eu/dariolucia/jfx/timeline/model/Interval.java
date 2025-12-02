@@ -33,7 +33,7 @@ public abstract class Interval extends LineElement {
     /**
      * Tooltip for time interval
      */
-    private SimpleObjectProperty<TimeTooltip> tooltip = new SimpleObjectProperty<>(null);
+    private final SimpleObjectProperty<TimeTooltip> tooltip = new SimpleObjectProperty<>(null);
     /* *****************************************************************************************
      * Internal variables
      * *****************************************************************************************/
