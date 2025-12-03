@@ -47,12 +47,9 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextBoundsType;
 
 import java.time.*;
-import java.time.temporal.ChronoField;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -220,7 +217,22 @@ public class Timeline extends GridPane implements IRenderingContext {
      * Hint to select when task item projection on task line headers shall be rendered.
      */
     private final SimpleObjectProperty<TaskItemProjection> taskProjectionHint = new SimpleObjectProperty<>(TaskItemProjection.COLLAPSE);
-
+    /**
+     * Tooltip for displaying
+     */
+    private TimeTooltip showedTooltip = null;
+    /**
+     * The X coordinate of the cursor
+     */
+    private double cursorX = 0.0;
+    /**
+     * The Y coordinate of the cursor
+     */
+    private double cursorY = 0.0;
+    /**
+     * Contains a set of date formats for each data type displayed in the header
+     */
+    private final HashMap<ChronoUnit, DateTimeFormatter> DateFormat = new HashMap<>();
     /* *****************************************************************************************
      * Internal variables
      * *****************************************************************************************/
@@ -246,6 +258,13 @@ public class Timeline extends GridPane implements IRenderingContext {
         secondRowConstraint.setVgrow(Priority.NEVER);
         getColumnConstraints().addAll(firstColConstraint, secondColConstraint);
         getRowConstraints().addAll(firstRowConstraint, secondRowConstraint);
+        // Set default date format
+        this.DateFormat.put(ChronoUnit.SECONDS, DateTimeFormatter.ofPattern("HH:mm:ss"));
+        this.DateFormat.put(ChronoUnit.MINUTES, DateTimeFormatter.ofPattern("HH:mm:00"));
+        this.DateFormat.put(ChronoUnit.HOURS, DateTimeFormatter.ofPattern("HH:00:00"));
+        this.DateFormat.put(ChronoUnit.DAYS, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        this.DateFormat.put(ChronoUnit.MONTHS, DateTimeFormatter.ofPattern("yyyy-MM"));
+        this.DateFormat.put(ChronoUnit.YEARS, DateTimeFormatter.ofPattern("yyyy"));
         // Create the image area and add
         this.imageArea = new Canvas();
         Pane ap = new Pane();
@@ -321,6 +340,8 @@ public class Timeline extends GridPane implements IRenderingContext {
 
         // Add listener for task item selection
         this.imageArea.addEventHandler(MouseEvent.MOUSE_CLICKED, this::mouseClickedAction);
+        // Add listener for tooltip cursor position update
+        this.imageArea.addEventHandler(MouseEvent.MOUSE_MOVED, this::mouseMoveAction);
         this.imageArea.addEventHandler(ScrollEvent.ANY, this::mouseScrolledAction);
 
         // Perform initial drawing
@@ -493,6 +514,27 @@ public class Timeline extends GridPane implements IRenderingContext {
     /* *****************************************************************************************
      * Object properties
      * *****************************************************************************************/
+
+    /**
+     * <h1>This function allows you to set the type of date formatting for each type of time unit.</h1>
+     * <ul>Default values:
+     *     <li>{@link ChronoUnit}.SECONDS = "HH:mm:ss"</li>
+     *     <li>{@link ChronoUnit}.MINUTES = "HH:mm:00"</li>
+     *     <li>{@link ChronoUnit}.HOURS = "HH:00:00"</li>
+     *     <li>{@link ChronoUnit}.DAYS = "yyyy-MM-dd"</li>
+     *     <li>{@link ChronoUnit}.MONTHS = "yyyy-MM"</li>
+     *     <li>{@link ChronoUnit}.YEARS = "yyyy"</li>
+     * </ul>
+     * <p><h1>P.S</h1>When the displayed unit of time is: {@link ChronoUnit}.HOURS, {@link ChronoUnit}.MINUTES or {@link ChronoUnit}.SECONDS.
+     * The date will be displayed in two lines, where the {@link ChronoUnit}.DAYS format will be used for the first line,
+     * and one of the above format will be used for the second line.</p>
+     * @param unit The {@link ChronoUnit} for which the format is set
+     * @param format The format for displaying the date
+     */
+    public void setDateFormat(ChronoUnit unit, DateTimeFormatter format)
+    {
+        if(DateFormat.containsKey(unit)) DateFormat.replace(unit, format);
+    }
 
     public Instant getMinTime() {
         return minTime.get();
@@ -1156,6 +1198,86 @@ public class Timeline extends GridPane implements IRenderingContext {
         }
     }
 
+    //[TaskLines]->[TaskItems]->[TimePoints]->Tooltip
+    private TimeTooltip getTooltipInTimePoints()
+    {
+        TimePoint point = getItems().stream()
+                .filter(taskLine -> taskLine.contains(cursorX, cursorY) && !taskLine.getTaskItems().isEmpty())
+                .flatMap(taskLine -> taskLine.getTaskItems().stream())
+                .filter(taskItem -> taskItem.contains(cursorX, cursorY) && !taskItem.getTimePoints().isEmpty())
+                .flatMap(taskItem -> taskItem.getTimePoints().stream())
+                .filter(timePoint -> timePoint.contains(this.cursorX, this.cursorY) && timePoint.getTooltip() != null)
+                .findFirst().orElse(null);
+
+        if(point != null) return point.getTooltip();
+
+        return null;
+    }
+
+    //[Timeline]->[TimeInterval]->Tooltip
+    //[TaskLines]->[TimeInterval]->Tooltip
+    //[TaskLines]->[TaskItems]->[TimeInterval]->Tooltip
+    private TimeTooltip getTooltipInTimeInterval()
+    {
+        //Global intervals on timeline
+        TimeInterval interval = getTimeIntervals().stream()
+                .filter(timeInterval -> timeInterval.contains(cursorX, cursorY) && timeInterval.getTooltip() != null)
+                .findFirst().orElse(null);
+
+        //intervals on task lines and task items
+        if(interval == null)
+        {
+            interval = getItems().stream()
+                    .filter(taskLine -> taskLine.contains(cursorX, cursorY) && !taskLine.getAllLineInterval().isEmpty())
+                    .flatMap(taskLine -> taskLine.getAllLineInterval().stream())
+                    .filter(timeInterval -> timeInterval.contains(cursorX, cursorY) && timeInterval.getTooltip() != null)
+                    .findFirst().orElse(null);
+        }
+
+        if(interval != null) return interval.getTooltip();
+
+        return null;
+    }
+
+    //[TaskLines]->[TaskItems]->Tooltip
+    private TimeTooltip getTooltipInTaskItem()
+    {
+        TaskItem item = getItems().stream()
+                .filter(taskLine -> taskLine.contains(cursorX, cursorY) && !taskLine.getTaskItems().isEmpty())
+                .flatMap(taskLine -> taskLine.getTaskItems().stream())
+                .filter(taskItem -> taskItem.contains(cursorX, cursorY) && taskItem.getTooltip() != null)
+                .findFirst().orElse(null);
+
+        if(item != null) return item.getTooltip();
+
+        return null;
+    }
+
+    private void mouseMoveAction(MouseEvent mouseEvent)
+    {
+        cursorX = mouseEvent.getX();
+        cursorY = mouseEvent.getY();
+
+        //refreshNeeded used for remove of last tooltip
+        boolean refreshNeeded = showedTooltip != null;
+        showedTooltip = null;
+
+        //[First priority level]
+        //Looking for priority tooltips for time point
+        //We display them even if they are under the time interval with another tooltip
+        showedTooltip = getTooltipInTimePoints();
+
+        //[Second priority level]
+        //If couldn't find the tooltip in task items, go ahead and search for the tooltip in all time intervals.
+        if(showedTooltip == null) showedTooltip = getTooltipInTimeInterval();
+
+        //[Third priority level]
+        //If the tooltip is still not found, proceed to search for the tooltip inside the task items.
+        if(showedTooltip == null) showedTooltip = getTooltipInTaskItem();
+
+        if(showedTooltip != null || refreshNeeded) internalRefresh();
+    }
+
     private void mouseClickedAction(MouseEvent mouseEvent) {
         // Get X,Y coordinates and check which task item is affected
         TaskItem selectedTaskItem = getTaskItemAt(mouseEvent.getX(), mouseEvent.getY());
@@ -1381,14 +1503,8 @@ public class Timeline extends GridPane implements IRenderingContext {
 
     private String formatHeaderText(Instant startTime, ChronoUnit headerElement) {
         ZonedDateTime time = startTime.atZone(ZoneId.of("UTC"));
-        switch(headerElement) {
-            case SECONDS: return String.format("%02d:%02d:%02d", time.getHour(), time.getMinute(), time.getSecond());
-            case MINUTES: return String.format("%02d:%02d:00", time.getHour(), time.getMinute());
-            case HOURS: return String.format("%02d:00:00", time.getHour());
-            case DAYS: return String.format("%04d-%02d-%02d", time.getYear(), time.get(ChronoField.MONTH_OF_YEAR), time.getDayOfMonth());
-            case MONTHS: return String.format("%04d-%02d", time.getYear(), time.get(ChronoField.MONTH_OF_YEAR));
-            default: return String.format("%04d", time.getYear());
-        }
+
+        return time.format(DateFormat.get(headerElement));
     }
 
     private Instant getAdjustedStartTime(Instant viewPortStart, ChronoUnit headerElement) {
@@ -1455,6 +1571,8 @@ public class Timeline extends GridPane implements IRenderingContext {
         drawTimeIntervals(gc, this, true);
         // Draw cursors
         drawCursors(gc, this);
+        // Draw Tooltip
+        if(this.showedTooltip != null) this.showedTooltip.render(gc, this, this.cursorX, this.cursorY);
         // Restore
         gc.restore();
     }
@@ -1677,7 +1795,7 @@ public class Timeline extends GridPane implements IRenderingContext {
      * Class-specific Methods
      * *****************************************************************************************/
 
-    private ChangeListener<? super Number> panelChangeWidth = (e,o,n) -> {
+    private final ChangeListener<? super Number> panelChangeWidth = (e, o, n) -> {
         updateHorizontalScrollbarFitInViewPort();
         recomputeViewport();
     };

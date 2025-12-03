@@ -54,8 +54,6 @@ public class TaskLine extends LineElement implements ITaskLine {
     /* *****************************************************************************************
      * Internal variables
      * *****************************************************************************************/
-
-    private BoundingBox lastRenderedBounds;
     /**
      * The rendering lines as computed by the class.
      */
@@ -159,8 +157,7 @@ public class TaskLine extends LineElement implements ITaskLine {
         //Render description text
         drawAdditionalTaskLineName(gc, (int)rc.getViewPortEndX(), taskLineYStart, rc.getAdditionalPanelWidth(), taskLineHeight, rc);
         // Remember boundaries
-        updateLastRenderedBounds(new BoundingBox(taskLineXStart, taskLineYStart,
-                rc.getViewPortEndX() - taskLineXStart, taskLineHeight));
+        updateLastRenderedBounds(new BoundingBox(taskLineXStart, taskLineYStart, rc.getViewPortEndX() - taskLineXStart, taskLineHeight));
     }
 
     /**
@@ -172,10 +169,17 @@ public class TaskLine extends LineElement implements ITaskLine {
      * @param rc the {@link IRenderingContext}
      */
     protected void drawTaskLineSingleLine(GraphicsContext gc, List<TaskItem> taskItemsInLine, int taskLineYStart, boolean lastLine, IRenderingContext rc) {
+        // Draw time intervals in background for all task items in line
+        taskItemsInLine.forEach(taskItem -> taskItem.drawTaskItemInterval(gc, taskLineYStart, rc, false));
+
         // Render task items
         for(TaskItem ti : taskItemsInLine) {
             ti.render(gc, taskLineYStart, rc);
         }
+
+        // Draw time intervals in foreground for all task items in line
+        taskItemsInLine.forEach(taskItem -> taskItem.drawTaskItemInterval(gc, taskLineYStart, rc, true));
+
         // Render bottom line
         if(lastLine) {
             gc.setStroke(rc.getPanelBorderColor());
@@ -189,8 +193,9 @@ public class TaskLine extends LineElement implements ITaskLine {
 
     @Override
     public void noRender() {
-        this.items.forEach(TaskItem::noRender);
-        updateLastRenderedBounds(null);
+        getIntervals().forEach(LineElement::noRender);
+        getItems().forEach(TaskItem::noRender);
+        super.noRender();
     }
 
     /* *****************************************************************************************
@@ -257,40 +262,23 @@ public class TaskLine extends LineElement implements ITaskLine {
         return this.renderingLines.size() != oldSize;
     }
 
-    /**
-     * To be used by subclasses. Set the latest bounding box as computed by the rendering process.
-     * @param boundingBox the bounding box to set in canvas coordinates
-     */
-    protected void updateLastRenderedBounds(BoundingBox boundingBox) {
-        this.lastRenderedBounds = boundingBox;
-    }
-
-    /**
-     * Return the bounding box if the line was rendered in the latest rendering cycle, otherwise null
-     * @return the bounding box in canvas coordinates if rendered, otherwise null
-     */
-    protected BoundingBox getLastRenderedBounds() {
-        return lastRenderedBounds;
-    }
-
-    @Override
-    public boolean contains(double x, double y) {
-        return this.lastRenderedBounds != null && this.lastRenderedBounds.contains(x, y);
-    }
-
-    @Override
-    public boolean isRendered() {
-        return this.lastRenderedBounds != null;
-    }
-
     @Override
     public Observable[] getObservableProperties() {
-        return new Observable[] { nameProperty(), descriptionProperty(), getItems() };
+        return new Observable[] { nameProperty(), descriptionProperty(), getItems(), getIntervals() };
     }
 
     @Override
     public List<TaskItem> getTaskItems() {
         return Collections.unmodifiableList(this.items);
+    }
+
+    @Override
+    public List<TimeInterval> getAllLineInterval() {
+        List<TimeInterval> intervalList = new ArrayList<>(this.intervals);
+
+        for(TaskItem item : getItems()) intervalList.addAll(item.getIntervals());
+
+        return intervalList;
     }
 
     @Override

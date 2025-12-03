@@ -30,7 +30,10 @@ public abstract class Interval extends LineElement {
      * The color of the time interval.
      */
     private final SimpleObjectProperty<Color> color = new SimpleObjectProperty<>(new Color(Color.LIMEGREEN.getRed(), Color.LIMEGREEN.getGreen(), Color.LIMEGREEN.getBlue(), 0.5));
-
+    /**
+     * Tooltip for time interval
+     */
+    private final SimpleObjectProperty<TimeTooltip> tooltip = new SimpleObjectProperty<>(null);
     /* *****************************************************************************************
      * Internal variables
      * *****************************************************************************************/
@@ -51,6 +54,8 @@ public abstract class Interval extends LineElement {
      * *****************************************************************************************/
 
     public Instant getStartTime() {
+        if(startTime.get() == null) return Instant.MIN;
+
         return startTime.get();
     }
 
@@ -63,6 +68,8 @@ public abstract class Interval extends LineElement {
     }
 
     public Instant getEndTime() {
+        if(endTime.get() == null) return Instant.MAX;
+
         return endTime.get();
     }
 
@@ -98,6 +105,18 @@ public abstract class Interval extends LineElement {
         this.color.set(color);
     }
 
+    public TimeTooltip getTooltip() {
+        return tooltip.get();
+    }
+
+    public void setTooltip(TimeTooltip tooltip) {
+        this.tooltip.set(tooltip);
+    }
+
+    public SimpleObjectProperty<TimeTooltip> tooltipProperty() {
+        return tooltip;
+    }
+
     /* *****************************************************************************************
      * Rendering Methods
      * *****************************************************************************************/
@@ -120,6 +139,7 @@ public abstract class Interval extends LineElement {
      */
     public Observable[] getObservableProperties()
     {
-        return new Observable[] { colorProperty(), startTimeProperty(), endTimeProperty(), foregroundProperty() };
+        return new Observable[] { colorProperty(), startTimeProperty(), tooltipProperty(),
+                endTimeProperty(), foregroundProperty() };
     }
 }

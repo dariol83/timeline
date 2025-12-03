@@ -79,12 +79,14 @@ public class TaskItem extends LineElement {
      * List of {@link TimeInterval} on a task item
      */
     private final ObservableList<TimeInterval> intervals = FXCollections.observableArrayList(TimeInterval::getObservableProperties);
+    /**
+     * Tooltip for task item
+     */
+    private final SimpleObjectProperty<TimeTooltip> tooltip = new SimpleObjectProperty<>(null);
 
     /* *****************************************************************************************
      * Internal variables
      * *****************************************************************************************/
-
-    private BoundingBox lastRenderedBounds;
     private Object userData;
 
     /**
@@ -109,8 +111,9 @@ public class TaskItem extends LineElement {
         this.startTime.set(startTime);
         this.expectedDuration.set(expectedDuration);
         this.actualDuration.set(actualDuration);
-        this.timePoints.addListener(this::timePointListUpdated);
-        this.intervals.addListener(this::intervalsListUpdated);
+
+        this.timePoints.addListener(this::listUpdated);
+        this.intervals.addListener(this::listUpdated);
     }
 
     /* *****************************************************************************************
@@ -210,6 +213,18 @@ public class TaskItem extends LineElement {
         return intervals;
     }
 
+    public TimeTooltip getTooltip() {
+        return tooltip.get();
+    }
+
+    public void setTooltip(TimeTooltip tooltip) {
+        this.tooltip.set(tooltip);
+    }
+
+    public SimpleObjectProperty<TimeTooltip> tooltipProperty() {
+        return tooltip;
+    }
+
     /* *****************************************************************************************
      * Rendering Methods
      * *****************************************************************************************/
@@ -229,8 +244,6 @@ public class TaskItem extends LineElement {
         int startY = taskLineYStart + (int) rc.getTextPadding();
         int taskHeight = (int) Math.round(rc.getLineRowHeight() - 2 * rc.getTextPadding());
 
-        // Draw time intervals in background
-        drawTaskItemInterval(gc, startY, taskHeight, rc, false);
         // Render only if in viewport
         if(rc.isInViewPort(getStartTime(), endTime)) {
             // Convert to X coordinates
@@ -255,8 +268,13 @@ public class TaskItem extends LineElement {
             // Remember rendering box in pixel coordinates
             updateLastRenderedBounds(new BoundingBox(startX, startY, Math.max(endX, actualEndX) - startX, taskHeight));
         }
-        // Draw time intervals in foreground
-        drawTaskItemInterval(gc, startY, taskHeight, rc, true);
+    }
+
+    @Override
+    public void noRender() {
+        getTimePoints().forEach(LineElement::noRender);
+        getIntervals().forEach(LineElement::noRender);
+        super.noRender();
     }
 
     /**
@@ -275,15 +293,18 @@ public class TaskItem extends LineElement {
     /**
      * Draw the time interval on a task item. Subclasses can override.
      * @param gc the {@link GraphicsContext}
-     * @param taskItemStartY the Y offset where the interval has to start
-     * @param taskItemHeight the height of the task item that the interval should fill
+     * @param taskLineStartY the Y offset where the task line begins in which the task item is located
      * @param rc the {@link IRenderingContext}
      * @param foreground draw interval on foreground
      */
-    public void drawTaskItemInterval(GraphicsContext gc, int taskItemStartY, int taskItemHeight, IRenderingContext rc, boolean foreground) {
+    public void drawTaskItemInterval(GraphicsContext gc, int taskLineStartY, IRenderingContext rc, boolean foreground)
+    {
+        int YStart = taskLineStartY + (int)rc.getTextPadding();
+        int Height = (int) Math.round(rc.getLineRowHeight() - 2 * rc.getTextPadding());
+
         for(TimeInterval i : intervals)
         {
-            if(i.isForeground() == foreground) i.render(gc, rc, taskItemStartY, taskItemHeight);
+            if(i.isForeground() == foreground) i.render(gc, rc, YStart, Height);
         }
     }
 
@@ -394,42 +415,8 @@ public class TaskItem extends LineElement {
      */
     public Observable[] getObservableProperties() {
         return new Observable[] {
-                startTimeProperty(), nameProperty(), expectedDurationProperty(), actualDurationProperty(),
-                taskBackgroundProperty(), taskTextColorProperty(), taskProgressBackgroundProperty(), trimIntervalsProperty() };
-    }
-
-    /**
-     * To be called by subclasses.
-     * @param boundingBox the bounding box or null
-     */
-    protected final void updateLastRenderedBounds(BoundingBox boundingBox) {
-        this.lastRenderedBounds = boundingBox;
-    }
-
-    /**
-     * Return the latest rendered bounding box of the task item, or null if not rendered. To be called by subclasses.
-     * @return the latest rendered bounding box in canvas coordinates, or null if not rendered
-     */
-    protected final BoundingBox getLastRenderedBounds() {
-        return lastRenderedBounds;
-    }
-
-    /**
-     * Return true if the x,y values in canvas coordinates are contained in the bounds of the task item.
-     * @param x the x in canvas coordinates
-     * @param y the y in canvas coordinates
-     * @return true if the x,y values are contained in the bounds of the task item, otherwise false
-     */
-    public final boolean contains(double x, double y) {
-        return this.lastRenderedBounds != null && this.lastRenderedBounds.contains(x, y);
-    }
-
-    /**
-     * Return true if the task item was rendered in the last rendering iteration, otherwise false.
-     * @return true if the task item was rendered in the last rendering iteration, otherwise false
-     */
-    public final boolean isRendered() {
-        return this.lastRenderedBounds != null;
+                startTimeProperty(), nameProperty(), expectedDurationProperty(), actualDurationProperty(), getTimePoints(), getIntervals(),
+                taskBackgroundProperty(), taskTextColorProperty(), taskProgressBackgroundProperty(), trimIntervalsProperty(), tooltipProperty() };
     }
 
     /**
@@ -442,13 +429,6 @@ public class TaskItem extends LineElement {
         long startTimeSecond = getStartTime().getEpochSecond();
         long endTimeSecond = getStartTime().plusSeconds(Math.max(getActualDuration(), getExpectedDuration())).getEpochSecond();
         return timeSeconds >= startTimeSecond && timeSeconds <= endTimeSecond;
-    }
-
-    /**
-     * Subclasses can override, as long as the update of the boundaries in set to null.
-     */
-    public void noRender() {
-        updateLastRenderedBounds(null);
     }
 
     /**
@@ -467,38 +447,18 @@ public class TaskItem extends LineElement {
                 (itemStartTime <= thisStartTime && itemEndTime >= thisEndTime);
     }
 
-    private void timePointListUpdated(ListChangeListener.Change<? extends TimePoint> change) {
+    private void listUpdated(ListChangeListener.Change<? extends ILineElement> change) {
         while(change.next()) {
-            if(change.wasAdded()) {
-                change.getAddedSubList().forEach(tp -> {
-                    tp.setParent(this);
-                    tp.setTimeline(getTimeline());
-                });
-            }
-            if(change.wasRemoved()) {
-                change.getRemoved().forEach(tp -> {
-                    tp.setParent(null);
-                    tp.setTimeline(null);
-                });
-            }
-        }
-    }
-
-    private void intervalsListUpdated(ListChangeListener.Change<? extends TimeInterval> change) {
-        while (change.next()) {
             if(change.wasAdded()) {
                 change.getAddedSubList().forEach(ti -> {
                     ti.setParent(this);
                     ti.setTimeline(getTimeline());
-
-                    //Trim the interval according to the size of the task item if the trimInterval property is true
-                    if(isTrimIntervals())
-                    {
-                        Instant EndTime = getStartTime().plusSeconds(getExpectedDuration());
-
-                        if(ti.getStartTime().isBefore(getStartTime())) ti.setStartTime(getStartTime());
-                        if(ti.getEndTime().isAfter(EndTime)) ti.setEndTime(EndTime);
-                    }
+                });
+            }
+            if(change.wasRemoved()) {
+                change.getRemoved().forEach(ti -> {
+                    ti.setParent(null);
+                    ti.setTimeline(null);
                 });
             }
         }

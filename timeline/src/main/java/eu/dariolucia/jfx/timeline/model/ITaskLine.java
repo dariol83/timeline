@@ -17,6 +17,7 @@
 package eu.dariolucia.jfx.timeline.model;
 
 import javafx.beans.Observable;
+import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.scene.canvas.GraphicsContext;
 
@@ -197,4 +198,9 @@ public interface ITaskLine extends ILineElement {
      */
     List<TaskItem> getTaskItems();
 
+    /**
+     * Return all the {@link TimeInterval} contained in this task line. This method computes recursively all such items.
+     * @return all the {@link TimeInterval} contained in this task line
+     */
+    List<TimeInterval> getAllLineInterval();
 }

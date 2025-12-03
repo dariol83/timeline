@@ -18,6 +18,7 @@ package eu.dariolucia.jfx.timeline.model;
 
 import eu.dariolucia.jfx.timeline.Timeline;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.geometry.BoundingBox;
 
 /** Common abstract class for elements handled in a {@link Timeline}. */
 public abstract class LineElement implements ILineElement {
@@ -34,6 +35,10 @@ public abstract class LineElement implements ILineElement {
      * Description of the element.
      */
     private final SimpleStringProperty description = new SimpleStringProperty();
+    /**
+     * Last rendered bound of the element.
+     */
+    private BoundingBox lastRenderedBounds;
 
     /* *****************************************************************************************
      * Internal variables
@@ -106,4 +111,48 @@ public abstract class LineElement implements ILineElement {
         this.parent = parent;
     }
 
+    /* *****************************************************************************************
+     * Class-specific Methods
+     * *****************************************************************************************/
+
+    /**
+     * To be called by subclasses.
+     * @param boundingBox the bounding box or null
+     */
+    protected final void updateLastRenderedBounds(BoundingBox boundingBox) {
+        this.lastRenderedBounds = boundingBox;
+    }
+
+    /**
+     * Return the latest rendered bounding box of the element, or null if not rendered. To be called by subclasses.
+     * @return the latest rendered bounding box in canvas coordinates, or null if not rendered
+     */
+    protected final BoundingBox getLastRenderedBounds() {
+        return lastRenderedBounds;
+    }
+
+    /**
+     * Return true if the x,y values in canvas coordinates are contained in the bounds of the element.
+     * @param x the x in canvas coordinates
+     * @param y the y in canvas coordinates
+     * @return true if the x,y values are contained in the bounds of the element, otherwise false
+     */
+    public final boolean contains(double x, double y) {
+        return this.lastRenderedBounds != null && this.lastRenderedBounds.contains(x, y);
+    }
+
+    /**
+     * Return true if the element was rendered in the last rendering iteration, otherwise false.
+     * @return true if the element was rendered in the last rendering iteration, otherwise false
+     */
+    public final boolean isRendered() {
+        return this.lastRenderedBounds != null;
+    }
+
+    /**
+     * Subclasses can override, as long as the update of the boundaries in set to null.
+     */
+    public void noRender() {
+        updateLastRenderedBounds(null);
+    }
 }

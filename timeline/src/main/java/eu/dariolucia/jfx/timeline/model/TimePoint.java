@@ -2,6 +2,7 @@ package eu.dariolucia.jfx.timeline.model;
 
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
@@ -39,6 +40,10 @@ public class TimePoint extends LineElement {
      * It is used to store an image with a changed color, saves rendering time.
      */
     private Image cachedImage = null;
+    /**
+     * Tooltip for time point
+     */
+    private final SimpleObjectProperty<TimeTooltip> tooltip = new SimpleObjectProperty<>(null);
 
     /* *****************************************************************************************
      * Internal variables
@@ -127,6 +132,18 @@ public class TimePoint extends LineElement {
         this.textColor.set(color);
     }
 
+    public TimeTooltip getTooltip() {
+        return tooltip.get();
+    }
+
+    public void setTooltip(TimeTooltip tooltip) {
+        this.tooltip.set(tooltip);
+    }
+
+    public SimpleObjectProperty<TimeTooltip> tooltipProperty() {
+        return tooltip;
+    }
+
     /* *****************************************************************************************
      * Rendering Methods
      * *****************************************************************************************/
@@ -142,7 +159,11 @@ public class TimePoint extends LineElement {
      */
     protected void render(GraphicsContext gc, IRenderingContext rc, int StartX, int StartY, int taskItemWidth, int taskItemHeight) {
         double X = rc.toX(getTime());
-        if(X > StartX+taskItemWidth || X < StartX) return;
+        if(X > StartX+taskItemWidth || X < StartX)
+        {
+            noRender();
+            return;
+        }
 
         double MaxSize = taskItemHeight-(2*rc.getTextPadding());
 
@@ -222,6 +243,9 @@ public class TimePoint extends LineElement {
 
             gc.setTextAlign(TextAlignment.LEFT);
         }
+
+        // Remember rendering box in pixel coordinates
+        updateLastRenderedBounds(new BoundingBox(X, StartY, size, size));
     }
 
     /* *****************************************************************************************
@@ -235,7 +259,7 @@ public class TimePoint extends LineElement {
      */
     public Observable[] getObservableProperties() {
         return new Observable[] {
-                imageProperty(), nameProperty(), typeProperty(),
+                imageProperty(), nameProperty(), typeProperty(), tooltipProperty(),
                 timeProperty(), colorProperty(), textColorProperty() };
     }
 }

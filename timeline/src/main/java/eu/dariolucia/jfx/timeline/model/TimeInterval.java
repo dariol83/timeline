@@ -16,7 +16,7 @@
 
 package eu.dariolucia.jfx.timeline.model;
 
-import javafx.beans.Observable;
+import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
 
 import java.time.Instant;
@@ -58,12 +58,32 @@ public class TimeInterval extends Interval {
         // Render only if in viewport
         if(rc.isInViewPort(getStartTime(), getEndTime()))
         {
-            double startX = getStartTime() == null || getStartTime().isBefore(rc.getViewPortStart()) ? rc.getViewPortStartX() : rc.toX(getStartTime());
-            double endX = getEndTime() == null || getEndTime().isAfter(rc.getViewPortEnd()) ? rc.getViewPortEndX() : rc.toX(getEndTime());
+            double startX;
+            double endX;
+
+            //We limit the interval to the size of the Task Item if the trim property is true.
+            if(getParent() != null && getParent() instanceof TaskItem && ((TaskItem) getParent()).isTrimIntervals())
+            {
+                TaskItem item = (TaskItem) getParent();
+                Instant EndTime = item.getStartTime().plusSeconds(item.getExpectedDuration());
+
+                startX = getStartTime().isBefore(item.getStartTime()) ? rc.toX(item.getStartTime()) : rc.toX(getStartTime());
+                endX = getEndTime().isAfter(EndTime) ? rc.toX(EndTime) : rc.toX(getEndTime());
+            }
+            //Otherwise, we limit the interval within the viewport.
+            else
+            {
+                startX = getStartTime().isBefore(rc.getViewPortStart()) ? rc.getViewPortStartX() : rc.toX(getStartTime());
+                endX = getEndTime().isAfter(rc.getViewPortEnd()) ? rc.getViewPortEndX() : rc.toX(getEndTime());
+            }
 
             gc.setFill(getColor());
             gc.fillRect(startX, startY, endX - startX, Height);
+
+            // Remember rendering box in pixel coordinates
+            updateLastRenderedBounds(new BoundingBox(startX, startY, endX - startX, Height));
         }
+        else noRender();
     }
 
     /* *****************************************************************************************

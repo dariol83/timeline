@@ -27,6 +27,7 @@ import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -66,7 +67,6 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
      * *****************************************************************************************/
     private boolean collapsedState = false;
     private BoundingBox collapseButtonBoundingBox = null;
-    private BoundingBox lastRenderedBounds;
 
     /**
      * Class constructor with no description.
@@ -85,6 +85,11 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
         super(name, description);
         this.items.addListener(this::listUpdated);
         this.intervals.addListener(this::listUpdated);
+
+        //Clearing the BoundingBox hierarchy
+        this.collapsed.addListener((observable, oldValue, newValue) -> {
+            if(newValue) noRender();
+        });
     }
 
     /* *****************************************************************************************
@@ -157,7 +162,7 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
         renderLineInterval(gc, taskLineYStart, renderedTotalHeight, rc, true);
         // Remember box
         double groupBoxTotalWidth = rc.toX(rc.getViewPortEnd()) - taskLineXStart;
-        this.lastRenderedBounds = new BoundingBox(taskLineXStart, taskLineYStart, groupBoxTotalWidth, renderedTotalHeight);
+        updateLastRenderedBounds(new BoundingBox(taskLineXStart, taskLineYStart, groupBoxTotalWidth, renderedTotalHeight));
     }
 
     @Override
@@ -179,8 +184,9 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
 
     @Override
     public void noRender() {
-        this.items.forEach(ITaskLine::noRender);
-        this.lastRenderedBounds = null;
+        getIntervals().forEach(LineElement::noRender);
+        getItems().forEach(ITaskLine::noRender);
+        super.noRender();
     }
 
     /**
@@ -261,33 +267,24 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
         return (this.collapsedState != oldCollapsedState) || changed;
     }
 
-    /**
-     * Return the bounding box if the line was rendered in the latest rendering cycle, otherwise null
-     * @return the bounding box in canvas coordinates if rendered, otherwise null
-     */
-    protected BoundingBox getLastRenderedBounds() {
-        return lastRenderedBounds;
-    }
-
-    @Override
-    public boolean isRendered() {
-        return this.lastRenderedBounds != null;
-    }
-
-    @Override
-    public boolean contains(double x, double y) {
-        return this.lastRenderedBounds != null && this.lastRenderedBounds.contains(x, y);
-    }
-
     @Override
     public Observable[] getObservableProperties() {
-        return new Observable[] { nameProperty(), descriptionProperty(), getItems(), collapsibleProperty(),
+        return new Observable[] { nameProperty(), descriptionProperty(), getItems(), getIntervals(), collapsibleProperty(),
         collapsedProperty() };
     }
 
     @Override
     public List<TaskItem> getTaskItems() {
         return this.items.stream().flatMap(i -> i.getTaskItems().stream()).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TimeInterval> getAllLineInterval() {
+        List<TimeInterval> intervalList = new ArrayList<>(this.intervals);
+
+        for(ITaskLine line : getItems()) intervalList.addAll(line.getAllLineInterval());
+
+        return intervalList;
     }
 
     @Override
