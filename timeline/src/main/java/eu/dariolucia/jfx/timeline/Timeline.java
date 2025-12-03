@@ -25,7 +25,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableListBase;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.SnapshotParameters;
@@ -34,7 +33,6 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.SelectionModel;
-import javafx.scene.control.Tooltip;
 import javafx.scene.effect.Effect;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
@@ -49,11 +47,10 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextBoundsType;
 
 import java.time.*;
-import java.time.temporal.ChronoField;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * A timeline is a graphical JavaFX component that can be used to display tasks and groups of tasks, time cursors
@@ -232,6 +229,10 @@ public class Timeline extends GridPane implements IRenderingContext {
      * The Y coordinate of the cursor
      */
     private double cursorY = 0.0;
+    /**
+     * Contains a set of date formats for each data type displayed in the header
+     */
+    private final HashMap<ChronoUnit, DateTimeFormatter> DateFormat = new HashMap<>();
     /* *****************************************************************************************
      * Internal variables
      * *****************************************************************************************/
@@ -257,6 +258,13 @@ public class Timeline extends GridPane implements IRenderingContext {
         secondRowConstraint.setVgrow(Priority.NEVER);
         getColumnConstraints().addAll(firstColConstraint, secondColConstraint);
         getRowConstraints().addAll(firstRowConstraint, secondRowConstraint);
+        // Set default date format
+        this.DateFormat.put(ChronoUnit.SECONDS, DateTimeFormatter.ofPattern("HH:mm:ss"));
+        this.DateFormat.put(ChronoUnit.MINUTES, DateTimeFormatter.ofPattern("HH:mm:00"));
+        this.DateFormat.put(ChronoUnit.HOURS, DateTimeFormatter.ofPattern("HH:00:00"));
+        this.DateFormat.put(ChronoUnit.DAYS, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        this.DateFormat.put(ChronoUnit.MONTHS, DateTimeFormatter.ofPattern("yyyy-MM"));
+        this.DateFormat.put(ChronoUnit.YEARS, DateTimeFormatter.ofPattern("yyyy"));
         // Create the image area and add
         this.imageArea = new Canvas();
         Pane ap = new Pane();
@@ -332,6 +340,7 @@ public class Timeline extends GridPane implements IRenderingContext {
 
         // Add listener for task item selection
         this.imageArea.addEventHandler(MouseEvent.MOUSE_CLICKED, this::mouseClickedAction);
+        // Add listener for tooltip cursor position update
         this.imageArea.addEventHandler(MouseEvent.MOUSE_MOVED, this::mouseMoveAction);
         this.imageArea.addEventHandler(ScrollEvent.ANY, this::mouseScrolledAction);
 
@@ -505,6 +514,27 @@ public class Timeline extends GridPane implements IRenderingContext {
     /* *****************************************************************************************
      * Object properties
      * *****************************************************************************************/
+
+    /**
+     * <h1>This function allows you to set the type of date formatting for each type of time unit.</h1>
+     * <ul>Default values:
+     *     <li>{@link ChronoUnit}.SECONDS = "HH:mm:ss"</li>
+     *     <li>{@link ChronoUnit}.MINUTES = "HH:mm:00"</li>
+     *     <li>{@link ChronoUnit}.HOURS = "HH:00:00"</li>
+     *     <li>{@link ChronoUnit}.DAYS = "yyyy-MM-dd"</li>
+     *     <li>{@link ChronoUnit}.MONTHS = "yyyy-MM"</li>
+     *     <li>{@link ChronoUnit}.YEARS = "yyyy"</li>
+     * </ul>
+     * <p><h1>P.S</h1>When the displayed unit of time is: {@link ChronoUnit}.HOURS, {@link ChronoUnit}.MINUTES or {@link ChronoUnit}.SECONDS.
+     * The date will be displayed in two lines, where the {@link ChronoUnit}.DAYS format will be used for the first line,
+     * and one of the above format will be used for the second line.</p>
+     * @param unit The {@link ChronoUnit} for which the format is set
+     * @param format The format for displaying the date
+     */
+    public void setDateFormat(ChronoUnit unit, DateTimeFormatter format)
+    {
+        if(DateFormat.containsKey(unit)) DateFormat.replace(unit, format);
+    }
 
     public Instant getMinTime() {
         return minTime.get();
@@ -1473,14 +1503,8 @@ public class Timeline extends GridPane implements IRenderingContext {
 
     private String formatHeaderText(Instant startTime, ChronoUnit headerElement) {
         ZonedDateTime time = startTime.atZone(ZoneId.of("UTC"));
-        switch(headerElement) {
-            case SECONDS: return String.format("%02d:%02d:%02d", time.getHour(), time.getMinute(), time.getSecond());
-            case MINUTES: return String.format("%02d:%02d:00", time.getHour(), time.getMinute());
-            case HOURS: return String.format("%02d:00:00", time.getHour());
-            case DAYS: return String.format("%04d-%02d-%02d", time.getYear(), time.get(ChronoField.MONTH_OF_YEAR), time.getDayOfMonth());
-            case MONTHS: return String.format("%04d-%02d", time.getYear(), time.get(ChronoField.MONTH_OF_YEAR));
-            default: return String.format("%04d", time.getYear());
-        }
+
+        return time.format(DateFormat.get(headerElement));
     }
 
     private Instant getAdjustedStartTime(Instant viewPortStart, ChronoUnit headerElement) {
@@ -1771,7 +1795,7 @@ public class Timeline extends GridPane implements IRenderingContext {
      * Class-specific Methods
      * *****************************************************************************************/
 
-    private ChangeListener<? super Number> panelChangeWidth = (e,o,n) -> {
+    private final ChangeListener<? super Number> panelChangeWidth = (e, o, n) -> {
         updateHorizontalScrollbarFitInViewPort();
         recomputeViewport();
     };

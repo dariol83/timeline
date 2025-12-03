@@ -8,8 +8,8 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
-import java.time.Duration;
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
 public class TestApplicationTooltip extends Application
@@ -23,6 +23,9 @@ public class TestApplicationTooltip extends Application
         primaryStage.setTitle("Timeline with tooltip Example");
         // Create timeline
         Timeline tl = new Timeline();
+        // Set displayed date format
+        tl.setDateFormat(ChronoUnit.MONTHS, DateTimeFormatter.ofPattern("LLL yyyy"));
+        tl.setDateFormat(ChronoUnit.DAYS, DateTimeFormatter.ofPattern("dd LLL yyyy"));
         // Add data defaults for testing
         Instant currentTime = Instant.now();
         tl.setMinTime(currentTime);
