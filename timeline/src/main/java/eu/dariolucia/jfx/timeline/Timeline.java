@@ -608,6 +608,11 @@ public class Timeline extends GridPane implements IRenderingContext {
     }
 
     @Override
+    public double getViewPortEndY() {
+        return getImageAreaHeight();
+    }
+
+    @Override
     public int getHeaderRowHeight() {
         return this.headerRowHeight;
     }
@@ -1625,8 +1630,6 @@ public class Timeline extends GridPane implements IRenderingContext {
                 tc.render(gc, rc);
             }
         }
-        gc.setLineWidth(1);
-        gc.setLineDashes();
     }
 
     private void drawBackground(GraphicsContext gc) {
@@ -1777,17 +1780,17 @@ public class Timeline extends GridPane implements IRenderingContext {
         gc.fillRect(xStart, 0, xEnd - xStart, height);
         gc.strokeRect(xStart, 0, xEnd - xStart, height);
         // Write text
-        gc.setStroke(getHeaderForegroundColor());
+        gc.setFill(getHeaderForegroundColor());
         if(headerElement == ChronoUnit.SECONDS || headerElement == ChronoUnit.MINUTES || headerElement == ChronoUnit.HOURS) {
             // Two lines
             String toWriteDays = formatHeaderText(startTime, ChronoUnit.DAYS);
-            gc.strokeText(toWriteDays, xStart + getTextPadding(), getTextHeight() + getTextPadding());
+            gc.fillText(toWriteDays, xStart + getTextPadding(), getTextHeight() + getTextPadding());
             String toWrite = formatHeaderText(startTime, headerElement);
-            gc.strokeText(toWrite, xStart + getTextPadding(), 2 * getTextHeight() + 2 * getTextPadding());
+            gc.fillText(toWrite, xStart + getTextPadding(), 2 * getTextHeight() + 2 * getTextPadding());
         } else {
             // One line
             String toWrite = formatHeaderText(startTime, headerElement);
-            gc.strokeText(toWrite, xStart + getTextPadding(), getTextHeight()/2.0 + height/2.0);
+            gc.fillText(toWrite, xStart + getTextPadding(), getTextHeight()/2.0 + height/2.0);
         }
     }
 

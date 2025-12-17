@@ -320,7 +320,7 @@ public class TaskItem extends LineElement {
      */
     protected void drawTaskItemName(GraphicsContext gc, int taskItemStartX, int taskItemStartY, int taskItemWidth, int taskItemHeight, boolean isSelected, IRenderingContext rc) {
         // Set the text color
-        gc.setStroke(getTaskTextColor());
+        gc.setFill(getTaskTextColor());
         Font original = gc.getFont();
         // If selected, use bold text
         if(isSelected) {
@@ -328,7 +328,7 @@ public class TaskItem extends LineElement {
         }
         // Render text in the middle
         int textWidth = rc.getTextWidth(gc, getName());
-        gc.strokeText(getName(), (int) Math.round(taskItemStartX + (taskItemWidth)/2.0 - textWidth/2.0), (int) Math.round(taskItemStartY + taskItemHeight/2.0 + rc.getTextHeight()/2.0));
+        gc.fillText(getName(), (int) Math.round(taskItemStartX + (taskItemWidth)/2.0 - textWidth/2.0), (int) Math.round(taskItemStartY + taskItemHeight/2.0 + rc.getTextHeight()/2.0));
         // If selected, restore font
         if(isSelected) {
             gc.setFont(original);

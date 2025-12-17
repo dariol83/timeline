@@ -182,8 +182,6 @@ public class TimePoint extends LineElement {
             gc.setStroke(getColor());
             gc.setFill(getColor());
         }
-        gc.setFont(gc.getFont());
-        gc.setLineWidth(1);
 
         switch (getType())
         {
@@ -236,10 +234,10 @@ public class TimePoint extends LineElement {
 
         if(!getName().isBlank() && rc.getTextWidth(gc, getName()) <= size)
         {
-            gc.setStroke(getTextColor());
+            gc.setFill(getTextColor());
             gc.setTextAlign(TextAlignment.CENTER);
 
-            gc.strokeText(getName(), X + size/2, StartY + size/2 + rc.getTextHeight()/2.0);
+            gc.fillText(getName(), X + size/2, StartY + size/2 + rc.getTextHeight()/2.0);
 
             gc.setTextAlign(TextAlignment.LEFT);
         }

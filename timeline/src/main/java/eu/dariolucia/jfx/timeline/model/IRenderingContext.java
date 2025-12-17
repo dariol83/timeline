@@ -175,6 +175,12 @@ public interface IRenderingContext {
     double getViewPortEndX();
 
     /**
+     * Return the end Y coordinate of the viewport.
+     * @return the end Y coordinate of the viewport.
+     */
+    double getViewPortEndY();
+
+    /**
      * Return the height of the header row in pixel.
      * @return the height of the header row in pixel
      */

@@ -84,8 +84,8 @@ public interface ITaskLine extends ILineElement {
      */
     default void drawTaskLineName(GraphicsContext gc, int taskLineXStart, int taskLineYStart, double taskLinePanelBoxWidth, int taskLineHeight, int textOffset, IRenderingContext rc)
     {
-        gc.setStroke(rc.getPanelForegroundColor());
-        gc.strokeText(getName(), taskLineXStart + textOffset + rc.getTextPadding(),
+        gc.setFill(rc.getPanelForegroundColor());
+        gc.fillText(getName(), taskLineXStart + textOffset + rc.getTextPadding(),
             taskLineYStart + (int) Math.round(taskLineHeight/2.0 + rc.getTextHeight()/2.0),
             taskLinePanelBoxWidth - 2 * rc.getTextPadding() - taskLineXStart);
     }
@@ -119,8 +119,8 @@ public interface ITaskLine extends ILineElement {
      */
     default void drawAdditionalTaskLineName(GraphicsContext gc, int taskLineXStart, int taskLineYStart, double taskLineAdditionalBoxWidth, int taskLineHeight, IRenderingContext rc)
     {
-        gc.setStroke(rc.getPanelForegroundColor());
-        gc.strokeText(getDescription(), taskLineXStart + rc.getTextPadding(),
+        gc.setFill(rc.getPanelForegroundColor());
+        gc.fillText(getDescription(), taskLineXStart + rc.getTextPadding(),
                 taskLineYStart + (int) Math.round(taskLineHeight/2.0 + rc.getTextHeight()/2.0),
                 taskLineAdditionalBoxWidth - 2 * rc.getTextPadding());
     }
