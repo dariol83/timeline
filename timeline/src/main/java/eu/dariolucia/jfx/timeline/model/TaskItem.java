@@ -28,6 +28,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
 
 import java.time.Instant;
 
@@ -327,8 +328,9 @@ public class TaskItem extends LineElement {
             gc.setFont(Font.font(original.getFamily(), original.getSize() + 2));
         }
         // Render text in the middle
-        int textWidth = rc.getTextWidth(gc, getName());
-        gc.fillText(getName(), (int) Math.round(taskItemStartX + (taskItemWidth)/2.0 - textWidth/2.0), (int) Math.round(taskItemStartY + taskItemHeight/2.0 + rc.getTextHeight()/2.0));
+        gc.setTextAlign(TextAlignment.CENTER);
+        gc.fillText(getName(), (int) Math.round(taskItemStartX + (taskItemWidth)/2.0), (int) Math.round(taskItemStartY + taskItemHeight/2.0 + rc.getTextHeight()/2.0), taskItemWidth);
+        gc.setTextAlign(TextAlignment.LEFT);
         // If selected, restore font
         if(isSelected) {
             gc.setFont(original);
