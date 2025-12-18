@@ -41,10 +41,7 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontSmoothingType;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextBoundsType;
+import javafx.scene.text.*;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -158,7 +155,7 @@ public class Timeline extends GridPane implements IRenderingContext {
     /**
      * Font to be used for string rendering in the timeline widget.
      */
-    private final SimpleObjectProperty<Font> textFont = new SimpleObjectProperty<>(null);
+    private final SimpleObjectProperty<Font> textFont = new SimpleObjectProperty<>(Font.font(Font.getDefault().getName(), FontWeight.BOLD, Font.getDefault().getSize()));
     /**
      * Visibility of the horizontal scrollbar.
      */
