@@ -41,10 +41,7 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontSmoothingType;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextBoundsType;
+import javafx.scene.text.*;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -158,7 +155,7 @@ public class Timeline extends GridPane implements IRenderingContext {
     /**
      * Font to be used for string rendering in the timeline widget.
      */
-    private final SimpleObjectProperty<Font> textFont = new SimpleObjectProperty<>(null);
+    private final SimpleObjectProperty<Font> textFont = new SimpleObjectProperty<>(Font.font(Font.getDefault().getName(), FontWeight.BOLD, Font.getDefault().getSize()));
     /**
      * Visibility of the horizontal scrollbar.
      */
@@ -605,6 +602,11 @@ public class Timeline extends GridPane implements IRenderingContext {
     @Override
     public double getViewPortEndX() {
         return getImageAreaWidth() - getAdditionalPanelWidth();
+    }
+
+    @Override
+    public double getViewPortEndY() {
+        return getImageAreaHeight();
     }
 
     @Override
@@ -1625,8 +1627,6 @@ public class Timeline extends GridPane implements IRenderingContext {
                 tc.render(gc, rc);
             }
         }
-        gc.setLineWidth(1);
-        gc.setLineDashes();
     }
 
     private void drawBackground(GraphicsContext gc) {
@@ -1777,17 +1777,17 @@ public class Timeline extends GridPane implements IRenderingContext {
         gc.fillRect(xStart, 0, xEnd - xStart, height);
         gc.strokeRect(xStart, 0, xEnd - xStart, height);
         // Write text
-        gc.setStroke(getHeaderForegroundColor());
+        gc.setFill(getHeaderForegroundColor());
         if(headerElement == ChronoUnit.SECONDS || headerElement == ChronoUnit.MINUTES || headerElement == ChronoUnit.HOURS) {
             // Two lines
             String toWriteDays = formatHeaderText(startTime, ChronoUnit.DAYS);
-            gc.strokeText(toWriteDays, xStart + getTextPadding(), getTextHeight() + getTextPadding());
+            gc.fillText(toWriteDays, xStart + getTextPadding(), getTextHeight() + getTextPadding());
             String toWrite = formatHeaderText(startTime, headerElement);
-            gc.strokeText(toWrite, xStart + getTextPadding(), 2 * getTextHeight() + 2 * getTextPadding());
+            gc.fillText(toWrite, xStart + getTextPadding(), 2 * getTextHeight() + 2 * getTextPadding());
         } else {
             // One line
             String toWrite = formatHeaderText(startTime, headerElement);
-            gc.strokeText(toWrite, xStart + getTextPadding(), getTextHeight()/2.0 + height/2.0);
+            gc.fillText(toWrite, xStart + getTextPadding(), getTextHeight()/2.0 + height/2.0);
         }
     }
 

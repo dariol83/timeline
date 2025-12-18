@@ -156,14 +156,14 @@ public class FlatGroupTaskLine extends CompositeTaskLine {
      * @param rc the {@link IRenderingContext}
      */
     protected void drawExpandedGroupName(GraphicsContext gc, int groupXStart, int groupYStart, int groupBoxWidth, int groupBoxHeight, IRenderingContext rc) {
-        gc.setStroke(rc.getPanelForegroundColor());
+        gc.setFill(rc.getPanelForegroundColor());
         gc.save();
         gc.translate(groupXStart, groupYStart);
         gc.rotate(-90);
         // Render in the middle
         int textWidth = rc.getTextWidth(gc, getName());
         double offset = groupBoxHeight/2.0;
-        gc.strokeText(getName(), (int) Math.round(-offset - textWidth/2.0), (int) Math.round(groupBoxWidth/2.0 + rc.getTextHeight()/2.0));
+        gc.fillText(getName(), (int) Math.round(-offset - textWidth/2.0), (int) Math.round(groupBoxWidth/2.0 + rc.getTextHeight()/2.0));
         gc.restore();
     }
 

@@ -91,15 +91,17 @@ public class TimeTooltip extends LineElement
         gc.setStroke(getTooltipBorderColor());
 
         if(startX + rc.getTextPadding()*2 + Width <= rc.getViewPortEndX()) startX += rc.getTextPadding()*2; //Indentation so that the tooltip is not under the cursor
-        else startX -= Width; //If the tooltip extends beyond the right border of the viewport, we will display the tooltip to the left of the cursor.
+        else startX -= Width; //If the tooltip extends beyond the right border of the viewport, we will display the tooltip to the left of the cursor. (vertical reflection)
+
+        if(startY + Height > rc.getViewPortEndY()) startY -= Height; //If the tooltip extends beyond the lower border of the viewport, we will display it above the cursor (horizontal reflection).
 
         gc.fillRect(startX, startY, Width, Height);
         gc.strokeRect(startX, startY, Width, Height);
 
-        gc.setStroke(getTooltipTextColor());
+        gc.setFill(getTooltipTextColor());
         for(int i = 0; i < Lines.length; i++)
         {
-            gc.strokeText(Lines[i], startX + rc.getTextPadding(), startY + rc.getTextHeight()*(i+1) + rc.getTextPadding());
+            gc.fillText(Lines[i], startX + rc.getTextPadding(), startY + rc.getTextHeight()*(i+1) + rc.getTextPadding());
         }
     }
 

@@ -88,7 +88,7 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
 
         //Clearing the BoundingBox hierarchy
         this.collapsed.addListener((observable, oldValue, newValue) -> {
-            if(newValue) noRender();
+            if(newValue) noRender(true);
         });
     }
 
@@ -184,9 +184,14 @@ public abstract class CompositeTaskLine extends LineElement implements ITaskLine
 
     @Override
     public void noRender() {
+        noRender(false);
+    }
+
+    public void noRender(boolean onlyChild)
+    {
         getIntervals().forEach(LineElement::noRender);
         getItems().forEach(ITaskLine::noRender);
-        super.noRender();
+        if(!onlyChild) super.noRender();
     }
 
     /**
