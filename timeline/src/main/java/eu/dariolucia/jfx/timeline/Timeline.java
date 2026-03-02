@@ -811,9 +811,9 @@ public class Timeline extends GridPane implements IRenderingContext {
 
     @Override
     public boolean isInViewPort(Instant start, Instant end) {
-        return (start.isAfter(getViewPortStart()) && start.isBefore(getViewPortEnd())) || (
-                end.isAfter(getViewPortStart()) && end.isBefore(getViewPortEnd())) ||
-                (start.isBefore(getViewPortStart()) && end.isAfter(getViewPortEnd()));
+        return (start.compareTo(getViewPortStart()) >= 0 && start.isBefore(getViewPortEnd())) || //If start equal ViewPortStart or start is between viewPortStart and viewPortEnd
+                (end.isAfter(getViewPortStart()) && end.compareTo(getViewPortEnd()) <= 0) || //If end equal ViewPortEnd or end is between viewPortStart and viewPortEnd
+                (start.isBefore(getViewPortStart()) && end.isAfter(getViewPortEnd())); // If start and end are behind viewPortStart and viewPortEnd respectively
     }
 
     public SimpleObjectProperty<Color> panelBorderColorProperty() {
