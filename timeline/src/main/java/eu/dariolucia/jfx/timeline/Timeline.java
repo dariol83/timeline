@@ -513,8 +513,8 @@ public class Timeline extends GridPane implements IRenderingContext {
      * *****************************************************************************************/
 
     /**
-     * <h1>This function allows you to set the type of date formatting for each type of time unit.</h1>
-     * <ul>Default values:
+     * <p>This function allows you to set the type of date formatting for each type of time unit.</p>
+     * <ul>
      *     <li>{@link ChronoUnit}.SECONDS = "HH:mm:ss"</li>
      *     <li>{@link ChronoUnit}.MINUTES = "HH:mm:00"</li>
      *     <li>{@link ChronoUnit}.HOURS = "HH:00:00"</li>
@@ -522,7 +522,7 @@ public class Timeline extends GridPane implements IRenderingContext {
      *     <li>{@link ChronoUnit}.MONTHS = "yyyy-MM"</li>
      *     <li>{@link ChronoUnit}.YEARS = "yyyy"</li>
      * </ul>
-     * <p><h1>P.S</h1>When the displayed unit of time is: {@link ChronoUnit}.HOURS, {@link ChronoUnit}.MINUTES or {@link ChronoUnit}.SECONDS.
+     * <p>P.S: when the displayed unit of time is: {@link ChronoUnit}.HOURS, {@link ChronoUnit}.MINUTES or {@link ChronoUnit}.SECONDS.
      * The date will be displayed in two lines, where the {@link ChronoUnit}.DAYS format will be used for the first line,
      * and one of the above format will be used for the second line.</p>
      * @param unit The {@link ChronoUnit} for which the format is set
